@@ -1,0 +1,12 @@
+# Package code owners
+
+# The listed owners will be automatically added as reviewers for PRs,
+# to ensure code quality and consistency of the package, and identify
+# possible side effects.
+# PRs should still be peer-reviewed by the team opening the PR
+
+# See https://help.github.com/articles/about-codeowners/ for syntax
+# Rules are matched bottom-to-top, so one team can own subdirectories
+# and another the rest of the directory.
+
+/ @DataDog/kenafeh
