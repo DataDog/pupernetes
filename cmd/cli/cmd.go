@@ -163,6 +163,9 @@ func NewCommand() (*cobra.Command, *int) {
 	rootCommand.PersistentFlags().String("systemd-unit-prefix", config.ViperConfig.GetString("systemd-unit-prefix"), "prefix for systemd unit name")
 	config.ViperConfig.BindPFlag("systemd-unit-prefix", rootCommand.PersistentFlags().Lookup("systemd-unit-prefix"))
 
+	rootCommand.PersistentFlags().Int("kubelet-cadvisor-port", config.ViperConfig.GetInt("kubelet-cadvisor-port"), "enable kubelet cAdvisor on port")
+	config.ViperConfig.BindPFlag("kubelet-cadvisor-port", rootCommand.PersistentFlags().Lookup("kubelet-cadvisor-port"))
+
 	rootCommand.PersistentFlags().StringP("clean", "c", config.ViperConfig.GetString("clean"), fmt.Sprintf("clean options before %s: %s", setupCommand.Name(), options.GetOptionNames(options.Clean{})))
 	config.ViperConfig.BindPFlag("clean", rootCommand.PersistentFlags().Lookup("clean"))
 

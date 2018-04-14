@@ -20,7 +20,8 @@ var (
 		{
 			Name:        "kubeconfig-auth",
 			Destination: ManifestConfig,
-			Content: []byte(`apiVersion: v1
+			Content: []byte(`---
+apiVersion: v1
 kind: Config
 clusters:
   - cluster:
@@ -43,7 +44,8 @@ users:
 		{
 			Name:        "kubeconfig-insecure",
 			Destination: ManifestConfig,
-			Content: []byte(`apiVersion: v1
+			Content: []byte(`---
+apiVersion: v1
 kind: Config
 clusters:
   - cluster:
@@ -282,7 +284,8 @@ spec:
 		{
 			Name:        "e2e-user-admin",
 			Destination: ManifestAPI,
-			Content: []byte(`apiVersion: rbac.authorization.k8s.io/v1
+			Content: []byte(`---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: e2e-admin
@@ -299,7 +302,7 @@ subjects:
 		{
 			Name:        "coredns",
 			Destination: ManifestAPI,
-			Content: []byte(`
+			Content: []byte(`---
 apiVersion: v1
 kind: ServiceAccount
 metadata:

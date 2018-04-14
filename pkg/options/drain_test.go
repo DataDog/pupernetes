@@ -13,8 +13,9 @@ import (
 
 func TestNewDrainOptions(t *testing.T) {
 	testCases := []struct {
-		input    string
-		expected *Drain
+		input     string
+		expected  *Drain
+		cliString string
 	}{
 		{
 			"all",
@@ -27,6 +28,7 @@ func TestNewDrainOptions(t *testing.T) {
 				true,
 				true,
 			},
+			"all",
 		},
 		{
 			"none",
@@ -39,6 +41,7 @@ func TestNewDrainOptions(t *testing.T) {
 				false,
 				false,
 			},
+			"",
 		},
 		{
 			"none,all",
@@ -51,6 +54,7 @@ func TestNewDrainOptions(t *testing.T) {
 				false,
 				false,
 			},
+			"",
 		},
 		{
 			"all,none",
@@ -63,6 +67,7 @@ func TestNewDrainOptions(t *testing.T) {
 				true,
 				true,
 			},
+			"all",
 		},
 		{
 			"pods",
@@ -75,6 +80,7 @@ func TestNewDrainOptions(t *testing.T) {
 				false,
 				false,
 			},
+			"pods",
 		},
 		{
 			"all,pods",
@@ -87,6 +93,7 @@ func TestNewDrainOptions(t *testing.T) {
 				true,
 				true,
 			},
+			"all",
 		},
 		{
 			"none,pods",
@@ -99,12 +106,14 @@ func TestNewDrainOptions(t *testing.T) {
 				false,
 				false,
 			},
+			"",
 		},
 	}
 	for _, testCase := range testCases {
-		t.Run("", func(t *testing.T) {
+		t.Run(testCase.input, func(t *testing.T) {
 			actual := NewDrainOptions(testCase.input)
 			assert.Equal(t, testCase.expected, actual)
+			assert.Equal(t, testCase.cliString, actual.StringCLI())
 		})
 	}
 }

@@ -13,8 +13,9 @@ import (
 
 func TestNewCleanOptions(t *testing.T) {
 	testCases := []struct {
-		input    string
-		expected *Clean
+		input     string
+		expected  *Clean
+		cliString string
 	}{
 		{
 			"all",
@@ -32,7 +33,9 @@ func TestNewCleanOptions(t *testing.T) {
 				true,
 				true,
 				true,
+				true,
 			},
+			"all",
 		},
 		{
 			"none",
@@ -50,7 +53,9 @@ func TestNewCleanOptions(t *testing.T) {
 				false,
 				false,
 				false,
+				false,
 			},
+			"",
 		},
 		{
 			"none,all",
@@ -68,7 +73,9 @@ func TestNewCleanOptions(t *testing.T) {
 				false,
 				false,
 				false,
+				false,
 			},
+			"",
 		},
 		{
 			"all,none",
@@ -86,7 +93,9 @@ func TestNewCleanOptions(t *testing.T) {
 				true,
 				true,
 				true,
+				true,
 			},
+			"all",
 		},
 		{
 			"etcd",
@@ -104,7 +113,9 @@ func TestNewCleanOptions(t *testing.T) {
 				false,
 				false,
 				false,
+				false,
 			},
+			"etcd",
 		},
 		{
 			"all,etcd",
@@ -122,7 +133,9 @@ func TestNewCleanOptions(t *testing.T) {
 				true,
 				true,
 				true,
+				true,
 			},
+			"all",
 		},
 		{
 			"etcd,binaries",
@@ -140,7 +153,9 @@ func TestNewCleanOptions(t *testing.T) {
 				false,
 				false,
 				false,
+				false,
 			},
+			"binaries,etcd",
 		},
 		{
 			"etcd,binaries,secrets",
@@ -158,7 +173,9 @@ func TestNewCleanOptions(t *testing.T) {
 				false,
 				false,
 				false,
+				false,
 			},
+			"binaries,etcd,secrets",
 		},
 		{
 			"none,etcd",
@@ -176,13 +193,16 @@ func TestNewCleanOptions(t *testing.T) {
 				false,
 				false,
 				false,
+				false,
 			},
+			"",
 		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.input, func(t *testing.T) {
 			actual := NewCleanOptions(testCase.input)
 			assert.Equal(t, testCase.expected, actual)
+			assert.Equal(t, testCase.cliString, actual.StringCLI())
 		})
 	}
 }

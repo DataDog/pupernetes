@@ -25,6 +25,8 @@ const (
 	customSystemdSection = "X-e2e"
 )
 
+var fieldsToCompare = []string{"ExecStart", "RootPath"}
+
 func getUnitOptions(unitABSPath string) ([]*unit2.UnitOption, error) {
 	f, err := os.OpenFile(unitABSPath, os.O_RDONLY, 0)
 	if err != nil {
@@ -41,18 +43,46 @@ func getUnitOptions(unitABSPath string) ([]*unit2.UnitOption, error) {
 	return opts, nil
 }
 
-func (e *Environment) isXe2eRootPathEqual(opts []*unit2.UnitOption) bool {
+func pushUnitInMap(opts []*unit2.UnitOption) map[string]string {
+	m := make(map[string]string, 2)
 	for _, elt := range opts {
-		if elt.Section != customSystemdSection {
-			continue
-		}
-		if elt.Name == "RootPath" {
-			glog.V(4).Infof("Current RootPath in already created systemd unit is: %s", elt.Value)
-			return elt.Value == e.rootABSPath
+		if elt.Section == customSystemdSection && elt.Name == "RootPath" {
+			m[elt.Name] = elt.Value
+		} else if elt.Section == "Service" && elt.Name == "ExecStart" {
+			m[elt.Name] = elt.Value
 		}
 	}
-	glog.Error("Cannot find the associated systemd Section/Name in the given options")
-	return false
+	return m
+}
+
+func (e *Environment) isUnitUpToDate(onDiskOpts, currentOpts []*unit2.UnitOption) bool {
+	disk := pushUnitInMap(onDiskOpts)
+	current := pushUnitInMap(currentOpts)
+
+	for _, field := range fieldsToCompare {
+		diskValue, ok := disk[field]
+		if !ok {
+			glog.Warningf("%s isn't in the systemd unit on disk", field)
+			return false
+		}
+		// we supposed the current is fine
+		if diskValue != current[field] {
+			glog.Warningf("On disk unit is different than the generated one")
+			dSplited := strings.Split(diskValue, " ")
+			cSplited := strings.Split(current[field], " ")
+			if len(dSplited) == len(cSplited) {
+				for i := 0; i < len(dSplited); i++ {
+					if dSplited[i] == cSplited[i] {
+						continue
+					}
+					glog.Warningf("Diff disk: %q, current: %q", dSplited[i], cSplited[i])
+				}
+			}
+			return false
+		}
+	}
+	glog.V(4).Infof("Unit on disk matched the current one")
+	return true
 }
 
 func statExecStart(opts []*unit2.UnitOption) error {
@@ -60,11 +90,13 @@ func statExecStart(opts []*unit2.UnitOption) error {
 		if elt.Section != "Service" {
 			continue
 		}
-		if elt.Name == "ExecStart" {
-			commandLine := strings.Split(elt.Value, " ")
-			_, err := os.Stat(commandLine[0])
-			return err
+		if elt.Name != "ExecStart" {
+			continue
 		}
+		commandLine := strings.Split(elt.Value, " ")
+		_, err := os.Stat(commandLine[0])
+		// TODO maybe check if executable ?
+		return err
 	}
 	return fmt.Errorf("cannot find ExecStart in systemd options")
 }
@@ -73,17 +105,17 @@ func (e *Environment) writeSystemdUnit(unitOpt []*unit2.UnitOption, unitName str
 	unitABSPath := path.Join(UnitPath, unitName)
 	_, err := os.Stat(unitABSPath)
 	if err == nil {
-		glog.V(2).Infof("Already created systemd unit: %s, used clean options are %s", unitName, e.cleanOptions.String())
+		glog.V(2).Infof("Already created systemd unit: %s, untouched", unitName)
 
 		// Validate the content
-		opts, err := getUnitOptions(unitABSPath)
+		onDiskOpts, err := getUnitOptions(unitABSPath)
 		if err != nil {
 			return err
 		}
-		if !e.isXe2eRootPathEqual(opts) {
-			glog.Warningf("The already created unit %q doesn't use the given %s directory", unitName, e.rootABSPath)
+		if !e.isUnitUpToDate(onDiskOpts, unitOpt) {
+			glog.Warningf(`The already created unit %q doesn't match the generated one, used clean options are %q use instead "%s,systemd"`, unitName, e.cleanOptions.StringCLI(), e.cleanOptions.StringCLI())
 		}
-		err = statExecStart(opts)
+		err = statExecStart(onDiskOpts)
 		if err != nil {
 			glog.Errorf("Current ExecStart in %s unit is incorrect: %v", unitABSPath, err)
 			return err
@@ -145,7 +177,7 @@ func (e *Environment) createEnd2EndSection() []*unit2.UnitOption {
 
 func (e *Environment) createKubeletUnit() error {
 	networkPluginArgs := ""
-	if e.isDockerBridge == false {
+	if !e.isDockerBridge {
 		networkPluginArgs = "--network-plugin=cni"
 	}
 	sdKubelet := []*unit2.UnitOption{
@@ -198,7 +230,7 @@ func (e *Environment) createKubeletUnit() error {
 				"--cni-bin-dir=" + e.binABSPath,      // --network-plugin is unset
 				networkPluginArgs,
 
-				"--cadvisor-port=0",
+				"--cadvisor-port=" + config.ViperConfig.GetString("kubelet-cadvisor-port"),
 				"--cgroups-per-qos=true", // TODO
 				"--max-pods=110",
 				"--node-ip=" + e.outboundIP.String(),

@@ -25,8 +25,10 @@ func init() {
 
 	ViperConfig.SetDefault("root-path", "") // TODO not used yet
 
-	ViperConfig.SetDefault("clean", "etcd,mounts")
+	ViperConfig.SetDefault("clean", "etcd,mounts,iptables")
 	ViperConfig.SetDefault("drain", "all")
 	ViperConfig.SetDefault("timeout", time.Hour*6)
 	ViperConfig.SetDefault("gc", time.Second*60)
+
+	ViperConfig.SetDefault("kubelet-cadvisor-port", 0)
 }

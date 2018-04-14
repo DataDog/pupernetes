@@ -7,7 +7,11 @@ package options
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/fatih/structs"
 	"github.com/golang/glog"
+	"sort"
+	"strings"
 )
 
 type Clean struct {
@@ -21,17 +25,34 @@ type Clean struct {
 	Systemd   bool `json:"systemd,omitempty"`
 	Kubectl   bool `json:"kubectl,omitempty"`
 	Mounts    bool `json:"mounts,omitempty"`
+	Iptables  bool `json:"iptables,omitempty"`
 }
 
 func NewCleanOptions(cleanString string) *Clean {
 	return newOptions(cleanString, &Clean{}).(*Clean)
 }
 
-func (c *Clean) String() string {
+func (c *Clean) StringJSON() string {
 	b, err := json.Marshal(c)
 	if err != nil {
 		glog.Errorf("Cannot marshal the clean options: %v", err)
 		return ""
 	}
 	return string(b)
+}
+
+func (c *Clean) StringCLI() string {
+	m := structs.Map(c)
+	var cli []string
+	for k, v := range m {
+		b, ok := v.(bool)
+		if ok && b {
+			cli = append(cli, strings.ToLower(fmt.Sprintf("%v", k)))
+		}
+	}
+	if len(cli) == len(m) {
+		return "all"
+	}
+	sort.Strings(cli)
+	return strings.Join(cli, ",")
 }
