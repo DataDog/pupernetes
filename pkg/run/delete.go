@@ -79,7 +79,7 @@ func (r *Runtime) deleteReplicationController(namespaces *corev1.NamespaceList) 
 		}
 	}
 	if len(errs) > 0 {
-		return fmt.Errorf("unexpected errors during delete Deployments: %s", strings.Join(errs, ", "))
+		return fmt.Errorf("unexpected errors during delete ReplicationControllers: %s", strings.Join(errs, ", "))
 	}
 	return nil
 }
@@ -94,7 +94,7 @@ func (r *Runtime) deleteReplicaSets(namespaces *corev1.NamespaceList) error {
 		}
 		glog.V(4).Infof("Deleting %d ReplicaSets in ns %q ...", len(toDelete.Items), ns.Name)
 		for _, elt := range toDelete.Items {
-			err = r.env.GetKubernetesClient().AppsV1().DaemonSets(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
+			err = r.env.GetKubernetesClient().AppsV1().ReplicaSets(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
 			if err != nil && !errors.IsNotFound(err) {
 				glog.Errorf("Cannot delete ReplicaSets %s -n %q: %v", elt.Name, elt.Namespace, err)
 				errs = append(errs, err.Error())
