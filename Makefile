@@ -14,10 +14,10 @@ clean:
 re: clean pupernetes
 
 fmt:
-	hack/update-gofmt.sh
+	scripts/update-gofmt.sh
 
 gen-doc:
-	$(CC) build -o $@ hack/docs.go
+	$(CC) build -o $@ scripts/docs.go
 	./$@
 	$(RM) $@
 

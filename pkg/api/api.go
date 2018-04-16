@@ -17,6 +17,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+// HandlerAPI handles the API calls
 type HandlerAPI struct {
 	sigChan        chan os.Signal
 	resetNamespace func(namespaces *corev1.NamespaceList) error
@@ -48,6 +49,7 @@ func (h *HandlerAPI) resetHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 }
 
+// NewAPI returns the API HTTP server
 func NewAPI(sigChan chan os.Signal, resetNamespaceFn func(namespaces *corev1.NamespaceList) error) *http.Server {
 	h := HandlerAPI{
 		sigChan:        sigChan,
