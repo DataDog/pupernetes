@@ -1,15 +1,15 @@
 # pupernetes - p8s
 
-
-**Run a Kubernetes setup in 45 seconds**
+Run a Kubernetes setup in 45 seconds
 
 ![img](docs/pupernetes.jpg)
 
-
 **Run it:**
+
 ```bash
 sudo ./pupernetes run sandbox/
 ```
+
 ```text
 I0412 19:24:01.349686   38841 clean.go:30] Removed /home/jb/go/src/github.com/DataDog/pupernetes/sandbox/etcd-data
 I0412 19:24:01.350733   38841 clean.go:136] Cleanup successfully finished
@@ -41,9 +41,11 @@ I0412 19:24:46.044459   38841 run.go:176] Kubelet is running 5 pods
 ```
 
 **Use it:**
+
 ```bash
 kubectl get svc,ds,deploy,job,po --all-namespaces
 ```
+
 ```text
 NAMESPACE     NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)         AGE
 default       kubernetes   ClusterIP   192.168.254.1   <none>        443/TCP         3m
@@ -64,28 +66,30 @@ kube-system   kube-proxy-wggdn           1/1       Running   0          3m
 kube-system   kube-scheduler-92zrj       1/1       Running   0          3m
 ```
 
-### Features
+## Features
 
-Provide:
+Provides:
+
 * etcd v3
 * kubelet
-* kube-apiserver 
+* kube-apiserver
 * kube-scheduler
 * kube-controller-manager
 * kube-proxy
 * coredns
 
 The default setup is secured with:
- * x509 certificates provided by an embedded vault PKI
- * HTTPS webhook to provide token lookups for the kubelet API
- * RBAC
 
+* x509 certificates provided by an embedded vault PKI
+* HTTPS webhook to provide token lookups for the kubelet API
+* RBAC
 
 ### Requirements
 
-##### Runtime
+#### Runtime
 
 Executables in PATH:
+
 * tar
 * unzip
 * systemctl
@@ -102,8 +106,7 @@ A systemd environment.
 * go
 * make
 
-### Quick run 
-
+### Quick run
 
 ```bash
 make
@@ -111,11 +114,11 @@ sudo ./pupernetes run sandbox/
 ```
 
 Graceful stop it with:
- * SIGINT
- * SIGTERM
- * `--timeout`
- * `curl -XPOST 127.0.0.1:8989/stop`
 
+* SIGINT
+* SIGTERM
+* `--timeout`
+* `curl -XPOST 127.0.0.1:8989/stop`
 
 ### Quick systemd-run
 
@@ -124,46 +127,38 @@ sudo systemd-run ./pupernetes run ${PWD}/sandbox
 ```
 
 Graceful stop it with:
- * `systemctl stop run-r${UNIT_ID}.service`
- * `--timeout`
- * `curl -XPOST 127.0.0.1:8989/stop`
 
+* `systemctl stop run-r${UNIT_ID}.service`
+* `--timeout`
+* `curl -XPOST 127.0.0.1:8989/stop`
 
 Find any systemd-run unit with:
+
 ```bash
 sudo systemctl list-units run-r*.service
 ```
-The `DESCRIPTION` field should match the initial `{COMMAND} [ARGS...]`
 
+The `DESCRIPTION` field should match the initial `{COMMAND} [ARGS...]`
 
 ### Command line
 
 The full documentation is available [here](docs).
 
-
 ### Current limitations
 
 * Container runtime
-    * You need docker already up and running
-    * You cannot use cri-containerd / crio without changing manually the systemd unit `/run/systemd/system/e2e-kubelet.service`
-
-
+  * You need docker already up and running
+  * You cannot use cri-containerd / crio without changing manually the systemd unit `/run/systemd/system/e2e-kubelet.service`
 * Systemd
-    * Currently working with systemd only
-    * Could be containerized with extensive mounts
-    
-
+  * Currently working with systemd only
+  * Could be containerized with extensive mounts
 * Networking
-    * The CNI bridge cannot be used yet
-    * Kubernetes cluster IP range is statically set
-
-
+  * The CNI bridge cannot be used yet
+  * Kubernetes cluster IP range is statically set
 * Secrets
-    * IP SAN
-        * Statically configured with the given Kubernetes cluster IP range
-
+  * IP SAN
+    * Statically configured with the given Kubernetes cluster IP range
 * Draining
-    * The garbage collection can't be done without adding some delay during the drain phase
-
+  * The garbage collection can't be done without adding some delay during the drain phase
 * Versions
-    * You just can minimally change the version of the downloaded binaries in the state directory during the `run` phase but the compatibility isn't granted
+  * You just can minimally change the version of the downloaded binaries in the state directory during the `run` phase but the compatibility isn't granted
