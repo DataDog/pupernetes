@@ -24,6 +24,7 @@ func init() {
 	ViperConfig.SetDefault("systemd-unit-prefix", "e2e-")
 
 	ViperConfig.SetDefault("kubectl-link", "")
+	ViperConfig.SetDefault("vault-root-token", "")
 
 	ViperConfig.SetDefault("clean", "etcd,mounts,iptables")
 	ViperConfig.SetDefault("drain", "all")

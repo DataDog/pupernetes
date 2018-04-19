@@ -18,8 +18,6 @@ import (
 	vault "github.com/hashicorp/vault/api"
 )
 
-const vaultRootToken = "1234567890"
-
 var pemParts = []string{"certificate", "issuing_ca", "private_key"}
 
 func tearDownCommand(cmd *exec.Cmd, originalErr error) error {
@@ -72,7 +70,7 @@ func (e *Environment) vaultCommands() error {
 		glog.Errorf("Cannot use vault client: %v", err)
 		return err
 	}
-	vRaw.SetToken(vaultRootToken)
+	vRaw.SetToken(e.vaultRootToken)
 	err = waitForUnseal(vRaw)
 	if err != nil {
 		glog.Errorf("Unexpected state of vault: %v", err)
@@ -180,7 +178,7 @@ func (e *Environment) generateVaultSecrets() error {
 		return nil
 	}
 	glog.V(4).Infof("Starting vault %s", e.binaryVault.binaryABSPath)
-	cmd := exec.Command(e.binaryVault.binaryABSPath, "server", "-dev", "-dev-root-token-id="+vaultRootToken)
+	cmd := exec.Command(e.binaryVault.binaryABSPath, "server", "-dev", "-dev-root-token-id="+e.vaultRootToken)
 	var std bytes.Buffer
 	cmd.Stderr = &std
 	cmd.Stdout = &std

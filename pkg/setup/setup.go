@@ -22,6 +22,7 @@ import (
 	"github.com/DataDog/pupernetes/pkg/config"
 	"github.com/DataDog/pupernetes/pkg/options"
 	defaultTemplates "github.com/DataDog/pupernetes/pkg/setup/templates"
+	"github.com/DataDog/pupernetes/pkg/util"
 )
 
 const (
@@ -86,6 +87,9 @@ type Environment struct {
 	kubernetesClusterIP *net.IP
 	dnsClusterIP        *net.IP
 	isDockerBridge      bool
+
+	// Vault token
+	vaultRootToken string
 
 	kubectlLink string
 }
@@ -195,6 +199,13 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		ServiceClusterIPRange: config.ViperConfig.GetString("kubernetes-cluster-ip-range"),
 		KubernetesClusterIP:   e.kubernetesClusterIP.String(),
 		DNSClusterIP:          e.dnsClusterIP.String(),
+	}
+
+	// Vault root token
+	e.vaultRootToken = config.ViperConfig.GetString("vault-root-token")
+	if e.vaultRootToken == "" {
+		e.vaultRootToken = util.RandStringBytesMaskImprSrc(20)
+		glog.V(4).Infof("Generated the vault root-token of length: %d", len(e.vaultRootToken))
 	}
 
 	// Kubectl link
