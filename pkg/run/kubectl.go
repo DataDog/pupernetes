@@ -11,7 +11,7 @@ import (
 )
 
 func (r *Runtime) applyManifests() error {
-	glog.Infof("Calling kubectl create -f %s ...", r.env.GetManifestsABSPathToApply())
+	glog.Infof("Calling kubectl apply -f %s ...", r.env.GetManifestsABSPathToApply())
 	b, err := exec.Command(r.env.GetHyperkubePath(), "kubectl", "--kubeconfig", r.env.GetKubeconfigInsecurePath(), "apply", "-f", r.env.GetManifestsABSPathToApply()).CombinedOutput()
 	output := string(b)
 	if err != nil {
