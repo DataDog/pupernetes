@@ -205,11 +205,11 @@ func (e *Environment) createKubeletUnit() error {
 				"--hostname-override=" + e.GetHostname(),
 				"--root-dir=" + e.kubeletRootDir,
 				"--healthz-port=" + strconv.Itoa(e.GetKubeletHealthzPort()), // TODO conf this
-				"--cert-dir=" + path.Join(e.kubeletRootDir, "pki"),
+				"--cert-dir=" + path.Join(e.kubeletRootDir, "pki"),          // not used
 				"--kubeconfig=" + e.GetKubeconfigInsecurePath(),
 				`--cloud-provider=""`,
 
-				"--resolv-conf=" + e.GetResolvConfPath(), // TODO this flag is ignored
+				//"--resolv-conf=" + e.GetResolvConfPath(), // TODO this flag is ignored
 				"--cluster-dns=" + e.dnsClusterIP.String(),
 				"--cluster-domain=cluster.local",
 
@@ -226,12 +226,12 @@ func (e *Environment) createKubeletUnit() error {
 				"--authentication-token-webhook-cache-ttl=5s",
 				"--authorization-mode=Webhook",
 
-				"--cni-conf-dir=" + e.networkABSPath, // no-op if
-				"--cni-bin-dir=" + e.binABSPath,      // --network-plugin is unset
-				networkPluginArgs,
+				//"--cni-conf-dir=" + e.networkABSPath, // no-op if
+				//"--cni-bin-dir=" + e.binABSPath,      // --network-plugin is unset
+				networkPluginArgs, // TODO
 
-				"--cadvisor-port=" + config.ViperConfig.GetString("kubelet-cadvisor-port"),
-				"--cgroups-per-qos=true", // TODO
+				"--cadvisor-port=" + config.ViperConfig.GetString("kubelet-cadvisor-port"), // TODO switch to a catalog
+				"--cgroups-per-qos=true",                                                   // TODO
 				"--max-pods=110",
 				"--node-ip=" + e.outboundIP.String(),
 				"--node-labels=e2e=mononode",
