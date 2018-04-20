@@ -9,24 +9,36 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/golang/glog"
 	"io/ioutil"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
 	"path"
-	"strconv"
-
-	"github.com/golang/glog"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
+	"strings"
 )
 
+func getHome() string {
+	user := os.Getenv("SUDO_USER")
+	if user == "" {
+		return os.Getenv("HOME")
+	}
+	return path.Join("/home", user)
+}
+
 func (e *Environment) setupKubectl() error {
+	kubeDirPath := path.Join(getHome(), ".kube")
+	kubeConfigPath := path.Join(kubeDirPath, "config")
+	glog.V(4).Infof("Building kubectl configuration in %s ...", kubeConfigPath)
+
 	// cluster
 	b, err := exec.Command(e.GetHyperkubePath(),
 		"kubectl",
 		"config",
+		"--kubeconfig="+kubeConfigPath,
 		"set-cluster",
 		defaultKubectlClusterName,
 		"--server=https://127.0.0.1:6443",
@@ -43,6 +55,7 @@ func (e *Environment) setupKubectl() error {
 	b, err = exec.Command(e.GetHyperkubePath(),
 		"kubectl",
 		"config",
+		"--kubeconfig="+kubeConfigPath,
 		"set-credentials",
 		defaultKubectlUserName,
 		"--username="+defaultKubectlUserName,
@@ -60,6 +73,7 @@ func (e *Environment) setupKubectl() error {
 	b, err = exec.Command(e.GetHyperkubePath(),
 		"kubectl",
 		"config",
+		"--kubeconfig="+kubeConfigPath,
 		"set-context",
 		defaultKubectlContextName,
 		"--user="+defaultKubectlUserName,
@@ -74,7 +88,13 @@ func (e *Environment) setupKubectl() error {
 	glog.V(4).Infof("kubectl config/set-context: %s", output)
 
 	// use context
-	b, err = exec.Command(e.GetHyperkubePath(), "kubectl", "config", "use-context", "e2e").CombinedOutput()
+	b, err = exec.Command(e.GetHyperkubePath(),
+		"kubectl",
+		"config",
+		"--kubeconfig="+kubeConfigPath,
+		"use-context",
+		"e2e",
+	).CombinedOutput()
 	output = string(b)
 	if err != nil {
 		glog.Errorf("Cannot use kubectl context: %v, %s", err, output)
@@ -82,19 +102,27 @@ func (e *Environment) setupKubectl() error {
 	}
 	glog.V(4).Infof("kubectl use-context: %s", output)
 
+	/*
+		If the kubeconfig file doesn't exists, the kubectl binary will create it
+		To let the ${SUDO_USER} continues to use kubectl without privileges,
+		the kubeDirPath is chown recursively
+	*/
 	sudoUser := os.Getenv("SUDO_USER")
-	// Atoi returns 0 on error so we can deal with it
-	sudoUID, _ := strconv.Atoi(os.Getenv("SUDO_UID"))
-	sudoGID, _ := strconv.Atoi(os.Getenv("SUDO_GID"))
-	if sudoUser != "" && sudoUID != 0 && sudoGID != 0 {
-		kubeConfig := fmt.Sprintf("/home/%s/.kube/config", sudoUser)
-		glog.V(5).Infof("chown %s: %s", sudoUser, kubeConfig)
-		os.Chown(kubeConfig, sudoUID, sudoGID)
+	if sudoUser != "" {
+		cmdLine := []string{"chown", "-R", fmt.Sprintf("%s:", sudoUser), kubeDirPath}
+		glog.V(5).Infof("%s", strings.Join(cmdLine, " "))
+		b, err := exec.Command(cmdLine[0], cmdLine[1:]...).CombinedOutput()
+		output = string(b)
+		if err != nil {
+			glog.Warningf("Cannot execute %s: %v, %s", strings.Join(cmdLine, " "), err, output)
+		}
+		glog.V(4).Infof("%s output: %q", strings.Join(cmdLine, " "), output)
 	}
 	return nil
 }
 
 func (e *Environment) setupKubeletClient() error {
+	glog.V(4).Infof("Building kubelet client ...")
 	cert, err := tls.LoadX509KeyPair(path.Join(e.secretsABSPath, "apiserver.certificate"), path.Join(e.secretsABSPath, "apiserver.private_key"))
 	if err != nil {
 		glog.Errorf("Cannot load x509 key pair: %v", err)
@@ -148,6 +176,7 @@ func (e *Environment) setupAPIServerClient() error {
 }
 
 func (e *Environment) setupKubeClients() error {
+	glog.V(4).Infof("Creating kubeclients configuration ...")
 	err := e.setupKubectl()
 	if err != nil {
 		return err
