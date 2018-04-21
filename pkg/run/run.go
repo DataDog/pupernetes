@@ -7,11 +7,9 @@ package run
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
@@ -39,15 +37,6 @@ type Runtime struct {
 	kubeDeleteOption *v1.DeleteOptions
 }
 
-type State struct {
-	sync.RWMutex
-
-	apiServerHookLastError string
-	apiServerHookDone      bool
-	kubeletProbeFailureNb  int
-	kubeletPodsRunningNb   int
-}
-
 func NewRunner(env *setup.Environment) *Runtime {
 	var zero int64 = 0
 	sigChan := make(chan os.Signal, 2)
@@ -66,30 +55,8 @@ func NewRunner(env *setup.Environment) *Runtime {
 		},
 	}
 	signal.Notify(run.SigChan, syscall.SIGTERM, syscall.SIGINT)
-	run.api = api.NewAPI(run.SigChan, run.DeleteAPIManifests)
+	run.api = api.NewAPI(run.SigChan, run.DeleteAPIManifests, run.state.IsAPIServerHookDone)
 	return run
-}
-
-func (r *Runtime) httpProbe(url string) error {
-	resp, err := r.httpClient.Get(url)
-	if err != nil {
-		glog.V(5).Infof("HTTP probe %s failed: %v", url, err)
-		return err
-	}
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		glog.Errorf("Unexpected error when reading body of %s: %s", url, err)
-		return err
-	}
-	content := string(b)
-	defer resp.Body.Close()
-	glog.V(10).Infof("%s %q", url, content)
-	if resp.StatusCode != http.StatusOK {
-		err = fmt.Errorf("bad status code for %s: %d", url, resp.StatusCode)
-		glog.V(5).Infof("HTTP probe %s failed: %v", url, err)
-		return err
-	}
-	return nil
 }
 
 func (r *Runtime) Run() error {
@@ -136,35 +103,44 @@ func (r *Runtime) Run() error {
 			if err == nil {
 				continue
 			}
-			r.state.Lock()
-			if r.state.kubeletProbeFailureNb < appProbeThreshold {
-				r.state.kubeletProbeFailureNb++
-				glog.Warningf("Kubelet probe threshold is %d/%d", r.state.kubeletProbeFailureNb, appProbeThreshold)
-				r.state.Unlock()
+			failures := r.state.getKubeletProbeFail()
+			if failures >= appProbeThreshold {
+				glog.Warningf("Probing failed, stopping ...")
+				// display some helpers to investigate:
+				glog.Infof("Investigate the kubelet logs with: journalctl -u %skubelet.service -o cat -e --no-pager", config.ViperConfig.GetString("systemd-unit-prefix"))
+				glog.Infof("Investigate the kubelet status with: systemctl status %skubelet.service -l --no-pager", config.ViperConfig.GetString("systemd-unit-prefix"))
+				// Propagate a stop
+				r.SigChan <- syscall.SIGTERM
 				continue
 			}
-			r.state.Unlock()
-			glog.Warningf("Probing failed, stopping ...")
-			glog.Infof("Investigate the kubelet logs with: journalctl -u %skubelet.service -o cat -e --no-pager", config.ViperConfig.GetString("systemd-unit-prefix"))
-			glog.Infof("Investigate the kubelet status with: systemctl status %skubelet.service -l --no-pager", config.ViperConfig.GetString("systemd-unit-prefix"))
-			r.SigChan <- syscall.SIGTERM
+			r.state.incKubeletProbeFail()
+			glog.Warningf("Kubelet probe threshold is %d/%d", failures+1, appProbeThreshold)
 
 		case <-displayChan.C:
 			r.runDisplay()
 
 		case <-apiserverHookChan.C:
-			if r.runAPIServerHook() {
-				glog.V(2).Infof("Kubernetes apiserver hooks done")
-				apiserverHookChan.Stop()
+			err = r.httpProbe("http://127.0.0.1:8080/healthz")
+			if err != nil {
+				r.state.setAPIServerProbeLastError(err.Error())
+				continue
 			}
+			err := r.applyManifests()
+			if err != nil {
+				// TODO do we trigger an exit at some point
+				// TODO because it's almost a deadlock if the user didn't set a short --timeout
+				glog.Errorf("Cannot apply manifests in %s", r.env.GetManifestsABSPathToApply())
+				continue
+			}
+			glog.V(2).Infof("Kubernetes apiserver hooks done")
+			r.state.setAPIServerHookDone()
+			apiserverHookChan.Stop()
 		}
 	}
 }
 
 func (r *Runtime) runDisplay() {
-	r.state.Lock()
-	defer r.state.Unlock()
-	if r.state.apiServerHookDone == false {
+	if !r.state.IsAPIServerHookDone() {
 		glog.V(8).Infof("Skipping display")
 		return
 	}
@@ -173,35 +149,5 @@ func (r *Runtime) runDisplay() {
 		glog.Warningf("Cannot runDisplay some state: %v", err)
 		return
 	}
-	if len(pods) != r.state.kubeletPodsRunningNb {
-		glog.Infof("Kubelet is running %d pods", len(pods))
-		r.state.kubeletPodsRunningNb = len(pods)
-	}
-}
-
-func (r *Runtime) runAPIServerHook() bool {
-	r.state.Lock()
-	defer r.state.Unlock()
-	if r.state.apiServerHookDone {
-		glog.V(7).Infof("Manifests already applied")
-		return false
-	}
-	err := r.httpProbe(fmt.Sprintf("http://127.0.0.1:8080/healthz"))
-	if err != nil {
-		if r.state.apiServerHookLastError != err.Error() {
-			r.state.apiServerHookLastError = err.Error()
-			glog.Warningf("Kubenertes apiserver not ready yet: %v", err)
-		}
-		return false
-	}
-	// deploy trough the kube-apiserver
-	err = r.applyManifests()
-	if err != nil {
-		// TODO do we trigger an exit at some point
-		// TODO because it's almost a deadlock if the user didn't set a short --timeout
-		glog.Errorf("Cannot apply manifests in %s", r.env.GetManifestsABSPathToApply())
-		return false
-	}
-	r.state.apiServerHookDone = true
-	return r.state.apiServerHookDone
+	r.state.setKubeletPodRunning(len(pods))
 }

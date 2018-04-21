@@ -21,6 +21,7 @@ import (
 type HandlerAPI struct {
 	sigChan        chan os.Signal
 	resetNamespace func(namespaces *corev1.NamespaceList) error
+	isReady        func() bool
 }
 
 func (h *HandlerAPI) stopHandler(_ http.ResponseWriter, _ *http.Request) {
@@ -49,15 +50,28 @@ func (h *HandlerAPI) resetHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 }
 
+func (h *HandlerAPI) isReadyHandler(w http.ResponseWriter, _ *http.Request) {
+	if h.isReady() {
+		w.WriteHeader(200)
+		w.Write([]byte("ok"))
+		return
+	}
+	w.WriteHeader(500)
+	w.Write([]byte("not ready yet"))
+	return
+}
+
 // NewAPI returns the API HTTP server
-func NewAPI(sigChan chan os.Signal, resetNamespaceFn func(namespaces *corev1.NamespaceList) error) *http.Server {
+func NewAPI(sigChan chan os.Signal, resetNamespaceFn func(namespaces *corev1.NamespaceList) error, isReadyFn func() bool) *http.Server {
 	h := HandlerAPI{
 		sigChan:        sigChan,
 		resetNamespace: resetNamespaceFn,
+		isReady:        isReadyFn,
 	}
 	r := mux.NewRouter()
 	r.Methods("POST").Path("/stop").HandlerFunc(h.stopHandler)
 	r.Methods("POST").Path("/reset/{namespace}").HandlerFunc(h.resetHandler)
+	r.Methods("GET").Path("/ready").HandlerFunc(h.isReadyHandler)
 
 	srv := &http.Server{
 		Handler:      r,
