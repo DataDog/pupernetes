@@ -118,6 +118,20 @@ func (e *Environment) setupKubectl() error {
 		}
 		glog.V(4).Infof("%s output: %q", strings.Join(cmdLine, " "), output)
 	}
+	return e.createKubectlLink()
+}
+
+func (e *Environment) createKubectlLink() error {
+	if e.kubectlLink == "" {
+		return nil
+	}
+	glog.V(4).Infof("Creating a kubectl link %s -> %s", e.GetHyperkubePath(), e.kubectlLink)
+	err := os.Symlink(e.GetHyperkubePath(), e.kubectlLink)
+	if err != nil {
+		glog.Errorf("Cannot create kubectl link: %v", err)
+		return err
+	}
+	glog.V(3).Infof("Successfully created kubectl link %s", e.kubectlLink)
 	return nil
 }
 

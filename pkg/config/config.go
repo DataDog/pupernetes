@@ -23,7 +23,7 @@ func init() {
 	ViperConfig.SetDefault("kubelet-root-dir", "/var/lib/e2e-kubelet")
 	ViperConfig.SetDefault("systemd-unit-prefix", "e2e-")
 
-	ViperConfig.SetDefault("root-path", "") // TODO not used yet
+	ViperConfig.SetDefault("kubectl-link", "")
 
 	ViperConfig.SetDefault("clean", "etcd,mounts,iptables")
 	ViperConfig.SetDefault("drain", "all")
