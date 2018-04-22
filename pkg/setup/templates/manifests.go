@@ -63,6 +63,19 @@ users:
 `),
 		},
 		{
+			Name:        "audit",
+			Destination: ManifestConfig,
+			Content: []byte(`---
+apiVersion: audit.k8s.io/v1beta1
+kind: Policy
+rules:
+- level: Metadata
+  resources:
+  - group: ""
+    resources: ["pods/log", "pods/exec"]
+`),
+		},
+		{
 			Name:        "kube-apiserver",
 			Destination: ManifestStaticPod,
 			Content: []byte(`---
@@ -79,6 +92,9 @@ spec:
   - name: secrets
     hostPath:
       path: "{{.RootABSPath}}/secrets"
+  - name: config
+    hostPath:
+      path: "{{.RootABSPath}}/manifest-config"
   containers:
   - name: kube-apiserver
     image: "{{ .HyperkubeImageURL }}"
@@ -97,8 +113,7 @@ spec:
     - --etcd-servers=http://127.0.0.1:2379
     - --anonymous-auth=false
     - --service-account-lookup=true
-    - --runtime-config=settings.k8s.io/v1alpha1=true
-    - --runtime-config=authentication.k8s.io/v1beta1=true
+    - --runtime-config=api/all=true
     - --client-ca-file=/etc/secrets/apiserver.issuing_ca
     - --tls-ca-file=/etc/secrets/apiserver.issuing_ca
     - --tls-cert-file=/etc/secrets/apiserver.certificate
@@ -113,10 +128,16 @@ spec:
     - --default-watch-cache-size=0
     - --watch-cache-sizes=""
     - --deserialization-cache-size=0
+    - --audit-log-path=-
+    - --audit-policy-file=/etc/kubernetes/audit.yaml
+    - --etcd-compaction-interval=0
+    - --event-ttl=10m
 
     volumeMounts:
       - name: secrets
         mountPath: /etc/secrets
+      - name: config
+        mountPath: /etc/kubernetes/
 
 # SyncLoop doesn't support probes
 `),
