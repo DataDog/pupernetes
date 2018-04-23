@@ -166,6 +166,9 @@ func NewCommand() (*cobra.Command, *int) {
 	rootCommand.PersistentFlags().Int("kubelet-cadvisor-port", config.ViperConfig.GetInt("kubelet-cadvisor-port"), "enable kubelet cAdvisor on port")
 	config.ViperConfig.BindPFlag("kubelet-cadvisor-port", rootCommand.PersistentFlags().Lookup("kubelet-cadvisor-port"))
 
+	rootCommand.PersistentFlags().String("kubectl-link", config.ViperConfig.GetString("kubectl-link"), "Path to create a kubectl link")
+	config.ViperConfig.BindPFlag("kubectl-link", rootCommand.PersistentFlags().Lookup("kubectl-link"))
+
 	rootCommand.PersistentFlags().StringP("clean", "c", config.ViperConfig.GetString("clean"), fmt.Sprintf("clean options before %s: %s", setupCommand.Name(), options.GetOptionNames(options.Clean{})))
 	config.ViperConfig.BindPFlag("clean", rootCommand.PersistentFlags().Lookup("clean"))
 

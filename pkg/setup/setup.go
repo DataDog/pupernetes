@@ -86,6 +86,8 @@ type Environment struct {
 	kubernetesClusterIP *net.IP
 	dnsClusterIP        *net.IP
 	isDockerBridge      bool
+
+	kubectlLink string
 }
 
 type templateMetadata struct {
@@ -193,6 +195,17 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		ServiceClusterIPRange: config.ViperConfig.GetString("kubernetes-cluster-ip-range"),
 		KubernetesClusterIP:   e.kubernetesClusterIP.String(),
 		DNSClusterIP:          e.dnsClusterIP.String(),
+	}
+
+	// Kubectl link
+	e.kubectlLink = config.ViperConfig.GetString("kubectl-link")
+	if e.kubectlLink == "" {
+		return e, nil
+	}
+	_, err = os.Stat(e.kubectlLink)
+	if err == nil {
+		err = fmt.Errorf("cannot use as kubectl-link: %s already exists", e.kubectlLink)
+		return e, err
 	}
 	return e, nil
 }
