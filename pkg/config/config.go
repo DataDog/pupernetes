@@ -13,7 +13,7 @@ import (
 var ViperConfig = viper.New()
 
 func init() {
-	ViperConfig.SetDefault("hyperkube-version", "1.10.0")
+	ViperConfig.SetDefault("hyperkube-version", "1.10.1")
 	ViperConfig.SetDefault("vault-version", "0.9.5")
 	ViperConfig.SetDefault("etcd-version", "3.1.11")
 	ViperConfig.SetDefault("cni-version", "0.7.0")
