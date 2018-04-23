@@ -120,6 +120,9 @@ func (r *Runtime) Run() error {
 			r.runDisplay()
 
 		case <-apiserverHookChan.C:
+			if r.state.IsAPIServerHookDone() {
+				continue
+			}
 			err = r.httpProbe("http://127.0.0.1:8080/healthz")
 			if err != nil {
 				r.state.setAPIServerProbeLastError(err.Error())
@@ -132,8 +135,8 @@ func (r *Runtime) Run() error {
 				glog.Errorf("Cannot apply manifests in %s", r.env.GetManifestsABSPathToApply())
 				continue
 			}
-			glog.V(2).Infof("Kubernetes apiserver hooks done")
 			r.state.setAPIServerHookDone()
+			glog.V(2).Infof("Kubernetes apiserver hooks done")
 			apiserverHookChan.Stop()
 		}
 	}
