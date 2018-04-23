@@ -10,6 +10,7 @@ pupernetes:
 
 clean:
 	$(RM) pupernetes
+	$(RM) pupernetes.sha512sum
 
 re: clean pupernetes
 
@@ -24,3 +25,6 @@ gen-doc:
 check:
 	$(CC) test -v ./pkg/options/
 	$(CC) test -v ./pkg/setup/
+
+sha512sum: pupernetes
+	$@ ./$^ > $^.$@
