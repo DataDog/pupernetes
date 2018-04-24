@@ -145,8 +145,8 @@ func (e *Environment) generateResolvConf() error {
 		return err
 	}
 	if len(discoveredNameservers) == 0 {
-		glog.V(2).Infof("No nameserver discovered, adding default 8.8.8.8") // TODO remove this
-		discoveredNameservers = append(discoveredNameservers, "8.8.8.8")
+		glog.V(2).Infof("No nameserver discovered, adding default 8.8.8.8, 8.8.4.4") // TODO remove this
+		discoveredNameservers = append(discoveredNameservers, "8.8.8.8", "8.8.4.4")
 	}
 	nameservers = append(nameservers, discoveredNameservers...)
 

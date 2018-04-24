@@ -209,7 +209,7 @@ func (e *Environment) createKubeletUnit() error {
 				"--kubeconfig=" + e.GetKubeconfigInsecurePath(),
 				`--cloud-provider=""`,
 
-				//"--resolv-conf=" + e.GetResolvConfPath(), // TODO this flag is ignored
+				"--resolv-conf=" + e.GetResolvConfPath(),
 				"--cluster-dns=" + e.dnsClusterIP.String(),
 				"--cluster-domain=cluster.local",
 

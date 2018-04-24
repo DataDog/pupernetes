@@ -380,7 +380,7 @@ data:
           pods insecure
         }
         prometheus :9153
-        proxy . /etc/resolv.conf
+        proxy . /etc/resolv.conf 8.8.8.8 8.8.4.4
         cache 30
     }
 ---
