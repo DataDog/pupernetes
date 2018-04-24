@@ -31,9 +31,9 @@ const (
 	defaultSecretDirName          = "secrets"
 	defaultNetworkDirName         = "net.d"
 
-	defaultKubectlClusterName = "e2e"
-	defaultKubectlUserName    = "e2e"
-	defaultKubectlContextName = "e2e"
+	defaultKubectlClusterName = "p8s"
+	defaultKubectlUserName    = "p8s"
+	defaultKubectlContextName = "p8s"
 )
 
 type Environment struct {

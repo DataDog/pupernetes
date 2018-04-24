@@ -22,7 +22,7 @@ import (
 
 const (
 	UnitPath             = "/run/systemd/system"
-	customSystemdSection = "X-e2e"
+	customSystemdSection = "X-p8s"
 )
 
 var fieldsToCompare = []string{"ExecStart", "RootPath"}
@@ -184,7 +184,7 @@ func (e *Environment) createKubeletUnit() error {
 		{
 			Section: "Unit",
 			Name:    "Description",
-			Value:   "Hyperkube kubelet for end to end testing",
+			Value:   "Hyperkube kubelet for pupernetes",
 		},
 		{
 			Section: "Unit",
@@ -214,10 +214,10 @@ func (e *Environment) createKubeletUnit() error {
 				"--cluster-domain=cluster.local",
 
 				"--cert-dir=" + path.Join(e.secretsABSPath),
-				"--client-ca-file=" + path.Join(e.secretsABSPath, "apiserver.issuing_ca"),
+				"--client-ca-file=" + path.Join(e.secretsABSPath, "kubernetes.issuing_ca"),
 				// TODO dedicated certs
-				"--tls-cert-file=" + path.Join(e.secretsABSPath, "apiserver.certificate"),
-				"--tls-private-key-file=" + path.Join(e.secretsABSPath, "apiserver.private_key"),
+				"--tls-cert-file=" + path.Join(e.secretsABSPath, "kubernetes.certificate"),
+				"--tls-private-key-file=" + path.Join(e.secretsABSPath, "kubernetes.private_key"),
 
 				"--read-only-port=0",
 				"--anonymous-auth=false",
@@ -232,7 +232,7 @@ func (e *Environment) createKubeletUnit() error {
 
 				"--cadvisor-port=" + config.ViperConfig.GetString("kubelet-cadvisor-port"), // TODO switch to a catalog
 				"--cgroups-per-qos=true",                                                   // TODO
-				"--max-pods=110",
+				"--max-pods=60",
 				"--node-ip=" + e.outboundIP.String(),
 				"--node-labels=e2e=mononode",
 				"--application-metrics-count-limit=50",
@@ -263,7 +263,7 @@ func (e *Environment) createEtcdUnit() error {
 		{
 			Section: "Unit",
 			Name:    "Description",
-			Value:   "etcd for end to end testing",
+			Value:   "etcd for pupernetes",
 		},
 		{
 			Section: "Unit",
@@ -286,11 +286,11 @@ func (e *Environment) createEtcdUnit() error {
 				"--quota-backend-bytes=0",
 				"--metrics=basic",
 				// TODO use dedicated certs
-				"--ca-file=" + path.Join(e.secretsABSPath, "apiserver.issuing_ca"),
-				"--cert-file=" + path.Join(e.secretsABSPath, "apiserver.certificate"),
-				"--key-file=" + path.Join(e.secretsABSPath, "apiserver.private_key"),
+				"--ca-file=" + path.Join(e.secretsABSPath, "etcd.issuing_ca"),
+				"--cert-file=" + path.Join(e.secretsABSPath, "etcd.certificate"),
+				"--key-file=" + path.Join(e.secretsABSPath, "etcd.private_key"),
 				"--client-cert-auth=true",
-				"--trusted-ca-file=" + path.Join(e.secretsABSPath, "apiserver.issuing_ca"),
+				"--trusted-ca-file=" + path.Join(e.secretsABSPath, "etcd.issuing_ca"),
 				fmt.Sprintf("--listen-client-urls=http://127.0.0.1:2379,https://%s:2379", e.GetPublicIP()),
 				fmt.Sprintf("--advertise-client-urls=http://127.0.0.1:2379,https://%s:2379", e.GetPublicIP()),
 			},
