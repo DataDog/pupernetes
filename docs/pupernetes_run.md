@@ -29,16 +29,23 @@ pupernetes run state/ --timeout 5m
 # Setup and run the environment, then garantee a kubelet garbage collection during the drain phase: 
 pupernetes run state/ --gc 1m
 
+# Setup and run the environment as a systemd service:
+# Get logs with "journalctl -o cat -efu pupernetes" 
+# Get status with "systemctl status pupernetes --no-pager" 
+pupernetes run state/ --job-type systemd
+
 ```
 
 ### Options
 
 ```
-      --bind-address string   bind address for the API ip:port (default "127.0.0.1:8989")
-  -d, --drain string          drain options after run: iptables,kubeletgc,pods,all,none (default "all")
-      --gc duration           grace period for the kubelet GC trigger when draining run, no-op if not draining (default 1m0s)
-  -h, --help                  help for run
-      --timeout duration      timeout for run (default 6h0m0s)
+      --bind-address string       bind address for the API ip:port (default "127.0.0.1:8989")
+  -d, --drain string              drain options after run: iptables,kubeletgc,pods,all,none (default "all")
+      --gc duration               grace period for the kubelet GC trigger when draining run, no-op if not draining (default 1m0s)
+  -h, --help                      help for run
+      --job-type string           type of job: fg or systemd (default "fg")
+      --systemd-job-name string   unit name used when running as systemd service (default "pupernetes")
+      --timeout duration          timeout for run (default 6h0m0s)
 ```
 
 ### Options inherited from parent commands
@@ -58,5 +65,5 @@ pupernetes run state/ --gc 1m
 
 ### SEE ALSO
 
-* [pupernetes](pupernetes.md)	 - Use this command to manage a Kubernetes testing environment
+* [pupernetes](pupernetes.md)	 - Use this command to clean setup and run a Kubernetes local environment
 

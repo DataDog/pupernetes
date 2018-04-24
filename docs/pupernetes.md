@@ -1,10 +1,10 @@
 ## pupernetes
 
-Use this command to manage a Kubernetes testing environment
+Use this command to clean setup and run a Kubernetes local environment
 
 ### Synopsis
 
-Use this command to manage a Kubernetes testing environment
+Use this command to clean setup and run a Kubernetes local environment
 
 ### Options
 

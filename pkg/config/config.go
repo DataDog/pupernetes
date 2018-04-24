@@ -12,6 +12,13 @@ import (
 
 var ViperConfig = viper.New()
 
+const (
+	// Job control
+	JobTypeKey    = "job-type"
+	JobSystemd    = "systemd"
+	JobForeground = "fg"
+)
+
 func init() {
 	ViperConfig.SetDefault("hyperkube-version", "1.10.1")
 	ViperConfig.SetDefault("vault-version", "0.9.5")
@@ -30,6 +37,11 @@ func init() {
 	ViperConfig.SetDefault("drain", "all")
 	ViperConfig.SetDefault("timeout", time.Hour*6)
 	ViperConfig.SetDefault("gc", time.Second*60)
+
+	// The supported job-type are "fg" and "systemd"
+	ViperConfig.SetDefault(JobTypeKey, JobForeground)
+
+	ViperConfig.SetDefault("systemd-job-name", "pupernetes")
 
 	ViperConfig.SetDefault("kubelet-cadvisor-port", 0)
 }

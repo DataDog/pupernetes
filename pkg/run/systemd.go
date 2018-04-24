@@ -30,7 +30,7 @@ func executeSystemdAction(unitName string, systemdAction func(string, string, ch
 			}
 		case <-timeout:
 			err := fmt.Errorf("timeout awaiting for %s unit to be done", unitName)
-			glog.Errorf("%v", err)
+			glog.Errorf("Unexpected error: %v", err)
 			return err
 		}
 	}
