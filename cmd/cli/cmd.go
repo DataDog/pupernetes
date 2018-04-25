@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/DataDog/pupernetes/pkg/config"
+	"github.com/DataDog/pupernetes/pkg/job"
 	"github.com/DataDog/pupernetes/pkg/options"
 	"github.com/DataDog/pupernetes/pkg/run"
 	"github.com/DataDog/pupernetes/pkg/setup"
@@ -26,8 +27,8 @@ func NewCommand() (*cobra.Command, *int) {
 	var exitCode int
 
 	rootCommand := &cobra.Command{
-		Use:   fmt.Sprintf("%s testing command line", programName),
-		Short: "Use this command to manage a Kubernetes testing environment",
+		Use:   fmt.Sprintf("%s command line", programName),
+		Short: "Use this command to clean setup and run a Kubernetes local environment",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			flag.Lookup("alsologtostderr").Value.Set("true")
 			flag.Lookup("v").Value.Set(strconv.Itoa(verbose))
@@ -82,8 +83,35 @@ func NewCommand() (*cobra.Command, *int) {
 
 # Setup and run the environment, then garantee a kubelet garbage collection during the drain phase: 
 %s run state/ --gc 1m
-`, programName, programName, programName, programName, programName),
+
+# Setup and run the environment as a systemd service:
+# Get logs with "journalctl -o cat -efu %s" 
+# Get status with "systemctl status %s --no-pager" 
+%s run state/ --%s %s
+`,
+			programName,
+			programName,
+			programName,
+			programName,
+			programName,
+			config.ViperConfig.GetString("systemd-job-name"), config.ViperConfig.GetString("systemd-job-name"), programName, config.JobTypeKey, config.JobSystemd,
+		),
 		Run: func(cmd *cobra.Command, args []string) {
+			// Manage self start in systemd
+			jobType := config.ViperConfig.GetString(config.JobTypeKey)
+			if jobType == config.JobSystemd {
+				glog.V(2).Infof("Self starting as systemd unit %s.service ...", config.ViperConfig.GetString("systemd-job-name"))
+				err := job.RunSystemdJob(args[0])
+				if err != nil {
+					glog.Errorf("Command returns error: %v", err)
+					exitCode = 1
+				}
+				return
+			}
+			if jobType != config.JobForeground {
+				glog.Warningf("Invalid value for --%s=%s, continuing as %q", config.JobTypeKey, jobType, config.JobForeground)
+			}
+
 			env, err := setup.NewConfigSetup(args[0])
 			if err != nil {
 				glog.Errorf("Command returns error: %v", err)
@@ -192,6 +220,12 @@ func NewCommand() (*cobra.Command, *int) {
 
 	runCommand.PersistentFlags().String("bind-address", config.ViperConfig.GetString("bind-address"), "bind address for the API ip:port")
 	config.ViperConfig.BindPFlag("bind-address", runCommand.PersistentFlags().Lookup("bind-address"))
+
+	runCommand.PersistentFlags().String("systemd-job-name", config.ViperConfig.GetString("systemd-job-name"), "unit name used when running as systemd service")
+	config.ViperConfig.BindPFlag("systemd-job-name", runCommand.PersistentFlags().Lookup("systemd-job-name"))
+
+	runCommand.PersistentFlags().String(config.JobTypeKey, config.ViperConfig.GetString(config.JobTypeKey), fmt.Sprintf("type of job: %s or %s", config.JobForeground, config.JobSystemd))
+	config.ViperConfig.BindPFlag(config.JobTypeKey, runCommand.PersistentFlags().Lookup(config.JobTypeKey))
 
 	return rootCommand, &exitCode
 }

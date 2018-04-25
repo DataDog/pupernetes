@@ -26,6 +26,7 @@ check:
 	$(CC) test -v ./pkg/options/
 	$(CC) test -v ./pkg/setup/
 	$(CC) test -v ./pkg/util/
+	$(CC) test -v ./pkg/job/
 
 sha512sum: pupernetes
 	$@ ./$^ > $^.$@

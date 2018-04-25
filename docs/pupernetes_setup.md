@@ -39,5 +39,5 @@ pupernetes setup state/
 
 ### SEE ALSO
 
-* [pupernetes](pupernetes.md)	 - Use this command to manage a Kubernetes testing environment
+* [pupernetes](pupernetes.md)	 - Use this command to clean setup and run a Kubernetes local environment
 

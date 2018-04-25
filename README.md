@@ -140,6 +140,18 @@ sudo systemctl list-units run-r*.service
 
 The `DESCRIPTION` field should match the initial `{COMMAND} [ARGS...]`
 
+### Systemd as job type
+
+It's possible to run pupernetes as a systemd service directly with the command line.
+In this case, pupernetes asks to be started with the given arguments.
+See more info about it in the [run command](docs/pupernetes_run.md).
+
+Graceful stop it with:
+
+* `systemctl stop pupernetes.service`
+* `--timeout`
+* `curl -XPOST 127.0.0.1:8989/stop`
+
 ### Command line
 
 The full documentation is available [here](docs).
