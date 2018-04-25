@@ -234,7 +234,7 @@ func (e *Environment) createKubeletUnit() error {
 				"--cgroups-per-qos=true",                                                   // TODO
 				"--max-pods=60",
 				"--node-ip=" + e.outboundIP.String(),
-				"--node-labels=e2e=mononode",
+				"--node-labels=p8s=mononode",
 				"--application-metrics-count-limit=50",
 			},
 				" "),
