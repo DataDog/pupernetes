@@ -25,6 +25,7 @@ gen-doc:
 check:
 	$(CC) test -v ./pkg/options/
 	$(CC) test -v ./pkg/setup/
+	$(CC) test -v ./pkg/util/
 
 sha512sum: pupernetes
 	$@ ./$^ > $^.$@
