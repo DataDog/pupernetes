@@ -13,15 +13,15 @@ sudo ./pupernetes run sandbox/
 ```text
 I0412 19:24:01.349686   38841 clean.go:30] Removed /home/jb/go/src/github.com/DataDog/pupernetes/sandbox/etcd-data
 I0412 19:24:01.350733   38841 clean.go:136] Cleanup successfully finished
-I0412 19:24:03.788224   38841 systemd.go:31] Already created systemd unit: /run/systemd/system/e2e-kubelet.service
-I0412 19:24:03.788277   38841 systemd.go:31] Already created systemd unit: /run/systemd/system/e2e-etcd.service
+I0412 19:24:03.788224   38841 systemd.go:31] Already created systemd unit: /run/systemd/system/p8s-kubelet.service
+I0412 19:24:03.788277   38841 systemd.go:31] Already created systemd unit: /run/systemd/system/p8s-etcd.service
 I0412 19:24:05.277634   38841 setup.go:249] Setup ready /home/jb/go/src/github.com/DataDog/pupernetes/sandbox
 I0412 19:24:05.278049   38841 run.go:95] Timeout for this current run is 6h0m0s
-I0412 19:24:05.278124   38841 systemd.go:40] Starting systemd unit: e2e-etcd.service ...
-I0412 19:24:06.024161   38841 systemd.go:40] Starting systemd unit: e2e-kubelet.service ...
+I0412 19:24:05.278124   38841 systemd.go:40] Starting systemd unit: p8s-etcd.service ...
+I0412 19:24:06.024161   38841 systemd.go:40] Starting systemd unit: p8s-kubelet.service ...
 W0412 19:24:07.034545   38841 run.go:192] Kubenertes apiserver not ready yet: Get http://127.0.0.1:8080/healthz: dial tcp 127.0.0.1:8080: connect: connection refused
 W0412 19:24:21.031852   38841 run.go:192] Kubenertes apiserver not ready yet: bad status code for http://127.0.0.1:8080/healthz: 500
-I0412 19:24:24.031872   38841 kubectl.go:14] Calling kubectl create -f /home/jb/go/src/github.com/DataDog/pupernetes/sandbox/manifest-api ...
+I0412 19:24:24.031872   38841 kubectl.go:14] Calling kubectl apply -f /home/jb/go/src/github.com/DataDog/pupernetes/sandbox/manifest-api ...
 I0412 19:24:25.541348   38841 kubectl.go:21] Successfully applied manifests:
 serviceaccount "coredns" created
 clusterrole.rbac.authorization.k8s.io "system:coredns" created
@@ -29,7 +29,7 @@ clusterrolebinding.rbac.authorization.k8s.io "system:coredns" created
 configmap "coredns" created
 deployment.extensions "coredns" created
 service "coredns" created
-clusterrolebinding.rbac.authorization.k8s.io "e2e-admin" created
+clusterrolebinding.rbac.authorization.k8s.io "p8s-admin" created
 serviceaccount "kube-controller-manager" created
 pod "kube-controller-manager" created
 daemonset.extensions "kube-proxy" created
@@ -148,7 +148,7 @@ The full documentation is available [here](docs).
 
 * Container runtime
   * You need docker already up and running
-  * You cannot use cri-containerd / crio without changing manually the systemd unit `/run/systemd/system/e2e-kubelet.service`
+  * You cannot use cri-containerd / crio without changing manually the systemd unit `/run/systemd/system/p8s-kubelet.service`
 * Systemd
   * Currently working with systemd only
   * Could be containerized with extensive mounts

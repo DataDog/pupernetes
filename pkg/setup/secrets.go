@@ -62,7 +62,7 @@ func waitForUnseal(vRaw *vault.Client) error {
 	}
 }
 
-func (e *Environment) vaultCommands() error {
+func (e *Environment) generateVaultPKI() error {
 	vaultCFG := vault.DefaultConfig()
 	vaultCFG.Address = "http://127.0.0.1:8200"
 	vRaw, err := vault.NewClient(vaultCFG)
@@ -76,7 +76,7 @@ func (e *Environment) vaultCommands() error {
 		glog.Errorf("Unexpected state of vault: %v", err)
 		return err
 	}
-	err = vRaw.Sys().Mount("pki/kubernetes", &vault.MountInput{
+	err = vRaw.Sys().Mount("pki/pupernetes", &vault.MountInput{
 		Config:     vault.MountConfigInput{MaxLeaseTTL: "87600h"},
 		Type:       "pki",
 		PluginName: "pki",
@@ -88,9 +88,9 @@ func (e *Environment) vaultCommands() error {
 
 	vClient := vRaw.Logical()
 	caConf := make(map[string]interface{})
-	caConf["common_name"] = "e2e"
+	caConf["common_name"] = "p8s"
 	caConf["ttl"] = "87600h"
-	_, err = vClient.Write("pki/kubernetes/root/generate/internal", caConf)
+	_, err = vClient.Write("pki/pupernetes/root/generate/internal", caConf)
 	if err != nil {
 		glog.Errorf("Cannot write: %v", err)
 		return err
@@ -99,28 +99,38 @@ func (e *Environment) vaultCommands() error {
 	roleConf := make(map[string]interface{})
 	roleConf["allow_any_name"] = "true"
 	roleConf["max_ttl"] = "43800h"
-	_, err = vClient.Write("pki/kubernetes/roles/apiserver", roleConf)
-	if err != nil {
-		glog.Errorf("Cannot write role: %s", err)
-		return err
-	}
-	err = vRaw.Sys().PutPolicy("kubernetes/apiserver",
-		`path "pki/kubernetes/issue/apiserver" { policy = "write" }`)
-	if err != nil {
-		glog.Errorf("Cannot write policy: %s", err)
-		return err
-	}
-
 	issueConf := make(map[string]interface{})
-	issueConf["common_name"] = "e2e"
+	issueConf["common_name"] = "p8s"
 	issueConf["ip_sans"] = fmt.Sprintf("127.0.0.1,%s,%s", e.outboundIP.String(), e.kubernetesClusterIP.String())
-	sec, err := vClient.Write("pki/kubernetes/issue/apiserver", issueConf)
+	for _, component := range []string{"kubernetes", "etcd"} {
+		err = e.generateSecretFor(vRaw, vClient, roleConf, issueConf, component)
+		if err != nil {
+			glog.Errorf("Unexpected error during the secret generation of %s: %v", component, err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (e *Environment) generateSecretFor(vRaw *vault.Client, vClient *vault.Logical, roleConf, issueConf map[string]interface{}, component string) error {
+	_, err := vClient.Write(fmt.Sprintf("pki/pupernetes/roles/%s", component), roleConf)
 	if err != nil {
-		glog.Errorf("Cannot issue: %v", err)
+		glog.Errorf("Cannot write role: %v", err)
+		return err
+	}
+	err = vRaw.Sys().PutPolicy(fmt.Sprintf("pupernetes/%s", component),
+		fmt.Sprintf(`path "pki/pupernetes/issue/%s" { policy = "write" }`, component))
+	if err != nil {
+		glog.Errorf("Cannot write policy: %v", err)
+		return err
+	}
+	sec, err := vClient.Write(fmt.Sprintf("pki/pupernetes/issue/%s", component), issueConf)
+	if err != nil {
+		glog.Errorf("Cannot generateSecretFor %s: %v", component, err)
 		return err
 	}
 	for _, part := range pemParts {
-		certFile, err := os.OpenFile(path.Join(e.secretsABSPath, "apiserver."+part), os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0444)
+		certFile, err := os.OpenFile(path.Join(e.secretsABSPath, fmt.Sprintf("%s.%s", component, part)), os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0444)
 		if err != nil {
 			return err
 		}
@@ -189,7 +199,7 @@ func (e *Environment) generateVaultSecrets() error {
 	}
 	glog.V(4).Infof("Vault successfully started")
 
-	err = e.vaultCommands()
+	err = e.generateVaultPKI()
 	level := glog.V(5)
 	if err != nil {
 		level = glog.V(0)

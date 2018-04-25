@@ -42,7 +42,7 @@ func (e *Environment) setupKubectl() error {
 		"set-cluster",
 		defaultKubectlClusterName,
 		"--server=https://127.0.0.1:6443",
-		"--certificate-authority="+path.Join(e.secretsABSPath, "apiserver.issuing_ca"),
+		"--certificate-authority="+path.Join(e.secretsABSPath, "kubernetes.issuing_ca"),
 	).CombinedOutput()
 	output := string(b)
 	if err != nil {
@@ -59,8 +59,8 @@ func (e *Environment) setupKubectl() error {
 		"set-credentials",
 		defaultKubectlUserName,
 		"--username="+defaultKubectlUserName,
-		"--client-certificate="+path.Join(e.secretsABSPath, "apiserver.certificate"),
-		"--client-key="+path.Join(e.secretsABSPath, "apiserver.private_key"),
+		"--client-certificate="+path.Join(e.secretsABSPath, "kubernetes.certificate"),
+		"--client-key="+path.Join(e.secretsABSPath, "kubernetes.private_key"),
 	).CombinedOutput()
 	output = string(b)
 	if err != nil {
@@ -93,7 +93,7 @@ func (e *Environment) setupKubectl() error {
 		"config",
 		"--kubeconfig="+kubeConfigPath,
 		"use-context",
-		"e2e",
+		defaultKubectlContextName,
 	).CombinedOutput()
 	output = string(b)
 	if err != nil {
@@ -137,13 +137,13 @@ func (e *Environment) createKubectlLink() error {
 
 func (e *Environment) setupKubeletClient() error {
 	glog.V(4).Infof("Building kubelet client ...")
-	cert, err := tls.LoadX509KeyPair(path.Join(e.secretsABSPath, "apiserver.certificate"), path.Join(e.secretsABSPath, "apiserver.private_key"))
+	cert, err := tls.LoadX509KeyPair(path.Join(e.secretsABSPath, "kubernetes.certificate"), path.Join(e.secretsABSPath, "kubernetes.private_key"))
 	if err != nil {
 		glog.Errorf("Cannot load x509 key pair: %v", err)
 		return err
 	}
 
-	caCertBytes, err := ioutil.ReadFile(path.Join(e.secretsABSPath, "apiserver.issuing_ca"))
+	caCertBytes, err := ioutil.ReadFile(path.Join(e.secretsABSPath, "kubernetes.issuing_ca"))
 	if err != nil {
 		glog.Errorf("Cannot read CA: %v", err)
 		return err

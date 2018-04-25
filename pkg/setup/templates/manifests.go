@@ -26,19 +26,19 @@ kind: Config
 clusters:
   - cluster:
       server: https://127.0.0.1:6443
-      certificate-authority: "{{.RootABSPath}}/secrets/apiserver.issuing_ca"
-    name: e2e
+      certificate-authority: "{{.RootABSPath}}/secrets/kubernetes.issuing_ca"
+    name: p8s
 contexts:
   - context:
-      cluster: e2e
-      user: e2e
-    name: e2e
-current-context: e2e
+      cluster: p8s
+      user: p8s
+    name: p8s
+current-context: p8s
 users:
-  - name: e2e
-    username: e2e
-    client-certificate: "{{.RootABSPath}}/secrets/apiserver.certificate"
-    client-key: "{{.RootABSPath}}/secrets/apiserver.private_key"
+  - name: p8s
+    username: p8s
+    client-certificate: "{{.RootABSPath}}/secrets/kubernetes.certificate"
+    client-key: "{{.RootABSPath}}/secrets/kubernetes.private_key"
 `),
 		},
 		{
@@ -50,16 +50,16 @@ kind: Config
 clusters:
   - cluster:
       server: http://127.0.0.1:8080
-    name: e2e
+    name: p8s
 contexts:
   - context:
-      cluster: e2e
-      user: e2e
-    name: e2e
-current-context: e2e
+      cluster: p8s
+      user: p8s
+    name: p8s
+current-context: p8s
 users:
-  - name: e2e
-    username: e2e
+  - name: p8s
+    username: p8s
 `),
 		},
 		{
@@ -114,15 +114,15 @@ spec:
     - --anonymous-auth=false
     - --service-account-lookup=true
     - --runtime-config=api/all=true
-    - --client-ca-file=/etc/secrets/apiserver.issuing_ca
-    - --tls-ca-file=/etc/secrets/apiserver.issuing_ca
-    - --tls-cert-file=/etc/secrets/apiserver.certificate
-    - --tls-private-key-file=/etc/secrets/apiserver.private_key
+    - --client-ca-file=/etc/secrets/kubernetes.issuing_ca
+    - --tls-ca-file=/etc/secrets/kubernetes.issuing_ca
+    - --tls-cert-file=/etc/secrets/kubernetes.certificate
+    - --tls-private-key-file=/etc/secrets/kubernetes.private_key
     - --service-account-key-file=/etc/secrets/service-accounts.rsa
-    - --kubelet-client-certificate=/etc/secrets/apiserver.certificate
-    - --kubelet-client-key=/etc/secrets/apiserver.private_key
+    - --kubelet-client-certificate=/etc/secrets/kubernetes.certificate
+    - --kubelet-client-key=/etc/secrets/kubernetes.private_key
     - --kubelet-https
-    - --kubelet-certificate-authority=/etc/secrets/apiserver.issuing_ca
+    - --kubelet-certificate-authority=/etc/secrets/kubernetes.issuing_ca
     - --target-ram-mb=0
     - --watch-cache=false
     - --default-watch-cache-size=0
@@ -181,9 +181,9 @@ spec:
     - --leader-elect-lease-duration=150s
     - --leader-elect-renew-deadline=100s
     - --leader-elect-retry-period=20s
-    - --cluster-signing-cert-file=/etc/secrets/apiserver.certificate
-    - --cluster-signing-key-file=/etc/secrets/apiserver.private_key
-    - --root-ca-file=/etc/secrets/apiserver.issuing_ca
+    - --cluster-signing-cert-file=/etc/secrets/kubernetes.certificate
+    - --cluster-signing-key-file=/etc/secrets/kubernetes.private_key
+    - --root-ca-file=/etc/secrets/kubernetes.issuing_ca
     - --service-account-private-key-file=/etc/secrets/service-accounts.rsa
     - --concurrent-deployment-syncs=2
     - --concurrent-endpoint-syncs=2
@@ -303,13 +303,13 @@ spec:
 `),
 		},
 		{
-			Name:        "e2e-user-admin",
+			Name:        "p8s-user-admin",
 			Destination: ManifestAPI,
 			Content: []byte(`---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: e2e-admin
+  name: p8s-admin
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -317,7 +317,7 @@ roleRef:
 subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
-  name: e2e
+  name: p8s
 `),
 		},
 		{

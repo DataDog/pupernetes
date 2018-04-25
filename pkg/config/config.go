@@ -20,8 +20,8 @@ func init() {
 
 	ViperConfig.SetDefault("kubernetes-cluster-ip-range", "192.168.254.0/24")
 	ViperConfig.SetDefault("bind-address", "127.0.0.1:8989")
-	ViperConfig.SetDefault("kubelet-root-dir", "/var/lib/e2e-kubelet")
-	ViperConfig.SetDefault("systemd-unit-prefix", "e2e-")
+	ViperConfig.SetDefault("kubelet-root-dir", "/var/lib/p8s-kubelet")
+	ViperConfig.SetDefault("systemd-unit-prefix", "p8s-")
 
 	ViperConfig.SetDefault("kubectl-link", "")
 	ViperConfig.SetDefault("vault-root-token", "")

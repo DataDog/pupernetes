@@ -42,7 +42,7 @@ func TestGetNameservers(t *testing.T) {
                       private
                       test
 
-Link 4 (e2e0)
+Link 4 (p8s0)
       Current Scopes: none
        LLMNR setting: yes
 MulticastDNS setting: no

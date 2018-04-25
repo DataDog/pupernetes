@@ -75,7 +75,7 @@ func (r *Runtime) Run() error {
 		return err
 	}
 
-	// TODO check the state of e2e-kubelet.service few seconds after: because it doesn't use sd_notify(3)
+	// TODO check the state of p8s-kubelet.service few seconds after: because it doesn't use sd_notify(3)
 
 	probeChan := time.NewTicker(time.Second * 2)
 	defer probeChan.Stop()

@@ -167,7 +167,7 @@ func (e *Environment) generateResolvConf() error {
 
 func (e *Environment) newCNIBridgeConfig(bridgeName, subnet string) *cniConfig {
 	return &cniConfig{
-		Name:             "e2e",
+		Name:             "p8s",
 		Type:             "bridge",
 		Bridge:           bridgeName,
 		IsDefaultGateway: true,
