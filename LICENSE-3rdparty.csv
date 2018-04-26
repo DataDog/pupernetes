@@ -1,7 +1,10 @@
 Component,Origin,License
 core,"github.com/frapposelli/wwhrd",MIT
+core,"github.com/coreos/go-systemd/daemon",Apache-2.0
 core,"github.com/coreos/go-systemd/dbus",Apache-2.0
 core,"github.com/coreos/go-systemd/unit",Apache-2.0
+core,"github.com/coreos/go-systemd/util",Apache-2.0
+core,"github.com/coreos/pkg/dlopen",Apache-2.0
 core,"github.com/cpuguy83/go-md2man/md2man",MIT
 core,"github.com/fatih/structs",MIT
 core,"github.com/fsnotify/fsnotify",NewBSD

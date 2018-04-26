@@ -8,8 +8,10 @@ import (
 	"github.com/golang/glog"
 	"io/ioutil"
 	"os"
+	"os/signal"
 	"path"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -103,6 +105,11 @@ func RunSystemdJob(givenRootPath string) error {
 		},
 		{
 			Section: "Service",
+			Name:    "Type",
+			Value:   "notify",
+		},
+		{
+			Section: "Service",
 			Name:    "Restart",
 			Value:   "no",
 		},
@@ -140,7 +147,16 @@ func RunSystemdJob(givenRootPath string) error {
 	}
 
 	// Poll the status of the started unit
-	timeout := time.After(time.Second * 5)
+	timeout := time.After(time.Minute * 5)
+
+	sigChan := make(chan os.Signal, 2)
+	defer close(sigChan)
+	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
+
+	displayChan := time.NewTicker(5 * time.Second)
+	defer displayChan.Stop()
+
+	glog.V(2).Infof("Polling the status of %s ... SIGTERM or SIGINT to interrupt", unitName)
 	for {
 		select {
 		case s := <-statusChan:
@@ -148,10 +164,18 @@ func RunSystemdJob(givenRootPath string) error {
 			if s == "done" {
 				return nil
 			}
+
 		case <-timeout:
 			err := fmt.Errorf("timeout awaiting for %s unit to be done", unitName)
 			glog.Errorf("Unexpected error: %v", err)
 			return err
+
+		case <-sigChan:
+			glog.V(2).Infof("Stop polling for the status of %s", unitName)
+			return nil
+
+		case <-displayChan.C:
+			glog.V(2).Infof("Still polling the status of %s ...", unitName)
 		}
 	}
 }

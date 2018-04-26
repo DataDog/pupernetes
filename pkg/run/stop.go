@@ -32,7 +32,7 @@ func (r *Runtime) getNamespaces() (*corev1.NamespaceList, error) {
 func (r *Runtime) isAPIServerHookDone() bool {
 	r.state.RLock()
 	defer r.state.RUnlock()
-	return r.state.apiServerHookDone
+	return r.state.ready
 }
 
 func (r *Runtime) gracefulDeleteManifests() error {

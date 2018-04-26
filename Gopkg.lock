@@ -4,11 +4,19 @@
 [[projects]]
   name = "github.com/coreos/go-systemd"
   packages = [
+    "daemon",
     "dbus",
-    "unit"
+    "unit",
+    "util"
   ]
   revision = "40e2722dffead74698ca12a750f64ef313ddce05"
   version = "v16"
+
+[[projects]]
+  name = "github.com/coreos/pkg"
+  packages = ["dlopen"]
+  revision = "3ac0863d7acf3bc44daf49afef8919af12f704ef"
+  version = "v3"
 
 [[projects]]
   name = "github.com/cpuguy83/go-md2man"
@@ -497,6 +505,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e8a4699634c17118818e67f4cb9cee219c0a0f3fe3747fc7998d148bbcf10d57"
+  inputs-digest = "eb07c142266daf4f00c988ad56c265e3f078f52b2e6f8c7a2fb537f872226f26"
   solver-name = "gps-cdcl"
   solver-version = 1

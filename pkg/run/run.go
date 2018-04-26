@@ -55,7 +55,7 @@ func NewRunner(env *setup.Environment) *Runtime {
 		},
 	}
 	signal.Notify(run.SigChan, syscall.SIGTERM, syscall.SIGINT)
-	run.api = api.NewAPI(run.SigChan, run.DeleteAPIManifests, run.state.IsAPIServerHookDone)
+	run.api = api.NewAPI(run.SigChan, run.DeleteAPIManifests, run.state.IsReady)
 	return run
 }
 
@@ -83,8 +83,8 @@ func (r *Runtime) Run() error {
 	displayChan := time.NewTicker(time.Second * 10)
 	defer displayChan.Stop()
 
-	apiserverHookChan := time.NewTicker(time.Second * 1)
-	defer apiserverHookChan.Stop()
+	readinessChan := time.NewTicker(time.Second * 1)
+	defer readinessChan.Stop()
 
 	kubeletProbeURL := fmt.Sprintf("http://127.0.0.1:%d/healthz", r.env.GetKubeletHealthzPort())
 	for {
@@ -119,15 +119,18 @@ func (r *Runtime) Run() error {
 		case <-displayChan.C:
 			r.runDisplay()
 
-		case <-apiserverHookChan.C:
-			if r.state.IsAPIServerHookDone() {
+		case <-readinessChan.C:
+			if r.state.IsReady() {
+				// In case of lags during the kubectl apply
 				continue
 			}
+			// Check if the kube-apiserver is healthy
 			err = r.httpProbe("http://127.0.0.1:8080/healthz")
 			if err != nil {
 				r.state.setAPIServerProbeLastError(err.Error())
 				continue
 			}
+			// kubectl apply -f manifests-api
 			err := r.applyManifests()
 			if err != nil {
 				// TODO do we trigger an exit at some point
@@ -135,15 +138,16 @@ func (r *Runtime) Run() error {
 				glog.Errorf("Cannot apply manifests in %s", r.env.GetManifestsABSPathToApply())
 				continue
 			}
-			r.state.setAPIServerHookDone()
-			glog.V(2).Infof("Kubernetes apiserver hooks done")
-			apiserverHookChan.Stop()
+			// Mark the current state as ready
+			r.state.setReady()
+			glog.V(2).Infof("Pupernetes is ready")
+			readinessChan.Stop()
 		}
 	}
 }
 
 func (r *Runtime) runDisplay() {
-	if !r.state.IsAPIServerHookDone() {
+	if !r.state.IsReady() {
 		glog.V(8).Infof("Skipping display")
 		return
 	}

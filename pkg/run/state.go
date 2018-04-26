@@ -9,22 +9,24 @@ type State struct {
 	sync.RWMutex
 
 	apiServerProbeLastError string
-	apiServerHookDone       bool
+	ready                   bool
 
 	kubeletProbeFail  int
 	kubeletPodRunning int
 }
 
-func (s *State) IsAPIServerHookDone() bool {
+func (s *State) IsReady() bool {
 	s.RLock()
 	defer s.RUnlock()
-	return s.apiServerHookDone
+	return s.ready
 }
 
-func (s *State) setAPIServerHookDone() {
+func (s *State) setReady() {
 	s.Lock()
-	s.apiServerHookDone = true
+	s.ready = true
 	s.Unlock()
+	// Ignore errors
+	notifySystemd()
 }
 
 func (s *State) setAPIServerProbeLastError(msg string) {
