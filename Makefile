@@ -15,18 +15,19 @@ clean:
 re: clean pupernetes
 
 fmt:
-	scripts/update-gofmt.sh
+	./scripts/update-gofmt.sh
 
-gen-doc:
-	$(CC) build -o $@ scripts/docs.go
-	./$@
-	$(RM) $@
+gen-docs:
+	$(CC) run ./scripts/docs.go
 
-check:
-	$(CC) test -v ./pkg/options/
-	$(CC) test -v ./pkg/setup/
-	$(CC) test -v ./pkg/util/
-	$(CC) test -v ./pkg/job/
+PKG=job options setup util
+$(PKG): %:
+	$(CC) test -v ./pkg/$@
+check: $(PKG)
+
+verify:
+	./scripts/verify-gofmt.sh
+	./scripts/verify-generated-docs.sh
 
 sha512sum: pupernetes
 	$@ ./$^ > $^.$@
