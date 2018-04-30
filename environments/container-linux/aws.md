@@ -7,6 +7,10 @@
 
 Use the CoreOS [validate tool](https://coreos.com/validate)
 
+Mind to replace:
+* image-id
+* key-name
+* region
 ```bash
 aws ec2 run-instances \
     --image-id "ami-5d6e5e38" \
@@ -16,5 +20,5 @@ aws ec2 run-instances \
     --region "us-east-2" \
     --user-data file://ignition.json \
     --instance-initiated-shutdown-behavior "terminate" \
-    --block-device-mapping '{"DeviceName":"/dev/xvda","Ebs":{"DeleteOnTermination":true,"SnapshotId":"snap-0647640d5fbac6d62","VolumeSize": 15,"VolumeType":"gp2"}}'
+    --block-device-mapping '{"DeviceName":"/dev/xvda","Ebs":{"DeleteOnTermination":true,"VolumeSize": 15,"VolumeType":"gp2"}}'
 ```
