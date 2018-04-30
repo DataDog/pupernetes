@@ -1,0 +1,97 @@
+---
+ignition:
+  version: 2.1.0
+systemd:
+  units:
+  - name: user-configdrive.service
+    mask: true
+
+  - name: user-configvirtfs.service
+    mask: true
+
+  - name: oem-cloudinit.service
+    enabled: true
+    contents: |
+      [Unit]
+      Description=Cloudinit from platform metadata
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/bin/coreos-cloudinit --oem=ec2-compat
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - name: setup-pupernetes.service
+    enabled: true
+    contents: |
+      [Unit]
+      Description=Setup pupernetes
+
+      [Service]
+      Type=oneshot
+      ExecStart=/opt/bin/setup-pupernetes
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - name: pupernetes.service
+    enabled: true
+    contents: |
+      [Unit]
+      Description=Run pupernetes
+      Requires=setup-pupernetes.service docker.service
+      After=setup-pupernetes.service docker.service
+
+      [Service]
+      Environment=SUDO_USER=core
+      ExecStart=/opt/bin/pupernetes run /opt/sandbox --kubectl-link /opt/bin/kubectl -v 5 --timeout 6h
+      Restart=on-failure
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - name: terminate.service
+    contents: |
+      [Unit]
+      Description=Trigger a poweroff
+
+      [Service]
+      ExecStart=/bin/systemctl poweroff
+      Restart=no
+
+  - name: terminate.timer
+    enabled: true
+    contents: |
+      [Timer]
+      OnBootSec=7200
+
+      [Install]
+      WantedBy=multi-user.target
+
+storage:
+  files:
+  - path: /opt/bin/setup-pupernetes
+    mode: 0500
+    filesystem: root
+    contents:
+      inline: |
+        #!/bin/bash -ex
+        curl -Lf https://s3.us-east-2.amazonaws.com/pupernetes/latest/pupernetes -o /opt/bin/pupernetes
+        sha512sum -c /opt/bin/pupernetes.sha512sum
+        chmod +x /opt/bin/pupernetes
+
+  - path: /opt/bin/pupernetes.sha512sum
+    mode: 0400
+    filesystem: root
+    contents:
+      inline: |
+        62b515f47362e26d50384c7efc89bcc27899be1953b8f550d1f904270d7d28b6a2c3a13243799cad0e3419ab5f60b40e690d54cc9f06b253bbb201e0b5d86692 /opt/bin/pupernetes
+
+  - path: /home/core/.kube/config
+    mode: 0644
+    filesystem: root
+    user:
+     name: "core"
