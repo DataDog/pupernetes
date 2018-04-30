@@ -7,14 +7,21 @@ set -o pipefail
 cd $(dirname $0)/..
 
 make gen-docs
-DIFF=$(git diff docs/)
 
-if [[ "${DIFF}x" == "x" ]]
+DIFF=$(git diff docs/)
+if [[ "${DIFF}x" != "x" ]]
 then
-    exit 0
+    echo "Docs outdated:" >&2
+    echo ${DIFF} >&2
+    exit 2
 fi
 
-echo "Docs outdated:" >&2
-echo ${DIFF} >&2
+DIFF=$(git ls-files docs/ --exclude-standard --others)
+if [[ "${DIFF}x" != "x" ]]
+then
+    echo "Docs removed:" >&2
+    echo ${DIFF} >&2
+    exit 2
+fi
 
-exit 2
+exit 0
