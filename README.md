@@ -86,6 +86,43 @@ The default setup is secured with:
 
 ### Requirements
 
+#### Install VMWare Fusion
+
+`pupernetes` must be run on linux. To run a linux VM install [VMWare Fusion](https://www.vmware.com/products/fusion/fusion-evaluation.html) or your preferred virtualization software. You can use the VMWare Fusion Pro 30-day trial.
+
+#### Create Ubuntu VM
+
+Download the latest version of [Ubuntu Desktop](https://www.ubuntu.com/download/desktop) and create the Ubuntu VM with VMWare Fusion or whichever virtualization software you prefer.
+
+#### Install Docker
+
+Follow the instructions [here](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce) to install docker.
+
+>Note:
+>
+>If you are seeing the following error after running `sudo apt-get install docker-ce` to install `docker-ce`.
+>
+>```
+>E: Invalid operation docker-ce
+>```
+>
+>Try running the following command to setup the **stable** repository that instead specifies an older Ubuntu distribution like `xenial` instead of using `lsb_release -cs` (using `bionic` doesn't seem to always works).
+>
+>```
+>$ sudo add-apt-repository \
+>   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+>   xenial \
+>  stable"
+>```
+>
+>Now try running `$ sudo apt-get install docker-ce` again.
+
+To manage docker as a non-root user (so you don't have to keep using `sudo`) follow the instructions [here](https://docs.docker.com/install/linux/linux-postinstall/). **You must log out and log back in (or just restart your VM) so that your group membership is re-evaluated**
+
+#### Install `kubectl`
+
+Follow the instructions [here](https://kubernetes.io/docs/tasks/tools/install-kubectl/#before-you-begin) for installing `kubectl` for Ubuntu.
+
 #### Runtime
 
 Executables in PATH:
