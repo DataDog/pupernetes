@@ -6,8 +6,9 @@
 package config
 
 import (
-	"github.com/spf13/viper"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 var ViperConfig = viper.New()
@@ -44,4 +45,6 @@ func init() {
 	ViperConfig.SetDefault("systemd-job-name", "pupernetes")
 
 	ViperConfig.SetDefault("kubelet-cadvisor-port", 0)
+
+	ViperConfig.SetDefault("cloud-provider", "")
 }

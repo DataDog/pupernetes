@@ -227,5 +227,8 @@ func NewCommand() (*cobra.Command, *int) {
 	runCommand.PersistentFlags().String(config.JobTypeKey, config.ViperConfig.GetString(config.JobTypeKey), fmt.Sprintf("type of job: %s or %s", config.JobForeground, config.JobSystemd))
 	config.ViperConfig.BindPFlag(config.JobTypeKey, runCommand.PersistentFlags().Lookup(config.JobTypeKey))
 
+	runCommand.PersistentFlags().String("cloud-provider", config.ViperConfig.GetString("cloud-provider"), "cloud provider for the kubelet")
+	config.ViperConfig.BindPFlag("cloud-provider", runCommand.PersistentFlags().Lookup("cloud-provider"))
+
 	return rootCommand, &exitCode
 }
