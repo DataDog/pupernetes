@@ -138,7 +138,7 @@ I0412 19:24:46.044459   38841 run.go:176] Kubelet is running 5 pods
 >
 >`kubectl` is automatically installed by `pupernetes`.
 >
->You may need to run the following command to add add kubectl to the `$PATH`:
+>You may need to run the following command to add `kubectl` to the `$PATH`:
 >
 >```bash
 > sudo ./pupernetes run sandbox/ --kubectl-link /usr/local/bin/kubectl
