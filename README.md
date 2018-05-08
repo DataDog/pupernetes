@@ -4,7 +4,7 @@ Run a Kubernetes setup in 45 seconds.
 
 ![img](docs/pupernetes.jpg)
 
-Provides:
+**Provides**:
 
 * etcd v3
 * kubectl
@@ -24,7 +24,7 @@ The default setup is secured with:
 ## Table of Contents
 - [Requirements](#requirements)
   * [Runtime](#runtime)
-  * [Development](#environment)
+  * [Development](#development)
     + [Install VMWare Fusion](#install-vmware-fusion)
     + [Create Ubuntu VM](#create-ubuntu-vm)
     + [Install Docker](#install-docker)
