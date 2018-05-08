@@ -1,10 +1,102 @@
 # pupernetes - p8s
 
-Run a Kubernetes setup in 45 seconds
+Run a Kubernetes setup in 45 seconds.
 
 ![img](docs/pupernetes.jpg)
 
-**Run it:**
+**Provides**:
+
+* etcd v3
+* kubectl
+* kubelet
+* kube-apiserver
+* kube-scheduler
+* kube-controller-manager
+* kube-proxy
+* coredns
+
+The default setup is secured with:
+
+* x509 certificates provided by an embedded vault PKI
+* HTTPS webhook to provide token lookups for the kubelet API
+* RBAC
+
+## Table of Contents
+- [Requirements](#requirements)
+  * [Runtime](#runtime)
+  * [Development](#development)
+    + [Install VMWare Fusion](#install-vmware-fusion)
+    + [Create Ubuntu VM](#create-ubuntu-vm)
+    + [Install Docker](#install-docker)
+- [Build it](#build-it)
+- [Run it](#run-it)
+- [Use it](#use-it)
+  * [Command line](#command-line)
+  * [Quick run](#quick-run)
+  * [Quick systemd-run](#quick-systemd-run)
+  * [Systemd as job type](#systemd-as-job-type)
+- [Current limitations](#current-limitations)
+
+## Requirements
+
+### Runtime
+
+Executables in PATH:
+
+* tar
+* unzip
+* systemctl
+* systemd-resolve (or a non-systemd managed `/etc/resolv.conf`)
+* openssl
+* mount
+
+Any implicit requirements for the **kubelet** like the container runtime and [more](https://github.com/kubernetes/kubernetes/issues/26093)
+
+A systemd environment.
+
+### Development
+
+Setup a linux environment for running `pupernetes`. **This is only a suggested environment for running pupernetes. You could also create a VM using Vagrant (not yet documented here).**
+
+#### Install VMWare Fusion
+
+`pupernetes` must be run on linux. To run a linux VM install [VMWare Fusion](https://www.vmware.com/products/fusion/fusion-evaluation.html) or your preferred virtualization software. You can use the VMWare Fusion Pro 30-day trial.
+
+#### Create Ubuntu VM
+
+Download the latest version of [Ubuntu Desktop](https://www.ubuntu.com/download/desktop) and create the Ubuntu VM with VMWare Fusion or whichever virtualization software you prefer.
+
+#### Install Docker
+
+Follow the instructions [here](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce) to install docker.
+
+>Note:
+>
+>If you are seeing the following error after running `sudo apt-get install docker-ce` to install `docker-ce`.
+>
+>```
+>E: Invalid operation docker-ce
+>```
+>
+>Try running the following command to setup the **stable** repository that instead specifies an older Ubuntu distribution like `xenial` instead of using `lsb_release -cs` (using `bionic` doesn't seem to always works).
+>
+>```
+>$ sudo add-apt-repository \
+>   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+>   xenial \
+>  stable"
+>```
+>
+>Now try running `$ sudo apt-get install docker-ce` again.
+
+To manage docker as a non-root user (so you don't have to keep using `sudo`) follow the instructions [here](https://docs.docker.com/install/linux/linux-postinstall/). **You must log out and log back in (or just restart your VM) so that your group membership is re-evaluated**
+
+## Build it
+
+* go
+* make
+
+## Run it
 
 ```bash
 sudo ./pupernetes run sandbox/
@@ -40,7 +132,17 @@ I0412 19:24:36.035496   38841 run.go:176] Kubelet is running 4 pods
 I0412 19:24:46.044459   38841 run.go:176] Kubelet is running 5 pods
 ```
 
-**Use it:**
+## Use it
+
+>Note:
+>
+>`kubectl` is automatically installed by `pupernetes`.
+>
+>You may need to run the following command to add `kubectl` to the `$PATH`:
+>
+>```bash
+> sudo ./pupernetes run sandbox/ --kubectl-link /usr/local/bin/kubectl
+>```
 
 ```bash
 kubectl get svc,ds,deploy,job,po --all-namespaces
@@ -66,45 +168,9 @@ kube-system   kube-proxy-wggdn           1/1       Running   0          3m
 kube-system   kube-scheduler-92zrj       1/1       Running   0          3m
 ```
 
-## Features
+### Command line
 
-Provides:
-
-* etcd v3
-* kubelet
-* kube-apiserver
-* kube-scheduler
-* kube-controller-manager
-* kube-proxy
-* coredns
-
-The default setup is secured with:
-
-* x509 certificates provided by an embedded vault PKI
-* HTTPS webhook to provide token lookups for the kubelet API
-* RBAC
-
-### Requirements
-
-#### Runtime
-
-Executables in PATH:
-
-* tar
-* unzip
-* systemctl
-* systemd-resolve (or a non-systemd managed `/etc/resolv.conf`)
-* openssl
-* mount
-
-Any implicit requirements for the **kubelet** like the container runtime and [more](https://github.com/kubernetes/kubernetes/issues/26093)
-
-A systemd environment.
-
-##### Build
-
-* go
-* make
+The full documentation is available [here](docs).
 
 ### Quick run
 
@@ -152,11 +218,7 @@ Graceful stop it with:
 * `--timeout`
 * `curl -XPOST 127.0.0.1:8989/stop`
 
-### Command line
-
-The full documentation is available [here](docs).
-
-### Current limitations
+## Current limitations
 
 * Container runtime
   * You need docker already up and running
