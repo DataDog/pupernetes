@@ -2,6 +2,8 @@
 
 set -ex
 
+export LC_ALL=C
+
 go get github.com/frapposelli/wwhrd
 
 cd $(dirname $0)/../..
