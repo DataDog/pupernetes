@@ -2,9 +2,9 @@
 
 set -ex
 
-go get -u github.com/frapposelli/wwhrd
+go get github.com/frapposelli/wwhrd
 
-cd $(dirname $0)/..
+cd $(dirname $0)/../..
 
 wwhrd list
 

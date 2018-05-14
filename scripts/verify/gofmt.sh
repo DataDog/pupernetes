@@ -20,7 +20,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-cd $(dirname "$0}")/..
+cd $(dirname "$0}")/../..
 
 
 find_files() {
