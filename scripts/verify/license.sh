@@ -3,23 +3,24 @@
 set -o errexit
 set -o nounset
 set -o pipefail
+set -e
 
-cd $(dirname $0)/..
+cd $(dirname $0)/../..
 
-make gen-docs
+make gen-license
 
-DIFF=$(git diff docs/)
+DIFF=$(git --no-pager diff LICENSE-3rdparty.csv)
 if [[ "${DIFF}x" != "x" ]]
 then
-    echo "Docs outdated:" >&2
-    echo ${DIFF} >&2
+    echo "License outdated:" >&2
+    git --no-pager diff LICENSE-3rdparty.csv >&2
     exit 2
 fi
 
 DIFF=$(git ls-files docs/ --exclude-standard --others)
 if [[ "${DIFF}x" != "x" ]]
 then
-    echo "Docs removed:" >&2
+    echo "License removed:" >&2
     echo ${DIFF} >&2
     exit 2
 fi

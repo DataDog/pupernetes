@@ -20,8 +20,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-PKG=$(dirname $0)/../pkg
-CMD=$(dirname $0)/../cmd
+PKG=$(dirname $0)/../../pkg
+CMD=$(dirname $0)/../../cmd
 SCRIPT=$(dirname $0)
 
 

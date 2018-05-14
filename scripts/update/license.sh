@@ -2,9 +2,11 @@
 
 set -ex
 
-go get -u github.com/frapposelli/wwhrd
+export LC_ALL=C
 
-cd $(dirname $0)/..
+go get github.com/frapposelli/wwhrd
+
+cd $(dirname $0)/../..
 
 wwhrd list
 

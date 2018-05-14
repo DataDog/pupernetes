@@ -1,0 +1,46 @@
+version: 2
+
+templates:
+  job_template: &job_template
+    docker:
+      - image: golang:1.10
+    working_directory: /go/src/github.com/DataDog/pupernetes
+
+jobs:
+  build:
+    <<: *job_template
+    steps:
+      - checkout
+      - run:
+          name: build
+          command: make
+
+  tests:
+    <<: *job_template
+    steps:
+      - checkout
+      - run:
+          name: run tests
+          command: make check
+
+  verify:
+    <<: *job_template
+    steps:
+      - checkout
+      - run:
+          name: verify-gofmt
+          command: make verify-gofmt
+      - run:
+          name: verify-docs
+          command: make verify-docs
+      - run:
+          name: verify-license
+          command: make verify-license
+
+workflows:
+  version: 2
+  build_test_verify:
+    jobs:
+      - tests
+      - verify
+      - build
