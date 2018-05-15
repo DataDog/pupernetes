@@ -24,4 +24,9 @@ sha512sum -c pupernetes.sha512sum
 ./pupernetes: OK
 ```
 
-Then tag and upload `pupernetes` + `pupernetes.sha512sum` in the release page.
+Update the [ignition example](environments/container-linux/ignition.yaml) especially the storage/files section:
+* /opt/bin/setup-pupernetes
+* /opt/bin/pupernetes.sha512sum
+
+Submit a PR, merge it after validation. 
+Then upload `pupernetes` + `pupernetes.sha512sum` in the release page.
