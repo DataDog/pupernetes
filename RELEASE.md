@@ -1,7 +1,16 @@
 # Release process
 
+### Locally
+
+Updated master branch:
+```bash
+git checkout master
+git pull
+```
+
 Clean:
 ```bash
+git clean . -fdx -e .idea
 make clean
 ```
 
@@ -28,5 +37,18 @@ Update the [ignition example](environments/container-linux/ignition.yaml) especi
 * /opt/bin/setup-pupernetes
 * /opt/bin/pupernetes.sha512sum
 
-Submit a PR, merge it after validation. 
+
+### Github
+
+Submit a PR, merge it after validation.
+ 
 Then upload `pupernetes` + `pupernetes.sha512sum` in the release page.
+
+The minor version should be incremented by one like:
+```text
+0.1 -> 0.2
+0.9 -> 0.10
+...
+```
+
+The release must be marked as pre-release.
