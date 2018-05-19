@@ -7,7 +7,7 @@ set -e
 
 cd $(dirname $0)/../..
 
-make gen-license
+make license
 
 DIFF=$(git --no-pager diff LICENSE-3rdparty.csv)
 if [[ "${DIFF}x" != "x" ]]

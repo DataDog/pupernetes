@@ -3,8 +3,6 @@ CFLAGS?=-i
 GOOS=linux
 CGO_ENABLED?=1
 
-.PHONY: pupernetes clean re fmt
-
 pupernetes:
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) $(CC) build $(CFLAGS) -o $@ cmd/main.go
 
@@ -17,15 +15,17 @@ re: clean pupernetes
 gofmt:
 	./scripts/update/gofmt.sh
 
-gen-docs:
+docs:
 	$(CC) run ./scripts/update/docs.go
 
-gen-license:
+license:
 	./scripts/update/license.sh
 
-PKG=job options setup util
+# Private targets
+PKG=.job .options .setup .util
 $(PKG): %:
-	$(CC) test -v ./pkg/$@
+	@# remove the leading '.'
+	$(CC) test -v ./pkg/$(subst .,,$@)
 check: $(PKG)
 
 verify-gofmt:
@@ -41,3 +41,6 @@ verify: verify-gofmt verify-docs verify-license
 
 sha512sum: pupernetes
 	$@ ./$^ > $^.$@
+
+# Everything but the pupernetes target
+.PHONY: clean re gofmt docs license check verify-gofmt verify-docs verify-license verify sha512sum
