@@ -14,21 +14,22 @@ func notifySystemd() error {
 	}
 
 	inService, err := systemdutil.RunningFromSystemService()
-	if err != nil {
+	if err != nil && err != systemdutil.ErrNoCGO {
 		glog.Errorf("Fail to identify if running in systemd service: %s", err)
 		return err
 	}
-	if !inService {
+	if err == nil && !inService {
 		glog.V(2).Info("Not running in systemd service, skipping the notify")
 		return nil
 	}
+	cgoDisabled := err == systemdutil.ErrNoCGO
 
 	sent, err := daemon.SdNotify(false, "READY=1")
 	if err != nil {
 		glog.Errorf("Failed to notify systemd for readiness: %v", err)
 		return err
 	}
-	if !sent {
+	if !sent && !cgoDisabled {
 		glog.Warning("Forgot to set Type=notify in systemd service file?")
 		return nil
 	}
