@@ -43,12 +43,15 @@ func tailJournal(unit string, tailCh chan struct{}) {
 	defer stdout.Close()
 
 	go func() {
+		glog.V(4).Infof("Display %s started", unit)
 		scanner := bufio.NewScanner(bufio.NewReader(stdout))
 		for scanner.Scan() {
 			fmt.Println(unit, scanner.Text())
 		}
+		glog.V(4).Infof("Display %s stopped", unit)
 	}()
 
+	glog.V(3).Infof("Starting the journal command ...")
 	err = cmd.Start()
 	if err != nil {
 		glog.Errorf("Cannot start the command %s: %v", cmdLineStr, err)
@@ -56,14 +59,14 @@ func tailJournal(unit string, tailCh chan struct{}) {
 	}
 
 	<-tailCh
-	glog.Infof("Stopping the journal command ...")
+	glog.V(3).Infof("Stopping the journal command ...")
 	err = cmd.Process.Signal(syscall.SIGTERM)
 	if err != nil {
 		glog.Errorf("Unexpected error during stopping command %s: %v", cmdLineStr, err)
 		return
 	}
 	cmd.Wait()
-	glog.Infof("Journal successfully stopped")
+	glog.V(3).Infof("Journal tailing successfully stopped")
 }
 
 func createExecStart(givenRootPath string, argv []string, wd string) (string, error) {
@@ -96,6 +99,18 @@ func createExecStart(givenRootPath string, argv []string, wd string) (string, er
 	return strings.Join(copyArgv, " "), nil
 }
 
+func tearDown(tailCh chan struct{}, err error) error {
+	if err != nil {
+		glog.Errorf("Unexpected error: %v", err)
+	}
+	glog.V(3).Infof("Stopping tailer ...")
+	tailCh <- struct{}{}
+	glog.V(3).Infof("Waiting tailer stopped ...")
+	<-tailCh
+	glog.V(3).Infof("Tailer stopped")
+	return err
+}
+
 // RunSystemdJob creates and starts a systemd unit with the current command line as ExecStart
 // TODO split this
 func RunSystemdJob(givenRootPath string) error {
@@ -123,8 +138,9 @@ func RunSystemdJob(givenRootPath string) error {
 			glog.V(2).Infof("Nothing to do: %s is already running: systemctl status %s --full", u.Name, u.Name)
 			return nil
 		case "stop-sigterm":
-			glog.Warningf("Please retry later: %s is stopping stop-sigterm: systemctl status %s --full", u.Name, u.Name)
-			return nil
+			err = fmt.Errorf("%s is stopping stop-sigterm", u.Name)
+			glog.Warningf("Please retry later: %v: systemctl status %s --full", err, u.Name)
+			return err
 		}
 	}
 
@@ -222,28 +238,19 @@ func RunSystemdJob(givenRootPath string) error {
 				continue
 			}
 
-			tailCh <- struct{}{}
-			<-tailCh
-			return nil
+			return tearDown(tailCh, nil)
 
 		case <-timeout:
-			err := fmt.Errorf("timeout awaiting for %s unit to be done", unitName)
-			glog.Errorf("Unexpected error: %v", err)
 
-			tailCh <- struct{}{}
-			<-tailCh
-			return err
+			return tearDown(tailCh, fmt.Errorf("timeout awaiting for %s unit to be done", unitName))
 
 		case <-sigChan:
 			glog.V(2).Infof("Stop polling for the status of %s", unitName)
 
-			tailCh <- struct{}{}
-			<-tailCh
-			return nil
+			return tearDown(tailCh, nil)
 
 		case <-displayChan.C:
-			glog.V(2).Infof("Still polling the status of %s ...", unitName)
-
+			glog.V(3).Infof("Still polling the status of %s ...", unitName)
 		}
 	}
 }
