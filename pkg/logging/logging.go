@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/golang/glog"
 )
@@ -25,6 +26,8 @@ func NewJournalTailer(unitName string) (*JournalTailer, error) {
 		"journalctl",
 		"-o",
 		"cat",
+		"-S",
+		time.Now().Format("15:04:05"),
 		"-fu",
 		unitName,
 	}
@@ -47,14 +50,18 @@ func NewJournalTailer(unitName string) (*JournalTailer, error) {
 
 func (j *JournalTailer) StopTail() error {
 	glog.V(3).Infof("Stopping command %s ...", j.cmdLine)
-	err := j.cmd.Process.Signal(syscall.SIGTERM)
+	err := j.stdoutPipe.Close()
+	if err != nil {
+		glog.Warningf("Unexpected error during pipe closing: %v", err)
+	}
+	err = j.cmd.Process.Signal(syscall.SIGTERM)
 	if err != nil {
 		glog.Errorf("Unexpected error during stopping command %s: %v", j.cmdLine, err)
 		return err
 	}
 	j.cmd.Wait()
 	glog.V(3).Infof("Journal tailing successfully stopped")
-	return j.stdoutPipe.Close()
+	return nil
 }
 
 func (j JournalTailer) display() {
