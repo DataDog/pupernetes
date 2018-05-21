@@ -9,6 +9,9 @@ systemd:
   - name: user-configvirtfs.service
     mask: true
 
+  - name: locksmithd.service
+    mask: true
+
   - name: oem-cloudinit.service
     enabled: true
     contents: |
@@ -73,6 +76,14 @@ systemd:
 
 storage:
   files:
+  - path: /etc/coreos/update.conf
+    mode: 0644
+    filesystem: root
+    contents:
+      inline: |
+        GROUP=alpha
+        REBOOT_STRATEGY=off
+
   - path: /opt/bin/setup-pupernetes
     mode: 0500
     filesystem: root
