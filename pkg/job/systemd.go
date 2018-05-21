@@ -1,73 +1,26 @@
 package job
 
 import (
-	"bufio"
 	"fmt"
-	"github.com/DataDog/pupernetes/pkg/config"
-	dbus2 "github.com/coreos/go-systemd/dbus"
-	"github.com/coreos/go-systemd/unit"
-	"github.com/golang/glog"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"os/signal"
 	"path"
 	"strings"
 	"syscall"
 	"time"
+
+	dbus2 "github.com/coreos/go-systemd/dbus"
+	"github.com/coreos/go-systemd/unit"
+	"github.com/golang/glog"
+
+	"github.com/DataDog/pupernetes/pkg/config"
+	"github.com/DataDog/pupernetes/pkg/logging"
 )
 
 const (
 	unitPath = "/run/systemd/system/"
 )
-
-func tailJournal(unit string, tailCh chan struct{}) {
-	defer func() { tailCh <- struct{}{} }()
-	cmdLine := []string{
-		"journalctl",
-		"-u",
-		unit,
-		"-o",
-		"cat",
-		"-f",
-		// TODO -S HH:MM.SS
-	}
-	cmdLineStr := strings.Join(cmdLine, " ")
-	cmd := exec.Command(cmdLine[0], cmdLine[1:]...)
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		glog.Errorf("Unexpected error during pipe: %v", err)
-		return
-	}
-	defer stdout.Close()
-
-	go func() {
-		glog.V(4).Infof("Display %s started", unit)
-		scanner := bufio.NewScanner(bufio.NewReader(stdout))
-		for scanner.Scan() {
-			fmt.Println(unit, scanner.Text())
-		}
-		glog.V(4).Infof("Display %s stopped", unit)
-	}()
-
-	glog.V(3).Infof("Starting the journal command ...")
-	err = cmd.Start()
-	if err != nil {
-		glog.Errorf("Cannot start the command %s: %v", cmdLineStr, err)
-		return
-	}
-
-	<-tailCh
-	glog.V(3).Infof("Stopping the journal command ...")
-	err = cmd.Process.Signal(syscall.SIGTERM)
-	if err != nil {
-		glog.Errorf("Unexpected error during stopping command %s: %v", cmdLineStr, err)
-		return
-	}
-	cmd.Wait()
-	glog.V(3).Infof("Journal tailing successfully stopped")
-}
 
 func createExecStart(givenRootPath string, argv []string, wd string) (string, error) {
 	copyArgv := make([]string, len(argv))
@@ -99,20 +52,7 @@ func createExecStart(givenRootPath string, argv []string, wd string) (string, er
 	return strings.Join(copyArgv, " "), nil
 }
 
-func tearDown(tailCh chan struct{}, err error) error {
-	if err != nil {
-		glog.Errorf("Unexpected error: %v", err)
-	}
-	glog.V(3).Infof("Stopping tailer ...")
-	tailCh <- struct{}{}
-	glog.V(3).Infof("Waiting tailer stopped ...")
-	<-tailCh
-	glog.V(3).Infof("Tailer stopped")
-	return err
-}
-
 // RunSystemdJob creates and starts a systemd unit with the current command line as ExecStart
-// TODO split this
 func RunSystemdJob(givenRootPath string) error {
 	dbus, err := dbus2.NewSystemdConnection()
 	if err != nil {
@@ -132,11 +72,15 @@ func RunSystemdJob(givenRootPath string) error {
 	}
 	for _, u := range units {
 		glog.V(3).Infof("Unit %q with load state %q is %q", u.Name, u.LoadState, u.SubState)
-
 		switch u.SubState {
 		case "running":
-			glog.V(2).Infof("Nothing to do: %s is already running: systemctl status %s --full", u.Name, u.Name)
+			err = fmt.Errorf("%s is already running", u.Name)
+			glog.Warningf("Nothing to do: %s is already running: systemctl status %s --full", u.Name, u.Name)
 			return nil
+		case "start":
+			err = fmt.Errorf("%s is already starting", u.Name)
+			glog.Warningf("Nothing to do: %v: systemctl status %s --full", err, u.Name)
+			return err
 		case "stop-sigterm":
 			err = fmt.Errorf("%s is stopping stop-sigterm", u.Name)
 			glog.Warningf("Please retry later: %v: systemctl status %s --full", err, u.Name)
@@ -206,9 +150,16 @@ func RunSystemdJob(givenRootPath string) error {
 		return err
 	}
 
-	tailCh := make(chan struct{}, 2)
-	defer close(tailCh)
-	go tailJournal(unitName, tailCh)
+	jt, err := logging.NewJournalTailer(unitName)
+	if err != nil {
+		glog.Errorf("Unexpected error while creating journal-tail of %s: %v", unitName, err)
+		return err
+	}
+	err = jt.StartTail()
+	if err != nil {
+		glog.Errorf("Cannot start the journal-tail of %s: %v", unitName, err)
+		return err
+	}
 
 	// Start the unit
 	statusChan := make(chan string)
@@ -237,17 +188,20 @@ func RunSystemdJob(givenRootPath string) error {
 			if s != "done" {
 				continue
 			}
-
-			return tearDown(tailCh, nil)
+			return jt.StopTail()
 
 		case <-timeout:
-
-			return tearDown(tailCh, fmt.Errorf("timeout awaiting for %s unit to be done", unitName))
+			err = fmt.Errorf("timeout awaiting for %s unit to be done", unitName)
+			tearDownErr := jt.StopTail()
+			if tearDownErr != nil {
+				err = fmt.Errorf("%s + %s", err, tearDownErr)
+			}
+			return err
 
 		case <-sigChan:
 			glog.V(2).Infof("Stop polling for the status of %s", unitName)
 
-			return tearDown(tailCh, nil)
+			return jt.StopTail()
 
 		case <-displayChan.C:
 			glog.V(3).Infof("Still polling the status of %s ...", unitName)
