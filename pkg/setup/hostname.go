@@ -7,9 +7,12 @@ package setup
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
 	"regexp"
+	"time"
 	"unicode"
 
 	"github.com/golang/glog"
@@ -32,26 +35,69 @@ func isValidHostname(h string) bool {
 	return hostnameRegex.MatchString(h)
 }
 
+func checkHostname(hostname string) error {
+	glog.V(4).Infof("Validating hostname %q ...", hostname)
+	if hostname == "" {
+		glog.Errorf("Invalid empty hostname")
+		return fmt.Errorf("empty hostname")
+	}
+	if hostname == "localhost" {
+		glog.Errorf("Invalid hostname: %q", hostname)
+		return fmt.Errorf("invalid hostname: %q", hostname)
+	}
+	if !isValidHostname(hostname) {
+		glog.Errorf("Invalid hostname: %q", hostname)
+		return fmt.Errorf("invalid hostname: %q, %s", hostname, invalidHostnameMessage)
+	}
+	_, err := net.LookupHost(hostname)
+	if err == nil {
+		glog.V(4).Infof("Valid hostname: %q", hostname)
+		return nil
+	}
+	glog.Errorf("Fail to lookup host: %s", err)
+	return err
+}
+
+func getAWSHostname() (string, error) {
+	glog.V(2).Infof("Trying AWS hostname ...")
+	c := &http.Client{
+		Timeout: time.Second,
+	}
+	resp, err := c.Get("http://169.254.169.254/latest/meta-data/hostname")
+	if err != nil {
+		glog.Errorf("Fail to reach AWS metadata: %v", err)
+		return "", err
+	}
+	defer resp.Body.Close()
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		glog.Errorf("Cannot read the AWS metadata response: %v", err)
+		return "", err
+	}
+	return string(b), nil
+}
+
 func (e *Environment) setupHostname() error {
 	hostname, err := os.Hostname()
 	if err != nil {
 		return err
 	}
-	if hostname == "" {
-		return fmt.Errorf("empty hostname")
+
+	if checkHostname(hostname) == nil {
+		e.hostname = hostname
+		return nil
 	}
-	if hostname == "localhost" {
-		return fmt.Errorf("invalid hostname: %q", hostname)
-	}
-	if !isValidHostname(hostname) {
-		return fmt.Errorf("invalid hostname: %q, %s", hostname, invalidHostnameMessage)
-	}
-	_, err = net.LookupHost(hostname)
+
+	hostname, err = getAWSHostname()
 	if err != nil {
 		return err
 	}
-	e.hostname = hostname
 
-	glog.V(4).Infof("Using hostname: %q", e.hostname)
-	return nil
+	err = checkHostname(hostname)
+	if err == nil {
+		e.hostname = hostname
+		return nil
+	}
+
+	return err
 }
