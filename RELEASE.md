@@ -1,6 +1,6 @@
 # Release process
 
-### Locally
+### Submit a PR
 
 Updated master branch:
 ```bash
@@ -17,6 +17,9 @@ make clean
 Compile statically the binary and generate the sha512sum:
 ```bash
 CGO_ENABLED=0 make sha512sum
+
+# or using docker
+docker run --rm -v "$GOPATH":/go -w /go/src/github.com/DataDog/pupernetes golang:1.10 make sha512sum
 ```
 
 Check the shared object dependencies:
@@ -24,6 +27,11 @@ Check the shared object dependencies:
 ldd pupernetes
 	not a dynamic executable
 echo $?
+1
+
+# or using docker
+docker run --rm -v "$GOPATH":/go -w /go/src/github.com/DataDog/pupernetes golang:1.10 sh -c 'ldd pupernetes ; echo $?'
+	not a dynamic executable
 1
 ```
 
@@ -33,16 +41,24 @@ sha512sum -c pupernetes.sha512sum
 ./pupernetes: OK
 ```
 
-Update the [ignition example](environments/container-linux/ignition.yaml) especially the storage/files section:
+Update the [ignition example](environments/container-linux/ignition.yaml) on the storage/files section:
 * /opt/bin/setup-pupernetes
 * /opt/bin/pupernetes.sha512sum
 
 
-### Github
+### Push tags
 
-Submit a PR, merge it after validation.
- 
-Then upload `pupernetes` + `pupernetes.sha512sum` in the release page.
+After validation, merge your PR and checkout the latest master branch:
+```bash
+git checkout master
+git pull
+```
+
+Tag the release with the new version (e.g. v0.3):
+```bash
+git tag v0.3
+git push --tags
+```
 
 The minor version should be incremented by one like:
 ```text
@@ -50,5 +66,7 @@ The minor version should be incremented by one like:
 0.9 -> 0.10
 ...
 ```
+
+Then upload `pupernetes` + `pupernetes.sha512sum` in the release page.
 
 The release must be marked as pre-release.

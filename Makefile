@@ -1,7 +1,7 @@
 CC=go
 CFLAGS?=-i
 GOOS=linux
-CGO_ENABLED?=1
+CGO_ENABLED?=0
 
 pupernetes:
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) $(CC) build $(CFLAGS) -o $@ cmd/main.go
