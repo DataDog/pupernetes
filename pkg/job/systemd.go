@@ -2,10 +2,6 @@ package job
 
 import (
 	"fmt"
-	"github.com/DataDog/pupernetes/pkg/config"
-	dbus2 "github.com/coreos/go-systemd/dbus"
-	"github.com/coreos/go-systemd/unit"
-	"github.com/golang/glog"
 	"io/ioutil"
 	"os"
 	"os/signal"
@@ -13,6 +9,13 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	dbus2 "github.com/coreos/go-systemd/dbus"
+	"github.com/coreos/go-systemd/unit"
+	"github.com/golang/glog"
+
+	"github.com/DataDog/pupernetes/pkg/config"
+	"github.com/DataDog/pupernetes/pkg/logging"
 )
 
 const (
@@ -69,9 +72,19 @@ func RunSystemdJob(givenRootPath string) error {
 	}
 	for _, u := range units {
 		glog.V(3).Infof("Unit %q with load state %q is %q", u.Name, u.LoadState, u.SubState)
-		if u.SubState == "running" {
-			glog.V(2).Infof("Nothing to do: %s is already running: systemctl status %s --full", u.Name, u.Name)
+		switch u.SubState {
+		case "running":
+			err = fmt.Errorf("%s is already running", u.Name)
+			glog.Warningf("Nothing to do: %s is already running: systemctl status %s --full", u.Name, u.Name)
 			return nil
+		case "start":
+			err = fmt.Errorf("%s is already starting", u.Name)
+			glog.Warningf("Nothing to do: %v: systemctl status %s --full", err, u.Name)
+			return err
+		case "stop-sigterm":
+			err = fmt.Errorf("%s is stopping stop-sigterm", u.Name)
+			glog.Warningf("Please retry later: %v: systemctl status %s --full", err, u.Name)
+			return err
 		}
 	}
 
@@ -137,6 +150,17 @@ func RunSystemdJob(givenRootPath string) error {
 		return err
 	}
 
+	jt, err := logging.NewJournalTailer(unitName)
+	if err != nil {
+		glog.Errorf("Unexpected error while creating journal-tail of %s: %v", unitName, err)
+		return err
+	}
+	err = jt.StartTail()
+	if err != nil {
+		glog.Errorf("Cannot start the journal-tail of %s: %v", unitName, err)
+		return err
+	}
+
 	// Start the unit
 	statusChan := make(chan string)
 	defer close(statusChan)
@@ -161,21 +185,26 @@ func RunSystemdJob(givenRootPath string) error {
 		select {
 		case s := <-statusChan:
 			glog.V(2).Infof("Status of %s job: %q", unitName, s)
-			if s == "done" {
-				return nil
+			if s != "done" {
+				continue
 			}
+			return jt.StopTail()
 
 		case <-timeout:
-			err := fmt.Errorf("timeout awaiting for %s unit to be done", unitName)
-			glog.Errorf("Unexpected error: %v", err)
+			err = fmt.Errorf("timeout awaiting for %s unit to be done", unitName)
+			tearDownErr := jt.StopTail()
+			if tearDownErr != nil {
+				err = fmt.Errorf("%s + %s", err, tearDownErr)
+			}
 			return err
 
 		case <-sigChan:
 			glog.V(2).Infof("Stop polling for the status of %s", unitName)
-			return nil
+
+			return jt.StopTail()
 
 		case <-displayChan.C:
-			glog.V(2).Infof("Still polling the status of %s ...", unitName)
+			glog.V(3).Infof("Still polling the status of %s ...", unitName)
 		}
 	}
 }
