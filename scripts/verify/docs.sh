@@ -7,7 +7,7 @@ set -e
 
 cd $(dirname $0)/../..
 
-make gen-docs
+make docs
 
 DIFF=$(git diff docs/)
 if [[ "${DIFF}x" != "x" ]]
