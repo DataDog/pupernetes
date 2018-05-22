@@ -21,6 +21,11 @@ import (
 const (
 	validHostnameRegex     = `[a-z0-9]([-a-z0-9]*[a-z0-9])?`
 	invalidHostnameMessage = `a DNS-1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com', regex used for validation is ` + validHostnameRegex
+
+	awsMetadataEndpoint = "http://169.254.169.254/latest/meta-data"
+	awsLocalHostname    = awsMetadataEndpoint + "/local-hostname"
+	awsPublicHostname   = awsMetadataEndpoint + "/public-hostname"
+	awsLocalIpv4        = awsMetadataEndpoint + "/local-ipv4"
 )
 
 var hostnameRegex = regexp.MustCompile(validHostnameRegex)
@@ -51,30 +56,36 @@ func checkHostname(hostname string) error {
 	}
 	_, err := net.LookupHost(hostname)
 	if err == nil {
-		glog.V(4).Infof("Valid hostname: %q", hostname)
+		glog.V(2).Infof("Using hostname: %q", hostname)
 		return nil
 	}
 	glog.Errorf("Fail to lookup host: %s", err)
 	return err
 }
 
-func getAWSHostname() (string, error) {
-	glog.V(2).Infof("Trying AWS hostname ...")
-	c := &http.Client{
-		Timeout: time.Second,
-	}
-	resp, err := c.Get("http://169.254.169.254/latest/meta-data/hostname")
+func getAWSHostname(url string) (string, error) {
+	glog.V(2).Infof("Trying AWS hostname on %s ...", url)
+	c := &http.Client{Timeout: time.Second}
+	resp, err := c.Get(url)
 	if err != nil {
 		glog.Errorf("Fail to reach AWS metadata: %v", err)
 		return "", err
 	}
+
+	if resp.StatusCode != http.StatusOK {
+		err = fmt.Errorf("unexpected status code on %s: %d", url, resp.StatusCode)
+		glog.Errorf("Cannot GET AWS endpoint: %v", err)
+		return "", err
+	}
+
 	defer resp.Body.Close()
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		glog.Errorf("Cannot read the AWS metadata response: %v", err)
 		return "", err
 	}
-	return string(b), nil
+	hostname := string(b)
+	return hostname, checkHostname(hostname)
 }
 
 func (e *Environment) setupHostname() error {
@@ -88,16 +99,16 @@ func (e *Environment) setupHostname() error {
 		return nil
 	}
 
-	hostname, err = getAWSHostname()
-	if err != nil {
-		return err
+	for _, ep := range []string{
+		awsLocalHostname,
+		awsPublicHostname,
+		awsLocalIpv4,
+	} {
+		hostname, err = getAWSHostname(ep)
+		if err == nil {
+			e.hostname = hostname
+			return nil
+		}
 	}
-
-	err = checkHostname(hostname)
-	if err == nil {
-		e.hostname = hostname
-		return nil
-	}
-
 	return err
 }
