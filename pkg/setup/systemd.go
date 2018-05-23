@@ -207,7 +207,7 @@ func (e *Environment) createKubeletUnit() error {
 				"--healthz-port=" + strconv.Itoa(e.GetKubeletHealthzPort()), // TODO conf this
 				"--cert-dir=" + path.Join(e.kubeletRootDir, "pki"),          // not used
 				"--kubeconfig=" + e.GetKubeconfigInsecurePath(),
-				`--cloud-provider=""`,
+				`--cloud-provider="` + e.cloudProvider + `"`,
 
 				"--resolv-conf=" + e.GetResolvConfPath(),
 				"--cluster-dns=" + e.dnsClusterIP.String(),

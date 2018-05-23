@@ -92,6 +92,8 @@ type Environment struct {
 	vaultRootToken string
 
 	kubectlLink string
+
+	cloudProvider string
 }
 
 type templateMetadata struct {
@@ -132,6 +134,7 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		etcdDataABSPath:        path.Join(rootABSPath, defaultEtcdDataDirName),
 		cleanOptions:           options.NewCleanOptions(config.ViperConfig.GetString("clean")),
 		drainOptions:           options.NewDrainOptions(config.ViperConfig.GetString("drain")),
+		cloudProvider:          config.ViperConfig.GetString("cloud-provider"),
 	}
 
 	// Kubernetes
