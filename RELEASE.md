@@ -54,16 +54,24 @@ git checkout master
 git pull
 ```
 
-Tag the release with the new version (e.g. v0.3):
+Tag the release with the new version (e.g. v0.3.0):
 ```bash
-git tag v0.3
+git tag v0.3.0
 git push --tags
 ```
 
-The minor version should be incremented by one like:
+Pupernetes follows Semantic Versionning ([_SemVer_](https://semver.org/)):
 ```text
-0.1 -> 0.2
-0.9 -> 0.10
+# Patch update
+0.3.0 -> 0.3.1
+
+# Minor update
+0.3.0 -> 0.4.0
+0.9.0 -> 0.10.0
+
+# Major update
+0.3.0 -> 1.0.0
+1.15.4 -> 2.0.0
 ...
 ```
 
