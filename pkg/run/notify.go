@@ -32,7 +32,11 @@ func notifySystemd() error {
 		return err
 	}
 	if cgoDisabled {
-		glog.V(2).Infof("Compiled with CGO_ENABLED=0, unable to ack the systemd notify. PPID is %d", os.Getppid())
+		v := glog.Level(2)
+		if os.Getppid() != 1 {
+			v = 3
+		}
+		glog.V(v).Infof("Compiled with CGO_ENABLED=0, unable to ack the systemd notify. PPID is %d", os.Getppid())
 		return nil
 	}
 	if !sent {
