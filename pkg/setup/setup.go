@@ -132,6 +132,7 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		etcdDataABSPath:        path.Join(rootABSPath, defaultEtcdDataDirName),
 		cleanOptions:           options.NewCleanOptions(config.ViperConfig.GetString("clean")),
 		drainOptions:           options.NewDrainOptions(config.ViperConfig.GetString("drain")),
+		kubectlLink:            config.ViperConfig.GetString("kubectl-link"),
 	}
 
 	// Kubernetes
@@ -206,17 +207,6 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 	if e.vaultRootToken == "" {
 		e.vaultRootToken = util.RandStringBytesMaskImprSrc(20)
 		glog.V(4).Infof("Generated the vault root-token of length: %d", len(e.vaultRootToken))
-	}
-
-	// Kubectl link
-	e.kubectlLink = config.ViperConfig.GetString("kubectl-link")
-	if e.kubectlLink == "" {
-		return e, nil
-	}
-	_, err = os.Stat(e.kubectlLink)
-	if err == nil {
-		err = fmt.Errorf("cannot use as kubectl-link: %s already exists", e.kubectlLink)
-		return e, err
 	}
 	return e, nil
 }

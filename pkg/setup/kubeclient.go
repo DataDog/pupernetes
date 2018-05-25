@@ -125,8 +125,25 @@ func (e *Environment) createKubectlLink() error {
 	if e.kubectlLink == "" {
 		return nil
 	}
-	glog.V(4).Infof("Creating a kubectl link %s -> %s", e.GetHyperkubePath(), e.kubectlLink)
-	err := os.Symlink(e.GetHyperkubePath(), e.kubectlLink)
+	glog.V(4).Infof("Creating a kubectl link %s -> %s", e.kubectlLink, e.GetHyperkubePath())
+	_, err := os.Stat(e.kubectlLink)
+	if err == nil {
+		target, err := os.Readlink(e.kubectlLink)
+		if err != nil {
+			glog.Errorf("Unexpected error: %v", err)
+			return err
+		}
+		glog.V(4).Infof("Already existent link: %s -> %s", e.kubectlLink, target)
+		if target != e.GetHyperkubePath() {
+			err = fmt.Errorf("link %s already created and pointing to %s", e.kubectlLink, target)
+			glog.Errorf("Unexpected error: %v, please remove %s", err, e.kubectlLink)
+			return err
+		}
+		glog.V(3).Infof("Already valid link: %s -> %s", e.kubectlLink, target)
+		return nil
+	}
+
+	err = os.Symlink(e.GetHyperkubePath(), e.kubectlLink)
 	if err != nil {
 		glog.Errorf("Cannot create kubectl link: %v", err)
 		return err
