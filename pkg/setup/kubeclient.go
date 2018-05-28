@@ -191,7 +191,7 @@ func (e *Environment) setupKubeletClient() error {
 
 func (e *Environment) setupAPIServerClient() error {
 	var err error
-	glog.V(4).Infof("Building restConfig from %s", e.GetKubeconfigAuthPath())
+	glog.V(4).Infof("Building restConfig from %s", e.GetKubeconfigInsecurePath())
 	e.restConfig, err = clientcmd.BuildConfigFromFlags("", e.GetKubeconfigInsecurePath())
 	if err != nil {
 		glog.Errorf("Cannot build restConfig: %v", err)
