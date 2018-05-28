@@ -100,7 +100,7 @@ func (e *Environment) Clean() error {
 		toRemove = append(toRemove, e.etcdDataABSPath)
 	}
 	if e.cleanOptions.Manifests {
-		toRemove = append(toRemove, e.manifestTemplatesABSPath, e.manifestStaticPodABSPath, e.manifestAPIABSPath, e.manifestConfigABSPath)
+		toRemove = append(toRemove, e.manifestTemplatesABSPath, e.manifestStaticPodABSPath, e.manifestAPIABSPath, e.manifestConfigABSPath, e.manifestSystemdUnit)
 	}
 	if e.cleanOptions.Binaries {
 		toRemove = append(toRemove, e.binABSPath)

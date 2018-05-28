@@ -176,82 +176,19 @@ func (e *Environment) createEnd2EndSection() []*unit2.UnitOption {
 }
 
 func (e *Environment) createKubeletUnit() error {
-	networkPluginArgs := ""
-	if !e.isDockerBridge {
-		networkPluginArgs = "--network-plugin=cni"
+	fd, err := os.OpenFile(path.Join(e.manifestSystemdUnit, "kubelet.service"), os.O_RDONLY, 0)
+	if err != nil {
+		glog.Errorf("Cannot read kubelet.service: %v", err)
+		return err
 	}
-	sdKubelet := []*unit2.UnitOption{
-		{
-			Section: "Unit",
-			Name:    "Description",
-			Value:   "Hyperkube kubelet for pupernetes",
-		},
-		{
-			Section: "Unit",
-			Name:    "After",
-			Value:   "network.target",
-		},
-		{
-			Section: "Service",
-			Name:    "ExecStart",
-			Value: strings.Join([]string{
-				e.binaryHyperkube.binaryABSPath,
-				"kubelet",
-				"--v=4",
-				"--allow-privileged",
-				"--fail-swap-on=false",
-				"--hairpin-mode=none",
-				"--pod-manifest-path=" + e.manifestStaticPodABSPath,
-				"--hostname-override=" + e.GetHostname(),
-				"--root-dir=" + e.kubeletRootDir,
-				"--healthz-port=" + strconv.Itoa(e.GetKubeletHealthzPort()), // TODO conf this
-				"--cert-dir=" + path.Join(e.kubeletRootDir, "pki"),          // not used
-				"--kubeconfig=" + e.GetKubeconfigInsecurePath(),
-				`--cloud-provider=""`,
-
-				"--resolv-conf=" + e.GetResolvConfPath(),
-				"--cluster-dns=" + e.dnsClusterIP.String(),
-				"--cluster-domain=cluster.local",
-
-				"--cert-dir=" + path.Join(e.secretsABSPath),
-				"--client-ca-file=" + path.Join(e.secretsABSPath, "kubernetes.issuing_ca"),
-				// TODO dedicated certs
-				"--tls-cert-file=" + path.Join(e.secretsABSPath, "kubernetes.certificate"),
-				"--tls-private-key-file=" + path.Join(e.secretsABSPath, "kubernetes.private_key"),
-
-				"--read-only-port=0",
-				"--anonymous-auth=false",
-
-				"--authentication-token-webhook",
-				"--authentication-token-webhook-cache-ttl=5s",
-				"--authorization-mode=Webhook",
-
-				//"--cni-conf-dir=" + e.networkABSPath, // no-op if
-				//"--cni-bin-dir=" + e.binABSPath,      // --network-plugin is unset
-				networkPluginArgs, // TODO
-
-				"--cadvisor-port=" + config.ViperConfig.GetString("kubelet-cadvisor-port"), // TODO switch to a catalog
-				"--cgroups-per-qos=true",                                                   // TODO
-				"--max-pods=60",
-				"--node-ip=" + e.outboundIP.String(),
-				"--node-labels=p8s=mononode",
-				"--application-metrics-count-limit=50",
-			},
-				" "),
-		},
-		{
-			Section: "Service",
-			Name:    "Restart",
-			Value:   "no",
-		},
-		{
-			Section: customSystemdSection,
-			Name:    "ProbeURL",
-			Value:   fmt.Sprintf("http://127.0.0.1:10248/healthz"),
-		},
+	defer fd.Close()
+	sdKubelet, err := unit2.Deserialize(fd)
+	if err != nil {
+		glog.Errorf("Unexpected error during parsing kubelet.service: %v", err)
+		return err
 	}
 	sdKubelet = append(sdKubelet, e.systemdEnd2EndSection...)
-	err := e.writeSystemdUnit(sdKubelet, fmt.Sprintf("%skubelet.service", config.ViperConfig.GetString("systemd-unit-prefix")))
+	err = e.writeSystemdUnit(sdKubelet, fmt.Sprintf("%skubelet.service", config.ViperConfig.GetString("systemd-unit-prefix")))
 	if err != nil {
 		return err
 	}
@@ -285,7 +222,6 @@ func (e *Environment) createEtcdUnit() error {
 				"--auto-compaction-retention=0",
 				"--quota-backend-bytes=0",
 				"--metrics=basic",
-				// TODO use dedicated certs
 				"--ca-file=" + path.Join(e.secretsABSPath, "etcd.issuing_ca"),
 				"--cert-file=" + path.Join(e.secretsABSPath, "etcd.certificate"),
 				"--key-file=" + path.Join(e.secretsABSPath, "etcd.private_key"),
