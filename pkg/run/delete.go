@@ -107,6 +107,29 @@ func (r *Runtime) deleteReplicaSets(namespaces *corev1.NamespaceList) error {
 	return nil
 }
 
+func (r *Runtime) deleteJobs(namespaces *corev1.NamespaceList) error {
+	var errs []string
+	for _, ns := range namespaces.Items {
+		toDelete, err := r.env.GetKubernetesClient().BatchV1().Jobs(ns.Name).List(v1.ListOptions{})
+		if err != nil {
+			glog.Errorf("Cannot get Jobs -n %s: %v", ns.Name, err)
+			return err
+		}
+		glog.V(4).Infof("Deleting %d Jobs in ns %q ...", len(toDelete.Items), ns.Name)
+		for _, elt := range toDelete.Items {
+			err = r.env.GetKubernetesClient().BatchV1().Jobs(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
+			if err != nil && !errors.IsNotFound(err) {
+				glog.Errorf("Cannot delete Jobs %s -n %q: %v", elt.Name, elt.Namespace, err)
+				errs = append(errs, err.Error())
+			}
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("unexpected errors during delete Jobs: %s", strings.Join(errs, ", "))
+	}
+	return nil
+}
+
 func (r *Runtime) deletePods(namespaces *corev1.NamespaceList) error {
 	var errs []string
 	for _, ns := range namespaces.Items {
@@ -132,6 +155,7 @@ func (r *Runtime) deletePods(namespaces *corev1.NamespaceList) error {
 
 func (r *Runtime) DeleteAPIManifests(namespaces *corev1.NamespaceList) error {
 	fnList := []func(ns *corev1.NamespaceList) error{
+		r.deleteJobs,
 		r.deleteDeployments,
 		r.deleteDaemonset,
 		r.deleteReplicationController,
