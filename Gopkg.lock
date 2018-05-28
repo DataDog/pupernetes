@@ -141,6 +141,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/hashicorp/go-sockaddr"
+  packages = ["."]
+  revision = "6d291a969b86c4b633730bfc6b8b9d64c3aafed9"
+
+[[projects]]
+  branch = "master"
   name = "github.com/hashicorp/hcl"
   packages = [
     ".",
@@ -165,8 +171,8 @@
     "helper/parseutil",
     "helper/strutil"
   ]
-  revision = "5dd7f25f5c4b541f2da62d70075b6f82771a650d"
-  version = "v0.10.0"
+  revision = "756fdc4587350daf1c65b93647b2cc31a6f119cd"
+  version = "v0.10.1"
 
 [[projects]]
   branch = "master"

@@ -29,6 +29,7 @@ core,"github.com/hashicorp/errwrap",MPL-2.0
 core,"github.com/hashicorp/go-cleanhttp",MPL-2.0
 core,"github.com/hashicorp/go-multierror",MPL-2.0
 core,"github.com/hashicorp/go-rootcerts",MPL-2.0
+core,"github.com/hashicorp/go-sockaddr",MPL-2.0
 core,"github.com/hashicorp/hcl",MPL-2.0
 core,"github.com/hashicorp/hcl/hcl/ast",MPL-2.0
 core,"github.com/hashicorp/hcl/hcl/parser",MPL-2.0
