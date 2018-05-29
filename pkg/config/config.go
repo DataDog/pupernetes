@@ -44,7 +44,5 @@ func init() {
 
 	ViperConfig.SetDefault("systemd-job-name", "pupernetes")
 
-	ViperConfig.SetDefault("kubelet-cadvisor-port", 0)
-
 	ViperConfig.SetDefault("apply", false)
 }
