@@ -70,11 +70,13 @@ jobs:
 
       - run:
           name: already-setup
-          command: sudo ./pupernetes setup sandbox/
+          # As it's already setup, pupernetes should be very fast
+          command: sudo timeout 10 ./pupernetes setup sandbox/
 
       - run:
           name: clean-setup
-          command: sudo ./pupernetes setup sandbox/ -c etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets,systemd
+          # As we kept the binaries, pupernetes should be very fast
+          command: sudo timeout 10 ./pupernetes setup sandbox/ -c etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets,systemd
 
 workflows:
   version: 2
