@@ -7,12 +7,12 @@ templates:
     working_directory: /go/src/github.com/DataDog/pupernetes
 
 jobs:
-  build:
+  make:
     <<: *job_template
     steps:
       - checkout
       - run:
-          name: build
+          name: make
           command: make
 
   tests:
@@ -20,27 +20,84 @@ jobs:
     steps:
       - checkout
       - run:
-          name: run tests
+          name: tests
           command: make check
 
-  verify:
+  gofmt:
     <<: *job_template
     steps:
       - checkout
       - run:
           name: verify-gofmt
           command: make verify-gofmt
+
+  docs:
+    <<: *job_template
+    steps:
+      - checkout
       - run:
           name: verify-docs
           command: make verify-docs
+
+  license:
+    <<: *job_template
+    steps:
+      - checkout
       - run:
           name: verify-license
           command: make verify-license
 
+  setup:
+    machine: true
+    working_directory: /home/circleci/.go_workspace/src/github.com/DataDog/pupernetes
+    environment:
+      CFLAGS: ""
+      CGO_ENABLED: "1"
+      DEBIAN_FRONTEND: "noninteractive"
+    steps:
+      - checkout
+      - run:
+          name: make
+          command: make
+
+      - run:
+          name: apt
+          command: sudo apt-get update -q && sudo apt-get install -yq systemd
+
+      - run:
+          name: setup
+          command: sudo ./pupernetes setup sandbox/
+
+      - run:
+          name: already-setup
+          # As it's already setup, pupernetes should be very fast
+          command: sudo timeout 10 ./pupernetes setup sandbox/
+
+      - run:
+          name: clean-setup
+          # As we kept the binaries, pupernetes should be very fast
+          command: sudo timeout 10 ./pupernetes setup sandbox/ -c etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets,systemd
+
+      - run:
+          name: clean
+          command: sudo ./pupernetes clean sandbox/ -c all
+
 workflows:
   version: 2
-  build_test_verify:
+  tests:
     jobs:
       - tests
-      - verify
-      - build
+
+  build:
+    jobs:
+      - make
+
+  verify:
+    jobs:
+      - gofmt
+      - docs
+      - license
+
+  cli:
+    jobs:
+      - setup
