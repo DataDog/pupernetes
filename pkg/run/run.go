@@ -81,6 +81,10 @@ func (r *Runtime) Run() error {
 	if err != nil {
 		return err
 	}
+	err = r.startUnit(fmt.Sprintf("%skube-apiserver.service", config.ViperConfig.GetString("systemd-unit-prefix")))
+	if err != nil {
+		return err
+	}
 	err = r.startUnit(fmt.Sprintf("%skubelet.service", config.ViperConfig.GetString("systemd-unit-prefix")))
 	if err != nil {
 		return err

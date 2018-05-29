@@ -100,7 +100,13 @@ func (e *Environment) Clean() error {
 		toRemove = append(toRemove, e.etcdDataABSPath)
 	}
 	if e.cleanOptions.Manifests {
-		toRemove = append(toRemove, e.manifestTemplatesABSPath, e.manifestStaticPodABSPath, e.manifestAPIABSPath, e.manifestConfigABSPath, e.manifestSystemdUnit)
+		toRemove = append(toRemove,
+			e.manifestTemplatesABSPath,
+			e.manifestStaticPodABSPath,
+			e.manifestAPIABSPath,
+			e.manifestConfigABSPath,
+			e.manifestSystemdUnit,
+		)
 	}
 	if e.cleanOptions.Binaries {
 		toRemove = append(toRemove, e.binABSPath)
@@ -112,8 +118,11 @@ func (e *Environment) Clean() error {
 		toRemove = append(toRemove, e.networkABSPath)
 	}
 	if e.cleanOptions.Systemd {
-		toRemove = append(toRemove, path.Join(UnitPath, fmt.Sprintf("%setcd.service", config.ViperConfig.GetString("systemd-unit-prefix"))))
-		toRemove = append(toRemove, path.Join(UnitPath, fmt.Sprintf("%skubelet.service", config.ViperConfig.GetString("systemd-unit-prefix"))))
+		toRemove = append(toRemove,
+			path.Join(UnitPath, fmt.Sprintf("%setcd.service", config.ViperConfig.GetString("systemd-unit-prefix"))),
+			path.Join(UnitPath, fmt.Sprintf("%skube-apiserver.service", config.ViperConfig.GetString("systemd-unit-prefix"))),
+			path.Join(UnitPath, fmt.Sprintf("%skubelet.service", config.ViperConfig.GetString("systemd-unit-prefix"))),
+		)
 	}
 	if e.cleanOptions.All {
 		toRemove = append(toRemove, e.rootABSPath)

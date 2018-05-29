@@ -25,7 +25,10 @@ const (
 	customSystemdSection = "X-p8s"
 )
 
-var fieldsToCompare = []string{"ExecStart", "RootPath"}
+var (
+	fieldsToCompare = []string{"ExecStart", "RootPath"}
+	neededUnits     = []string{"kubelet.service", "kube-apiserver.service", "etcd.service"}
+)
 
 func getUnitOptions(unitABSPath string) ([]*unit2.UnitOption, error) {
 	f, err := os.OpenFile(unitABSPath, os.O_RDONLY, 0)
@@ -128,7 +131,7 @@ func (e *Environment) writeSystemdUnit(unitOpt []*unit2.UnitOption, unitName str
 	c := unit2.Serialize(unitOpt)
 	b, err := ioutil.ReadAll(c)
 	if err != nil {
-		glog.Errorf("Cannot read kubelet systemd unit: %v", err)
+		glog.Errorf("Cannot read %s systemd unit: %v", unitName, err)
 		return err
 	}
 	err = ioutil.WriteFile(unitABSPath, b, 0444)
@@ -175,76 +178,20 @@ func (e *Environment) createEnd2EndSection() []*unit2.UnitOption {
 	}
 }
 
-func (e *Environment) createKubeletUnit() error {
-	fd, err := os.OpenFile(path.Join(e.manifestSystemdUnit, "kubelet.service"), os.O_RDONLY, 0)
+func (e *Environment) createUnitFromTemplate(unitName string) error {
+	fd, err := os.OpenFile(path.Join(e.manifestSystemdUnit, unitName), os.O_RDONLY, 0)
 	if err != nil {
-		glog.Errorf("Cannot read kubelet.service: %v", err)
+		glog.Errorf("Cannot read %s: %v", unitName, err)
 		return err
 	}
 	defer fd.Close()
-	sdKubelet, err := unit2.Deserialize(fd)
+	unitOptions, err := unit2.Deserialize(fd)
 	if err != nil {
-		glog.Errorf("Unexpected error during parsing kubelet.service: %v", err)
+		glog.Errorf("Unexpected error during parsing s: %v", unitName, err)
 		return err
 	}
-	sdKubelet = append(sdKubelet, e.systemdEnd2EndSection...)
-	err = e.writeSystemdUnit(sdKubelet, fmt.Sprintf("%skubelet.service", config.ViperConfig.GetString("systemd-unit-prefix")))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (e *Environment) createEtcdUnit() error {
-	sdKubelet := []*unit2.UnitOption{
-		{
-			Section: "Unit",
-			Name:    "Description",
-			Value:   "etcd for pupernetes",
-		},
-		{
-			Section: "Unit",
-			Name:    "After",
-			Value:   "network.target",
-		},
-		{
-			Section: "Service",
-			Name:    "Type",
-			Value:   "notify",
-		},
-		{
-			Section: "Service",
-			Name:    "ExecStart",
-			Value: strings.Join([]string{
-				e.binaryEtcd.binaryABSPath,
-				"--name=etcdv" + e.binaryEtcd.version,
-				"--data-dir=" + e.etcdDataABSPath,
-				"--auto-compaction-retention=0",
-				"--quota-backend-bytes=0",
-				"--metrics=basic",
-				"--ca-file=" + path.Join(e.secretsABSPath, "etcd.issuing_ca"),
-				"--cert-file=" + path.Join(e.secretsABSPath, "etcd.certificate"),
-				"--key-file=" + path.Join(e.secretsABSPath, "etcd.private_key"),
-				"--client-cert-auth=true",
-				"--trusted-ca-file=" + path.Join(e.secretsABSPath, "etcd.issuing_ca"),
-				fmt.Sprintf("--listen-client-urls=http://127.0.0.1:2379,https://%s:2379", e.GetPublicIP()),
-				fmt.Sprintf("--advertise-client-urls=http://127.0.0.1:2379,https://%s:2379", e.GetPublicIP()),
-			},
-				" "),
-		},
-		{
-			Section: "Service",
-			Name:    "Restart",
-			Value:   "no",
-		},
-		{
-			Section: customSystemdSection,
-			Name:    "ProbeURL",
-			Value:   fmt.Sprintf("http://127.0.0.1:2379/health"),
-		},
-	}
-	sdKubelet = append(sdKubelet, e.systemdEnd2EndSection...)
-	err := e.writeSystemdUnit(sdKubelet, fmt.Sprintf("%setcd.service", config.ViperConfig.GetString("systemd-unit-prefix")))
+	unitOptions = append(unitOptions, e.systemdEnd2EndSection...)
+	err = e.writeSystemdUnit(unitOptions, fmt.Sprintf("%s%s", config.ViperConfig.GetString("systemd-unit-prefix"), unitName))
 	if err != nil {
 		return err
 	}
@@ -259,14 +206,12 @@ func (e *Environment) setupSystemd() error {
 	}
 	e.dbusClient = conn
 
-	err = e.createKubeletUnit()
-	if err != nil {
-		return err
-	}
-
-	err = e.createEtcdUnit()
-	if err != nil {
-		return err
+	for _, u := range neededUnits {
+		glog.V(4).Infof("Creating systemd unit %s ...", u)
+		err = e.createUnitFromTemplate(u)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = conn.Reload()

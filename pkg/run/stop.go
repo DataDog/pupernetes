@@ -175,6 +175,11 @@ func (r *Runtime) Stop() error {
 		return err
 	}
 
+	err = r.stopUnit(fmt.Sprintf("%skube-apiserver.service", config.ViperConfig.GetString("systemd-unit-prefix")))
+	if err != nil {
+		return err
+	}
+
 	err = r.stopUnit(fmt.Sprintf("%setcd.service", config.ViperConfig.GetString("systemd-unit-prefix")))
 	if err != nil {
 		return err

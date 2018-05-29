@@ -2,7 +2,6 @@ package templates
 
 var (
 	manifest1o10 = []Manifest{
-
 		{
 			Name:        "kubelet.service",
 			Destination: ManifestSystemdUnit,
@@ -45,7 +44,74 @@ ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
 Restart=no
 `),
 		},
+		{
+			Name:        "kube-apiserver.service",
+			Destination: ManifestSystemdUnit,
+			Content: []byte(`[Unit]
+Description=Hyperkube apiserver for pupernetes
+After=network.target
 
+[Service]
+ExecStart={{.RootABSPath}}/bin/hyperkube apiserver \
+	--apiserver-count=1 \
+	--insecure-bind-address=127.0.0.1 \
+	--insecure-port=8080 \
+	--allow-privileged=true \
+	--service-cluster-ip-range={{ .ServiceClusterIPRange }} \
+	--admission-control=NamespaceLifecycle,PodPreset,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \
+	--kubelet-preferred-address-types=InternalIP,LegacyHostIP,ExternalDNS,InternalDNS,Hostname \
+	--authorization-mode=RBAC \
+	--etcd-servers=http://127.0.0.1:2379 \
+	--anonymous-auth=false \
+	--service-account-lookup=true \
+	--runtime-config=api/all=true \
+	--client-ca-file={{.RootABSPath}}/secrets/kubernetes.issuing_ca \
+	--tls-ca-file={{.RootABSPath}}/secrets/kubernetes.issuing_ca \
+	--tls-cert-file={{.RootABSPath}}/secrets/kubernetes.certificate \
+	--tls-private-key-file={{.RootABSPath}}/secrets/kubernetes.private_key \
+	--service-account-key-file={{.RootABSPath}}/secrets/service-accounts.rsa \
+	--kubelet-client-certificate={{.RootABSPath}}/secrets/kubernetes.certificate \
+	--kubelet-client-key={{.RootABSPath}}/secrets/kubernetes.private_key \
+	--kubelet-https \
+	--kubelet-certificate-authority={{.RootABSPath}}/secrets/kubernetes.issuing_ca \
+	--target-ram-mb=0 \
+	--watch-cache=false \
+	--default-watch-cache-size=0 \
+	--watch-cache-sizes="" \
+	--deserialization-cache-size=0 \
+	--audit-log-path=- \
+	--audit-policy-file={{.RootABSPath}}/manifest-config/audit.yaml \
+	--etcd-compaction-interval=0 \
+	--event-ttl=10m \
+
+Restart=no
+`),
+		},
+		{
+			Name:        "etcd.service",
+			Destination: ManifestSystemdUnit,
+			Content: []byte(`[Unit]
+Description=etcd for pupernetes
+After=network.target
+
+[Service]
+ExecStart={{.RootABSPath}}/bin/etcd \
+	--name=etcdv3.1.11 \
+	--data-dir={{.RootABSPath}}/etcd-data \
+	--auto-compaction-retention=0 \
+	--quota-backend-bytes=0 \
+	--metrics=basic \
+	--ca-file={{.RootABSPath}}/secrets/etcd.issuing_ca \
+	--cert-file={{.RootABSPath}}/secrets/etcd.certificate \
+	--key-file={{.RootABSPath}}/secrets/etcd.private_key \
+	--client-cert-auth=true \
+	--trusted-ca-file={{.RootABSPath}}/secrets/etcd.issuing_ca \
+	--listen-client-urls=http://127.0.0.1:2379,https://{{ .NodeIP }}:2379 \
+	--advertise-client-urls=http://127.0.0.1:2379,https://{{ .NodeIP }}:2379 \
+
+Restart=no
+`),
+		},
 		{
 			Name:        "kubeconfig-auth.yaml",
 			Destination: ManifestConfig,
@@ -102,73 +168,6 @@ rules:
   resources:
   - group: ""
     resources: ["pods/log", "pods/exec"]
-`),
-		},
-		{
-			Name:        "kube-apiserver.yaml",
-			Destination: ManifestStaticPod,
-			Content: []byte(`---
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    app: kube-apiserver
-  name: kube-apiserver
-  namespace: kube-system
-spec:
-  hostNetwork: true
-  volumes:
-  - name: secrets
-    hostPath:
-      path: "{{.RootABSPath}}/secrets"
-  - name: config
-    hostPath:
-      path: "{{.RootABSPath}}/manifest-config"
-  containers:
-  - name: kube-apiserver
-    image: "{{ .HyperkubeImageURL }}"
-    imagePullPolicy: IfNotPresent
-    command:
-    - /hyperkube
-    - apiserver
-    - --apiserver-count=1
-    - --insecure-bind-address=127.0.0.1
-    - --insecure-port=8080
-    - --allow-privileged=true
-    - --service-cluster-ip-range={{ .ServiceClusterIPRange }}
-    - --admission-control=NamespaceLifecycle,PodPreset,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota
-    - --kubelet-preferred-address-types=InternalIP,LegacyHostIP,ExternalDNS,InternalDNS,Hostname
-    - --authorization-mode=RBAC
-    - --etcd-servers=http://127.0.0.1:2379
-    - --anonymous-auth=false
-    - --service-account-lookup=true
-    - --runtime-config=api/all=true
-    - --client-ca-file=/etc/secrets/kubernetes.issuing_ca
-    - --tls-ca-file=/etc/secrets/kubernetes.issuing_ca
-    - --tls-cert-file=/etc/secrets/kubernetes.certificate
-    - --tls-private-key-file=/etc/secrets/kubernetes.private_key
-    - --service-account-key-file=/etc/secrets/service-accounts.rsa
-    - --kubelet-client-certificate=/etc/secrets/kubernetes.certificate
-    - --kubelet-client-key=/etc/secrets/kubernetes.private_key
-    - --kubelet-https
-    - --kubelet-certificate-authority=/etc/secrets/kubernetes.issuing_ca
-    - --target-ram-mb=0
-    - --watch-cache=false
-    - --default-watch-cache-size=0
-    - --watch-cache-sizes=""
-    - --deserialization-cache-size=0
-    - --audit-log-path=-
-    - --audit-policy-file=/etc/kubernetes/audit.yaml
-    - --etcd-compaction-interval=0
-    - --event-ttl=10m
-
-    volumeMounts:
-      - name: secrets
-        mountPath: /etc/secrets
-      - name: config
-        mountPath: /etc/kubernetes/
-
-# SyncLoop doesn't support probes
 `),
 		},
 		{
