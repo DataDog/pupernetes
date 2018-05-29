@@ -60,7 +60,7 @@ func (r *Runtime) gracefulDeleteAPIResources() error {
 			}
 			staticPods := r.SearchStaticPods(stillRunningPods)
 			if len(staticPods) == len(stillRunningPods) {
-				glog.V(2).Infof("Kubelet run only %d static pods", len(staticPods))
+				glog.V(2).Infof("Kubelet run %d static pods", len(staticPods))
 				return nil
 			}
 			glog.V(3).Infof("Kubelet still reports %d API Pods", len(stillRunningPods)-len(staticPods))
