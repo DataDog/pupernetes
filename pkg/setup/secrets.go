@@ -113,16 +113,26 @@ func (e *Environment) createIntermediateCertificateAuthority(vRaw *vault.Client,
 		glog.V(4).Infof("%s:%s", key, val)
 	}
 
-	err = ioutil.WriteFile(path.Join(e.secretsABSPath, certificateAuthorityName+".certificate"), []byte(intermediateSec.Data["certificate"].(string)), 0444)
+	certificate := []byte(intermediateSec.Data["certificate"].(string))
+	issuingCA := []byte(intermediateSec.Data["issuing_ca"].(string))
+	err = ioutil.WriteFile(path.Join(e.secretsABSPath, certificateAuthorityName+".certificate"), certificate, 0444)
 	if err != nil {
 		glog.Errorf("Cannot write secret file: %v", err)
 		return err
 	}
-	err = ioutil.WriteFile(path.Join(e.secretsABSPath, certificateAuthorityName+".issuing_ca"), []byte(intermediateSec.Data["issuing_ca"].(string)), 0444)
+	err = ioutil.WriteFile(path.Join(e.secretsABSPath, certificateAuthorityName+".issuing_ca"), issuingCA, 0444)
 	if err != nil {
 		glog.Errorf("Cannot write secret file: %v", err)
 		return err
 	}
+
+	// Creating the pem_bundle
+	err = ioutil.WriteFile(path.Join(e.secretsABSPath, certificateAuthorityName+".bundle"), append(certificate, issuingCA...), 0444)
+	if err != nil {
+		glog.Errorf("Cannot write secret file: %v", err)
+		return err
+	}
+
 	glog.V(4).Infof("Wrote all needed files for %s CA", certificateAuthorityName)
 	return nil
 }
@@ -174,7 +184,8 @@ func (e *Environment) generateVaultPKI() error {
 	// Intermediate CA - kube-controller-manager
 	err = e.createIntermediateCertificateAuthority(vRaw, vClient, "kube-controller-manager")
 	if err != nil {
-		glog.Errorf("Fail to create the Intermediate CA")
+		glog.Errorf("Fail to create the Intermediate CA: %v", err)
+		return err
 	}
 
 	// Prepare the role / issue configuration
