@@ -91,14 +91,13 @@ func newOptions(stringOptions string, opt interface{}) interface{} {
 			setNone(opt)
 			return opt
 
+		case "common":
+			glog.Warningf("Cannot use %q as option", elt)
+			continue
+
 		default:
 			if !containsString(availableOptions, elt) {
 				glog.Warningf("Cannot use %q as option it's not in %s", elt, availableOptions)
-				continue
-			}
-			if elt == "common" {
-				// TODO maybe return an error here ?
-				glog.Warningf("Cannot use %q as option", elt)
 				continue
 			}
 			elt = strings.Title(elt)
