@@ -56,7 +56,6 @@ pupernetes daemon run state/ --job-type systemd
       --etcd-version string          etcd version (default "3.1.11")
       --hyperkube-version string     hyperkube version (default "1.10.1")
       --kubectl-link string          Path to create a kubectl link
-      --kubelet-cadvisor-port int    enable kubelet cAdvisor on port
       --kubelet-root-dir string      directory path for managing kubelet files (default "/var/lib/p8s-kubelet")
       --systemd-unit-prefix string   prefix for systemd unit name (default "p8s-")
       --vault-version string         vault version (default "0.9.5")

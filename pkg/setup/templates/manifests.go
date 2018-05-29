@@ -28,7 +28,7 @@ func init() {
 	Manifests["1.10"] = manifest1o10
 	Manifests["1.9"] = manifest1o9
 	Manifests["1.8"] = manifest1o8
-	//Manifests["1.7"] = manifest1o7
+	Manifests["1.7"] = manifest1o7
 	//Manifests["1.6"] = manifest1o6
 	//Manifests["1.5"] = manifest1o5
 	//Manifests["1.4"] = manifest1o4
