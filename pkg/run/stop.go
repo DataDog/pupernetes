@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/DataDog/pupernetes/pkg/config"
+	"github.com/DataDog/pupernetes/pkg/util"
 	"github.com/golang/glog"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -153,7 +153,7 @@ func (r *Runtime) cleanIptables() error {
 	b, err := exec.Command(r.env.GetHyperkubePath(), "proxy", "--cleanup").CombinedOutput()
 	output := string(b)
 	if err != nil {
-		glog.V(4).Infof("Issue during kube-proxy --cleanup: %s, %v", output, err)
+		glog.V(5).Infof("Issue during kube-proxy --cleanup: %s, %v", output, err)
 		return err
 	}
 	return nil
@@ -170,19 +170,11 @@ func (r *Runtime) Stop() error {
 		glog.Errorf("Failed to stop kubelet: %v", err)
 	}
 
-	err = r.stopUnit(fmt.Sprintf("%skubelet.service", config.ViperConfig.GetString("systemd-unit-prefix")))
-	if err != nil {
-		return err
-	}
-
-	err = r.stopUnit(fmt.Sprintf("%skube-apiserver.service", config.ViperConfig.GetString("systemd-unit-prefix")))
-	if err != nil {
-		return err
-	}
-
-	err = r.stopUnit(fmt.Sprintf("%setcd.service", config.ViperConfig.GetString("systemd-unit-prefix")))
-	if err != nil {
-		return err
+	for _, u := range r.env.GetSystemdUnits() {
+		err = util.StopUnit(r.env.GetDBUSClient(), u)
+		if err != nil {
+			return err
+		}
 	}
 
 	// ignore any error here

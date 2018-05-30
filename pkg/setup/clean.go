@@ -8,16 +8,16 @@ package setup
 import (
 	"os"
 	"os/exec"
-	"path"
 	"strings"
 	"syscall"
 
-	"fmt"
-	"github.com/DataDog/pupernetes/pkg/config"
+	"github.com/DataDog/pupernetes/pkg/util"
+	"github.com/coreos/go-systemd/dbus"
 	"github.com/golang/glog"
 )
 
 func remove(path string) error {
+	glog.V(4).Infof("Trying to remove %s ...", path)
 	_, err := os.Stat(path)
 	if err != nil && os.IsNotExist(err) {
 		glog.V(4).Infof("Not existing path: %s", path)
@@ -118,11 +118,23 @@ func (e *Environment) Clean() error {
 		toRemove = append(toRemove, e.networkABSPath)
 	}
 	if e.cleanOptions.Systemd {
-		toRemove = append(toRemove,
-			path.Join(UnitPath, fmt.Sprintf("%setcd.service", config.ViperConfig.GetString("systemd-unit-prefix"))),
-			path.Join(UnitPath, fmt.Sprintf("%skube-apiserver.service", config.ViperConfig.GetString("systemd-unit-prefix"))),
-			path.Join(UnitPath, fmt.Sprintf("%skubelet.service", config.ViperConfig.GetString("systemd-unit-prefix"))),
-		)
+		glog.V(3).Infof("Tear down systemd")
+		conn, err := dbus.NewSystemdConnection()
+		if err != nil {
+			glog.Errorf("Cannot connect to dbus: %v", err)
+			return err
+		}
+		defer conn.Reload()
+		defer conn.Close()
+		for _, u := range e.systemdUnitNames {
+			toRemove = append(toRemove, UnitPath+u)
+			glog.Errorf("%s", UnitPath+u)
+			err = util.StopUnit(conn, u)
+			if err != nil {
+				glog.Errorf("Cannot tear down systemd unit %s: %v", u, err)
+				// don't return
+			}
+		}
 	}
 	if e.cleanOptions.All {
 		toRemove = append(toRemove, e.rootABSPath)
@@ -139,10 +151,10 @@ func (e *Environment) Clean() error {
 		toRemove = append(toRemove, KubeletCRILogPath)
 	}
 
-	for _, dir := range toRemove {
-		err := remove(dir)
+	for _, elt := range toRemove {
+		err := remove(elt)
 		if err != nil {
-			if dir == e.kubeletRootDir && strings.Contains(err.Error(), "device or resource busy") {
+			if elt == e.kubeletRootDir && strings.Contains(err.Error(), "device or resource busy") {
 				glog.Warningf("Mounts still present in %s ?", e.kubeletRootDir)
 				continue
 			}

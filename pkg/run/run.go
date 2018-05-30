@@ -16,6 +16,7 @@ import (
 	"github.com/DataDog/pupernetes/pkg/api"
 	"github.com/DataDog/pupernetes/pkg/config"
 	"github.com/DataDog/pupernetes/pkg/setup"
+	"github.com/DataDog/pupernetes/pkg/util"
 	"github.com/golang/glog"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -77,17 +78,11 @@ func (r *Runtime) Run() error {
 
 	go r.api.ListenAndServe()
 
-	err := r.startUnit(fmt.Sprintf("%setcd.service", config.ViperConfig.GetString("systemd-unit-prefix")))
-	if err != nil {
-		return err
-	}
-	err = r.startUnit(fmt.Sprintf("%skube-apiserver.service", config.ViperConfig.GetString("systemd-unit-prefix")))
-	if err != nil {
-		return err
-	}
-	err = r.startUnit(fmt.Sprintf("%skubelet.service", config.ViperConfig.GetString("systemd-unit-prefix")))
-	if err != nil {
-		return err
+	for _, u := range r.env.GetSystemdUnits() {
+		err := util.StartUnit(r.env.GetDBUSClient(), u)
+		if err != nil {
+			return err
+		}
 	}
 
 	// TODO check the state of p8s-kubelet.service few seconds after: because it doesn't use sd_notify(3)
@@ -171,13 +166,13 @@ func (r *Runtime) Run() error {
 				continue
 			}
 			// Check if the kube-apiserver is healthy
-			err = r.httpProbe("http://127.0.0.1:8080/healthz")
+			err := r.httpProbe("http://127.0.0.1:8080/healthz")
 			if err != nil {
 				r.state.setAPIServerProbeLastError(err.Error())
 				continue
 			}
 			// kubectl apply -f manifests-api
-			err := r.applyManifests()
+			err = r.applyManifests()
 			if err != nil {
 				// TODO do we trigger an exit at some point
 				// TODO because it's almost a deadlock if the user didn't set a short --timeoutTimer

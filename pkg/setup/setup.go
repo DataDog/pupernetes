@@ -62,8 +62,16 @@ type Environment struct {
 	cleanOptions *options.Clean
 	drainOptions *options.Drain
 
-	hostname   string
-	dbusClient *dbus.Conn
+	hostname string
+
+	// Systemd
+	dbusClient        *dbus.Conn
+	systemdUnitPrefix string
+
+	etcdUnitName          string
+	kubeletUnitName       string
+	kubeAPIServerUnitName string
+	systemdUnitNames      []string
 
 	// executable dependencies
 	binaryHyperkube *exeBinary
@@ -143,8 +151,18 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		cleanOptions:           options.NewCleanOptions(config.ViperConfig.GetString("clean")),
 		drainOptions:           options.NewDrainOptions(config.ViperConfig.GetString("drain")),
 		kubectlLink:            config.ViperConfig.GetString("kubectl-link"),
+
+		systemdUnitPrefix:     config.ViperConfig.GetString("systemd-unit-prefix"),
+		etcdUnitName:          config.ViperConfig.GetString("systemd-unit-prefix") + "etcd.service",
+		kubeletUnitName:       config.ViperConfig.GetString("systemd-unit-prefix") + "kubelet.service",
+		kubeAPIServerUnitName: config.ViperConfig.GetString("systemd-unit-prefix") + "kube-apiserver.service",
 	}
 
+	e.systemdUnitNames = []string{
+		e.etcdUnitName,
+		e.kubeletUnitName,
+		e.kubeAPIServerUnitName,
+	}
 	// Kubernetes
 	e.binaryHyperkube = &exeBinary{
 		depBinary: depBinary{

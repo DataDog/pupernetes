@@ -14,20 +14,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DataDog/pupernetes/pkg/config"
 	"github.com/coreos/go-systemd/dbus"
 	unit2 "github.com/coreos/go-systemd/unit"
 	"github.com/golang/glog"
 )
 
 const (
-	UnitPath             = "/run/systemd/system"
+	UnitPath             = "/run/systemd/system/"
 	customSystemdSection = "X-p8s"
 )
 
 var (
 	fieldsToCompare = []string{"ExecStart", "RootPath"}
-	neededUnits     = []string{"kubelet.service", "kube-apiserver.service", "etcd.service"}
 )
 
 func getUnitOptions(unitABSPath string) ([]*unit2.UnitOption, error) {
@@ -116,6 +114,11 @@ func (e *Environment) writeSystemdUnit(unitOpt []*unit2.UnitOption, unitName str
 			return err
 		}
 		if !e.isUnitUpToDate(onDiskOpts, unitOpt) {
+			if e.cleanOptions.Systemd {
+				err = fmt.Errorf("non uptodate systemd unit %s", unitABSPath)
+				glog.Errorf("Unexpected error: %v", err)
+				return err
+			}
 			glog.Warningf(`The already created unit %q doesn't match the generated one, used clean options are %q use instead "%s,systemd"`, unitName, e.cleanOptions.StringCLI(), e.cleanOptions.StringCLI())
 		}
 		err = statExecStart(onDiskOpts)
@@ -179,19 +182,20 @@ func (e *Environment) createEnd2EndSection() []*unit2.UnitOption {
 }
 
 func (e *Environment) createUnitFromTemplate(unitName string) error {
-	fd, err := os.OpenFile(path.Join(e.manifestSystemdUnit, unitName), os.O_RDONLY, 0)
+	unitNameNoPrefix := strings.TrimPrefix(unitName, e.systemdUnitPrefix)
+	fd, err := os.OpenFile(path.Join(e.manifestSystemdUnit, unitNameNoPrefix), os.O_RDONLY, 0)
 	if err != nil {
-		glog.Errorf("Cannot read %s: %v", unitName, err)
+		glog.Errorf("Cannot read %s: %v", unitNameNoPrefix, err)
 		return err
 	}
 	defer fd.Close()
 	unitOptions, err := unit2.Deserialize(fd)
 	if err != nil {
-		glog.Errorf("Unexpected error during parsing s: %v", unitName, err)
+		glog.Errorf("Unexpected error during parsing s: %v", unitNameNoPrefix, err)
 		return err
 	}
 	unitOptions = append(unitOptions, e.systemdEnd2EndSection...)
-	err = e.writeSystemdUnit(unitOptions, fmt.Sprintf("%s%s", config.ViperConfig.GetString("systemd-unit-prefix"), unitName))
+	err = e.writeSystemdUnit(unitOptions, unitName)
 	if err != nil {
 		return err
 	}
@@ -206,7 +210,7 @@ func (e *Environment) setupSystemd() error {
 	}
 	e.dbusClient = conn
 
-	for _, u := range neededUnits {
+	for _, u := range e.systemdUnitNames {
 		glog.V(4).Infof("Creating systemd unit %s ...", u)
 		err = e.createUnitFromTemplate(u)
 		if err != nil {

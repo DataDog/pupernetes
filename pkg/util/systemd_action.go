@@ -3,12 +3,13 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2018 Datadog, Inc.
 
-package run
+package util
 
 import (
 	"fmt"
 	"time"
 
+	"github.com/coreos/go-systemd/dbus"
 	"github.com/golang/glog"
 )
 
@@ -36,12 +37,12 @@ func executeSystemdAction(unitName string, systemdAction func(string, string, ch
 	}
 }
 
-func (r *Runtime) startUnit(unitName string) error {
+func StartUnit(d *dbus.Conn, unitName string) error {
 	glog.Infof("Starting systemd unit: %s ...", unitName)
-	return executeSystemdAction(unitName, r.env.GetDBUSClient().StartUnit)
+	return executeSystemdAction(unitName, d.StartUnit)
 }
 
-func (r *Runtime) stopUnit(unitName string) error {
+func StopUnit(d *dbus.Conn, unitName string) error {
 	glog.Infof("Stopping systemd unit: %s ...", unitName)
-	return executeSystemdAction(unitName, r.env.GetDBUSClient().StopUnit)
+	return executeSystemdAction(unitName, d.StopUnit)
 }
