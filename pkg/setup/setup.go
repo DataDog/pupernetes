@@ -26,6 +26,8 @@ import (
 )
 
 const (
+	KubeletCRILogPath = "/var/log/pods/"
+
 	defaultBinaryDirName          = "bin"
 	defaultSourceTemplatesDirName = "source-templates"
 	defaultEtcdDataDirName        = "etcd-data"

@@ -27,7 +27,6 @@ import (
 
 const (
 	appProbeThreshold = 10
-	kubeletCRILogs    = "/var/log/pods/"
 )
 
 type Runtime struct {
@@ -155,7 +154,7 @@ func (r *Runtime) Run() error {
 }
 
 func (r *Runtime) runDisplay() {
-	podLogs, err := ioutil.ReadDir(kubeletCRILogs)
+	podLogs, err := ioutil.ReadDir(setup.KubeletCRILogPath)
 	if err != nil {
 		glog.Errorf("Cannot read dir: %v", err)
 		return
@@ -170,7 +169,7 @@ func (r *Runtime) runDisplay() {
 			if strings.ContainsRune(pod.Name(), rune('-')) {
 				continue
 			}
-			containers, err := ioutil.ReadDir(kubeletCRILogs + pod.Name())
+			containers, err := ioutil.ReadDir(setup.KubeletCRILogPath + pod.Name())
 			if err != nil {
 				glog.Errorf("Unexpected error: %v", err)
 				continue
@@ -179,7 +178,7 @@ func (r *Runtime) runDisplay() {
 				if !container.IsDir() {
 					continue
 				}
-				containerABSPath := path.Join(kubeletCRILogs, pod.Name(), container.Name())
+				containerABSPath := path.Join(setup.KubeletCRILogPath, pod.Name(), container.Name())
 				logs, err := ioutil.ReadDir(containerABSPath)
 				if err != nil {
 					glog.Errorf("Unexpected error: %v", err)

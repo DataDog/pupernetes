@@ -127,7 +127,7 @@ func (e *Environment) Clean() error {
 			e.cleanMounts()
 		}
 		toRemove = append(toRemove, e.kubeletRootDir)
-		toRemove = append(toRemove, "/var/log/pods")
+		toRemove = append(toRemove, KubeletCRILogPath)
 	}
 
 	for _, dir := range toRemove {
