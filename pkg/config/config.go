@@ -33,7 +33,7 @@ func init() {
 	ViperConfig.SetDefault("kubectl-link", "")
 	ViperConfig.SetDefault("vault-root-token", "")
 
-	ViperConfig.SetDefault("clean", "etcd,mounts,iptables")
+	ViperConfig.SetDefault("clean", "etcd,kubelet,mounts,iptables")
 	ViperConfig.SetDefault("drain", "all")
 	ViperConfig.SetDefault("timeout", time.Hour*6)
 	ViperConfig.SetDefault("gc", time.Second*60)

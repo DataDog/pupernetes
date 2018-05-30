@@ -9,7 +9,7 @@ Use this command to clean setup and run a Kubernetes local environment
 ### Options
 
 ```
-  -c, --clean string                 clean options before setup: binaries,etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets,systemd,all,none (default "etcd,mounts,iptables")
+  -c, --clean string                 clean options before setup: binaries,etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets,systemd,all,none (default "etcd,kubelet,mounts,iptables")
       --cni-version string           container network interface (cni) version (default "0.7.0")
       --etcd-version string          etcd version (default "3.1.11")
   -h, --help                         help for pupernetes
