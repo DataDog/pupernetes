@@ -159,6 +159,31 @@ func (r *Runtime) cleanIptables() error {
 	return nil
 }
 
+func (r *Runtime) runJournalTailers()  {
+	if len(r.journalTailers) == 0 {
+		return
+	}
+	// Display the logs of the failed units
+	r.journalTailerMutex.RLock()
+	defer r.journalTailerMutex.RUnlock()
+	for unitName, jt := range r.journalTailers {
+		err := jt.StartTail()
+		if err != nil {
+			glog.Errorf("Fail to start the journal tailer for %s: %v", unitName, err)
+		}
+	}
+
+	// let time to display logs
+	time.Sleep(time.Second * 2)
+
+	for unitName, jt := range r.journalTailers {
+		err := jt.StopTail()
+		if err != nil {
+			glog.Errorf("Fail to start the journal tailer for %s: %v", unitName, err)
+		}
+	}
+}
+
 func (r *Runtime) Stop() error {
 	if r.env.IsSkippingStop() {
 		glog.Infof("Skipping stop")
@@ -179,5 +204,6 @@ func (r *Runtime) Stop() error {
 
 	// ignore any error here
 	r.cleanIptables()
+	r.runJournalTailers()
 	return nil
 }

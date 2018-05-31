@@ -12,9 +12,13 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"sync"
+
+	"github.com/golang/glog"
 
 	"github.com/DataDog/pupernetes/pkg/api"
 	"github.com/DataDog/pupernetes/pkg/config"
+	"github.com/DataDog/pupernetes/pkg/logging"
 	"github.com/DataDog/pupernetes/pkg/setup"
 	"github.com/DataDog/pupernetes/pkg/util"
 	"github.com/golang/glog"
@@ -42,6 +46,10 @@ type Runtime struct {
 	waitKubeletGC    time.Duration
 	kubeDeleteOption *v1.DeleteOptions
 
+	runTimestamp       time.Time
+	journalTailerMutex sync.RWMutex
+	journalTailers     map[string]*logging.JournalTailer
+
 	ApplyChan chan struct{}
 }
 
@@ -62,6 +70,8 @@ func NewRunner(env *setup.Environment) *Runtime {
 		kubeDeleteOption: &v1.DeleteOptions{
 			GracePeriodSeconds: &zero,
 		},
+		journalTailers: make(map[string]*logging.JournalTailer),
+		runTimestamp:   time.Now(),
 		ApplyChan: make(chan struct{}),
 	}
 	signal.Notify(run.SigChan, syscall.SIGTERM, syscall.SIGINT)
@@ -113,6 +123,13 @@ func (r *Runtime) Run() error {
 			r.SigChan <- syscall.SIGTERM
 
 		case <-probeTick.C:
+			err = r.httpProbe(kubeletProbeURL)
+		case <-probeChan.C:
+			err := r.probeUnitStatuses()
+			if err != nil {
+				r.SigChan <- syscall.SIGTERM
+				continue
+			}
 			err = r.httpProbe(kubeletProbeURL)
 			if err == nil {
 				continue

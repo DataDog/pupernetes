@@ -21,13 +21,13 @@ type JournalTailer struct {
 	stdoutScanner *bufio.Scanner
 }
 
-func NewJournalTailer(unitName string) (*JournalTailer, error) {
+func NewJournalTailer(unitName string, since time.Time) (*JournalTailer, error) {
 	s := []string{
 		"journalctl",
 		"-o",
 		"cat",
 		"-S",
-		time.Now().Format("15:04:05"),
+		since.Format("15:04:05"),
 		"-fu",
 		unitName,
 	}

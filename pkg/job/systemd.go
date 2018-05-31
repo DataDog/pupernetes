@@ -150,7 +150,7 @@ func RunSystemdJob(givenRootPath string) error {
 		return err
 	}
 
-	jt, err := logging.NewJournalTailer(unitName)
+	jt, err := logging.NewJournalTailer(unitName, time.Now())
 	if err != nil {
 		glog.Errorf("Unexpected error while creating journal-tail of %s: %v", unitName, err)
 		return err
