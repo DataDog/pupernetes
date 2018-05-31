@@ -194,6 +194,7 @@ func (e *Environment) generateVaultPKI() error {
 	roleConf["max_ttl"] = "43800h"
 	issueConf := make(map[string]interface{})
 	issueConf["common_name"] = "p8s"
+	issueConf["alt_names"] = fmt.Sprintf("localhost,%s", e.hostname)
 	issueConf["ip_sans"] = fmt.Sprintf("127.0.0.1,%s,%s", e.outboundIP.String(), e.kubernetesClusterIP.String())
 
 	// Generate secrets - certificates for each component:

@@ -40,6 +40,16 @@ func setAll(d interface{}) {
 	reflect.ValueOf(d).Elem().FieldByName("None").SetBool(false)
 }
 
+func setAllBut(d interface{}, but string) {
+	but = strings.Title(but)
+	for _, name := range structs.Names(d) {
+		if name == "common" || name == but {
+			continue
+		}
+		reflect.ValueOf(d).Elem().FieldByName(name).SetBool(true)
+	}
+}
+
 func setNone(d interface{}) {
 	for _, name := range structs.Names(d) {
 		if name == "common" {
@@ -96,6 +106,11 @@ func newOptions(stringOptions string, opt interface{}) interface{} {
 			continue
 
 		default:
+			if elt[0] == '-' && len(elt) > 1 {
+				glog.V(3).Infof("Setting all options except %q", elt[1:])
+				setAllBut(opt, elt[1:])
+				return opt
+			}
 			if !containsString(availableOptions, elt) {
 				glog.Warningf("Cannot use %q as option it's not in %s", elt, availableOptions)
 				continue
