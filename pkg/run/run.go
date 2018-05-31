@@ -10,9 +10,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
-	"sync"
 
 	"github.com/golang/glog"
 
@@ -21,13 +21,8 @@ import (
 	"github.com/DataDog/pupernetes/pkg/logging"
 	"github.com/DataDog/pupernetes/pkg/setup"
 	"github.com/DataDog/pupernetes/pkg/util"
-	"github.com/golang/glog"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
-	"path"
-	"sort"
-	"strconv"
-	"strings"
 )
 
 const (
@@ -62,9 +57,7 @@ func NewRunner(env *setup.Environment) *Runtime {
 		httpClient: &http.Client{
 			Timeout: time.Millisecond * 500,
 		},
-		state: &State{
-			kubeAPIServerRestartNb: -1,
-		},
+		state:         &State{},
 		runTimeout:    config.ViperConfig.GetDuration("timeout"),
 		waitKubeletGC: config.ViperConfig.GetDuration("gc"),
 		kubeDeleteOption: &v1.DeleteOptions{
@@ -211,53 +204,6 @@ func (r *Runtime) runDisplay() {
 		return
 	}
 	r.state.setKubeletLogsPodRunning(len(podLogs))
-	if !r.state.IsReady() {
-		for _, pod := range podLogs {
-			if !pod.IsDir() {
-				continue
-			}
-			// Static POD id is a hash of the spec, the hash doesn't contain traditional -
-			if strings.ContainsRune(pod.Name(), rune('-')) {
-				continue
-			}
-			containers, err := ioutil.ReadDir(setup.KubeletCRILogPath + pod.Name())
-			if err != nil {
-				glog.Errorf("Unexpected error: %v", err)
-				continue
-			}
-			for _, container := range containers {
-				if !container.IsDir() {
-					continue
-				}
-				containerABSPath := path.Join(setup.KubeletCRILogPath, pod.Name(), container.Name())
-				logs, err := ioutil.ReadDir(containerABSPath)
-				if err != nil {
-					glog.Errorf("Unexpected error: %v", err)
-					continue
-				}
-				if len(logs) == 0 {
-					glog.V(2).Infof("Kubernetes apiserver not running yet")
-					continue
-				}
-				var logFilenames []string
-				for _, log := range logs {
-					logFilenames = append(logFilenames, log.Name())
-				}
-				sort.Strings(logFilenames)
-				latestLog := logFilenames[len(logFilenames)-1]
-				if !strings.HasSuffix(latestLog, ".log") {
-					continue
-				}
-				restartCount, err := strconv.Atoi(latestLog[:len(latestLog)-4])
-				if err != nil {
-					glog.Errorf("Cannot parse the kube-apiserver restart count: %v", err)
-					continue
-				}
-				r.state.setKubeAPIServerRestartNb(restartCount)
-			}
-		}
-		return
-	}
 	pods, err := r.GetKubeletRunningPods()
 	if err != nil {
 		glog.Warningf("Cannot runDisplay some state: %v", err)

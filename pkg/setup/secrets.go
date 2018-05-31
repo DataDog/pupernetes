@@ -233,6 +233,15 @@ func (e *Environment) generateSecretFor(vRaw *vault.Client, vClient *vault.Logic
 		}
 		glog.V(4).Infof("Successfully created %s", certABSPath)
 	}
+
+	// Creating the pem_bundle
+	certificate := []byte(sec.Data["certificate"].(string))
+	issuingCA := []byte(sec.Data["issuing_ca"].(string))
+	err = ioutil.WriteFile(path.Join(e.secretsABSPath, component+".bundle"), append(certificate, issuingCA...), 0444)
+	if err != nil {
+		glog.Errorf("Cannot write secret file: %v", err)
+		return err
+	}
 	return nil
 }
 

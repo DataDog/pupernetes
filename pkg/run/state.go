@@ -14,8 +14,6 @@ type State struct {
 	kubeletProbeFail      int
 	kubeletAPIPodRunning  int
 	kubeletLogsPodRunning int
-
-	kubeAPIServerRestartNb int
 }
 
 func (s *State) IsReady() bool {
@@ -67,15 +65,6 @@ func (s *State) setKubeletLogsPodRunning(nb int) {
 	if s.kubeletLogsPodRunning != nb {
 		glog.Infof("Kubelet log reports %d running pods", nb)
 		s.kubeletLogsPodRunning = nb
-	}
-	s.Unlock()
-}
-
-func (s *State) setKubeAPIServerRestartNb(nb int) {
-	s.Lock()
-	if s.kubeAPIServerRestartNb != nb {
-		glog.Infof("Kube apiserver restart count: %d", nb)
-		s.kubeAPIServerRestartNb = nb
 	}
 	s.Unlock()
 }

@@ -159,7 +159,7 @@ func (r *Runtime) cleanIptables() error {
 	return nil
 }
 
-func (r *Runtime) runJournalTailers()  {
+func (r *Runtime) runJournalTailers() {
 	if len(r.journalTailers) == 0 {
 		return
 	}
