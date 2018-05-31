@@ -21,7 +21,7 @@ func executeSystemdAction(unitName string, systemdAction func(string, string, ch
 		glog.Errorf("Cannot execute systemd action on %s: %v", unitName, err)
 		return err
 	}
-	timeout := time.After(time.Second * 5)
+	timeout := time.After(time.Second * 10)
 	for {
 		select {
 		case s := <-statusChan:

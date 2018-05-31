@@ -12,11 +12,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/DataDog/pupernetes/pkg/logging"
 	"github.com/DataDog/pupernetes/pkg/util"
 	"github.com/golang/glog"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os/exec"
+	"strings"
 )
 
 func (r *Runtime) getNamespaces() (*corev1.NamespaceList, error) {
@@ -138,8 +140,8 @@ func (r *Runtime) drainingPods() error {
 			}
 			glog.V(2).Infof("Kubelet still have static pods running: %d", len(remainStaticPods))
 		case <-timeout.C:
-			err := fmt.Errorf("timeout reached during kubelet stop")
-			glog.Errorf("Cannot properly delete static pods: %v", err)
+			err := fmt.Errorf("timeout reached during pod draining")
+			glog.Errorf("Cannot properly delete pods: %v", err)
 			return err
 		}
 	}
@@ -159,29 +161,62 @@ func (r *Runtime) cleanIptables() error {
 	return nil
 }
 
-func (r *Runtime) runJournalTailers() {
-	if len(r.journalTailers) == 0 {
-		return
+func (r *Runtime) startJournalTailers() ([]*logging.JournalTailer, error) {
+	failed, err := r.probeUnitStatuses()
+	if err != nil && len(failed) == 0 {
+		glog.Errorf("Probe units in failed: %v", err)
+		return nil, err
+	}
+	if len(failed) == 0 {
+		glog.V(2).Infof("All systemd units are healthy")
+		return nil, nil
 	}
 	// Display the logs of the failed units
-	r.journalTailerMutex.RLock()
-	defer r.journalTailerMutex.RUnlock()
-	for unitName, jt := range r.journalTailers {
-		err := jt.StartTail()
+	var journalTailers []*logging.JournalTailer
+	var errs []string
+
+	for _, unitName := range failed {
+		jt, err := logging.NewJournalTailer(unitName, r.runTimestamp)
 		if err != nil {
-			glog.Errorf("Fail to start the journal tailer for %s: %v", unitName, err)
+			msg := fmt.Sprintf("cannot create journal tailer for %s: %v", unitName, err)
+			errs = append(errs, msg)
+			glog.Errorf("Unexpected error: %s", msg)
+			continue
+		}
+		journalTailers = append(journalTailers, jt)
+		err = jt.StartTail()
+		if err != nil {
+			msg := fmt.Sprintf("cannot start journal tailer for %s: %v", unitName, err)
+			errs = append(errs, msg)
+			glog.Errorf("Unexpected error: %s", msg)
 		}
 	}
+	if len(errs) == 0 {
+		return journalTailers, nil
+	}
+	return journalTailers, fmt.Errorf("failed to start journal tailers: %s", strings.Join(errs, ", "))
+}
 
+func stopJournalTailers(journalTailers []*logging.JournalTailer) error {
+	if len(journalTailers) == 0 {
+		glog.V(3).Infof("No journal tailers to stop")
+		return nil
+	}
 	// let time to display logs
 	time.Sleep(time.Second * 2)
 
-	for unitName, jt := range r.journalTailers {
+	var errs []string
+	for _, jt := range journalTailers {
 		err := jt.StopTail()
 		if err != nil {
-			glog.Errorf("Fail to start the journal tailer for %s: %v", unitName, err)
+			glog.Errorf("Fail to stop the journal tailer: %v", err)
+			errs = append(errs, err.Error())
 		}
 	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return fmt.Errorf("fail to stop journal tailers: %v", strings.Join(errs, ", "))
 }
 
 func (r *Runtime) Stop() error {
@@ -190,20 +225,41 @@ func (r *Runtime) Stop() error {
 		return nil
 	}
 
+	var errs []string
+
 	err := r.drainingPods()
 	if err != nil {
-		glog.Errorf("Failed to stop kubelet: %v", err)
+		glog.Errorf("Failed to drain the node: %v", err)
+		errs = append(errs, err.Error())
+	}
+
+	journalTailers, err := r.startJournalTailers()
+	if err != nil {
+		glog.Errorf("Fail to start journalTailers: %v", err)
+		errs = append(errs, err.Error())
+	}
+	if len(journalTailers) > 0 {
+		errs = append(errs, "systemd units unhealthy")
+	}
+
+	err = stopJournalTailers(journalTailers)
+	if err != nil {
+		errs = append(errs, err.Error())
 	}
 
 	for _, u := range r.env.GetSystemdUnits() {
 		err = util.StopUnit(r.env.GetDBUSClient(), u)
 		if err != nil {
-			return err
+			errs = append(errs, err.Error())
 		}
 	}
 
-	// ignore any error here
+	// iptables always fail
 	r.cleanIptables()
-	r.runJournalTailers()
-	return nil
+	if len(errs) == 0 {
+		return nil
+	}
+	err = fmt.Errorf("errors during stop: %s", strings.Join(errs, ", "))
+	glog.Errorf("Unexpected errors: %v", err)
+	return err
 }

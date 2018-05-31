@@ -2,7 +2,6 @@ package run
 
 import (
 	"fmt"
-	"github.com/DataDog/pupernetes/pkg/logging"
 	"github.com/golang/glog"
 	"io/ioutil"
 	"net/http"
@@ -31,15 +30,13 @@ func (r *Runtime) httpProbe(url string) error {
 	return nil
 }
 
-func (r *Runtime) probeUnitStatuses() error {
+func (r *Runtime) probeUnitStatuses() ([]string, error) {
 	units, err := r.env.GetDBUSClient().ListUnitsByNames(r.env.GetSystemdUnits())
 	if err != nil {
 		glog.Errorf("Unexpected error: %v", err)
-		return err
+		return nil, err
 	}
-	var errs []string
-	r.journalTailerMutex.Lock()
-	defer r.journalTailerMutex.Unlock()
+	var failed []string
 	for _, u := range units {
 		s := fmt.Sprintf("unit %q with load state %q is %q", u.Name, u.LoadState, u.SubState)
 		glog.V(3).Infof("%s", s)
@@ -50,16 +47,11 @@ func (r *Runtime) probeUnitStatuses() error {
 			continue
 		}
 		glog.Errorf("Unexpected state of: %s", s)
-		errs = append(errs, s)
-		jt, err := logging.NewJournalTailer(u.Name, r.runTimestamp)
-		if err != nil {
-			glog.Errorf("Fail to create the journal tailer for %s: %v", u.Name, err)
-			continue
-		}
-		r.journalTailers[u.Name] = jt
+		failed = append(failed, u.Name)
+
 	}
-	if len(errs) > 0 {
-		return fmt.Errorf("%s", strings.Join(errs, ", "))
+	if len(failed) > 0 {
+		return failed, fmt.Errorf("failed units: %s", strings.Join(failed, ", "))
 	}
-	return nil
+	return nil, nil
 }

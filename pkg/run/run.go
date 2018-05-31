@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
@@ -18,7 +17,6 @@ import (
 
 	"github.com/DataDog/pupernetes/pkg/api"
 	"github.com/DataDog/pupernetes/pkg/config"
-	"github.com/DataDog/pupernetes/pkg/logging"
 	"github.com/DataDog/pupernetes/pkg/setup"
 	"github.com/DataDog/pupernetes/pkg/util"
 	"io/ioutil"
@@ -118,7 +116,7 @@ func (r *Runtime) Run() error {
 		case <-probeTick.C:
 			err = r.httpProbe(kubeletProbeURL)
 		case <-probeChan.C:
-			err := r.probeUnitStatuses()
+			_, err := r.probeUnitStatuses()
 			if err != nil {
 				r.SigChan <- syscall.SIGTERM
 				continue
