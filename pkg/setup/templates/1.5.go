@@ -167,15 +167,11 @@ rules:
 `),
 		},
 		{
-			Name:        "kube-controller-manager.yaml",
-			Destination: ManifestAPI,
+			Name: "kube-controller-manager.yaml",
+			// automountServiceAccountToken: false
+			// doesn't exist so we need to use a static pod
+			Destination: ManifestStaticPod,
 			Content: []byte(`---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: kube-controller-manager
-  namespace: kube-system
----
 apiVersion: v1
 kind: Pod
 metadata:
@@ -184,7 +180,6 @@ metadata:
   name: kube-controller-manager
   namespace: kube-system
 spec:
-  serviceAccountName: kube-controller-manager
   nodeName: "{{ .Hostname }}"
   hostNetwork: true
   volumes:
@@ -337,9 +332,8 @@ roleRef:
   kind: ClusterRole
   name: cluster-admin
 subjects:
-- apiGroup: rbac.authorization.k8s.io
-  kind: User
-  name: p8s
+-  kind: User                         
+   name: p8s
 `),
 		},
 		{
