@@ -76,8 +76,12 @@ jobs:
       - run:
           name: clean-setup
           # As we kept the binaries, pupernetes should be very fast
-          command: sudo timeout 10 ./pupernetes daemon setup sandbox/ -c etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets,systemd
-          command: sudo timeout 10 ./pupernetes setup sandbox/ -c etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets
+          command: sudo timeout 10 ./pupernetes daemon setup sandbox/ -c etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets
+
+      - run:
+          name: version-setup
+          # it should download and extract the hyperkube tarball
+          command: sudo ./pupernetes daemon setup sandbox/ --hyperkube-version 1.9.4
 
       - run:
           name: clean

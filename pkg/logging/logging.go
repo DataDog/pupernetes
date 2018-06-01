@@ -21,15 +21,19 @@ type JournalTailer struct {
 	stdoutScanner *bufio.Scanner
 }
 
-func NewJournalTailer(unitName string, since time.Time) (*JournalTailer, error) {
+func NewJournalTailer(unitName string, since time.Time, follow bool) (*JournalTailer, error) {
 	s := []string{
 		"journalctl",
 		"-o",
 		"cat",
 		"-S",
 		since.Format("15:04:05"),
-		"-fu",
+		"-u",
 		unitName,
+		"--no-pager",
+	}
+	if follow {
+		s = append(s, "-f")
 	}
 	c := exec.Command(s[0], s[1:]...)
 
@@ -82,4 +86,22 @@ func (j *JournalTailer) StartTail() error {
 	}
 	glog.V(3).Infof("Command %s started as pid %d", j.cmdLine, j.cmd.Process.Pid)
 	return nil
+}
+
+func (j *JournalTailer) Wait() error {
+	err := j.cmd.Wait()
+	if err == nil {
+		glog.V(2).Infof("Journal tailing of %s stopped, get them again with: %s", j.unitName, j.cmdLine)
+		return nil
+	}
+	glog.Errorf("Journal tailing of %s stopped with unexpected error: %s", j.unitName, err)
+	return err
+}
+
+func (j *JournalTailer) GetUnitName() string {
+	return j.unitName
+}
+
+func (j *JournalTailer) GetCommandLine() string {
+	return j.cmdLine
 }

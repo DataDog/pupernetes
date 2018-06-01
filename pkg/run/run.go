@@ -17,10 +17,12 @@ import (
 
 	"github.com/DataDog/pupernetes/pkg/api"
 	"github.com/DataDog/pupernetes/pkg/config"
+	"github.com/DataDog/pupernetes/pkg/logging"
 	"github.com/DataDog/pupernetes/pkg/setup"
 	"github.com/DataDog/pupernetes/pkg/util"
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sync"
 )
 
 const (
@@ -63,7 +65,7 @@ func NewRunner(env *setup.Environment) *Runtime {
 		},
 		journalTailers: make(map[string]*logging.JournalTailer),
 		runTimestamp:   time.Now(),
-		ApplyChan: make(chan struct{}),
+		ApplyChan:      make(chan struct{}),
 	}
 	signal.Notify(run.SigChan, syscall.SIGTERM, syscall.SIGINT)
 	run.api = api.NewAPI(run.SigChan, run.DeleteAPIManifests, run.state.IsReady, run.ApplyChan)
@@ -86,12 +88,10 @@ func (r *Runtime) Run() error {
 		}
 	}
 
-	// TODO check the state of p8s-kubelet.service few seconds after: because it doesn't use sd_notify(3)
-
 	probeTick := time.NewTicker(time.Second * 2)
 	defer probeTick.Stop()
 
-	displayTick := time.NewTicker(time.Second * 2)
+	displayTick := time.NewTicker(time.Second * 5)
 	defer displayTick.Stop()
 
 	readinessTick := time.NewTicker(time.Second * 1)
@@ -114,8 +114,6 @@ func (r *Runtime) Run() error {
 			r.SigChan <- syscall.SIGTERM
 
 		case <-probeTick.C:
-			err = r.httpProbe(kubeletProbeURL)
-		case <-probeChan.C:
 			_, err := r.probeUnitStatuses()
 			if err != nil {
 				r.SigChan <- syscall.SIGTERM
@@ -125,7 +123,7 @@ func (r *Runtime) Run() error {
 			if err == nil {
 				continue
 			}
-			failures := r.state.getKubeletProbeFail()
+			failures := r.state.GetKubeletProbeFail()
 			if failures >= appProbeThreshold {
 				glog.Warningf("Probing failed, stopping ...")
 				// display some helpers to investigate:
@@ -135,7 +133,7 @@ func (r *Runtime) Run() error {
 				r.SigChan <- syscall.SIGTERM
 				continue
 			}
-			r.state.incKubeletProbeFail()
+			r.state.IncKubeletProbeFailures()
 			glog.Warningf("Kubelet probe threshold is %d/%d", failures+1, appProbeThreshold)
 
 		case <-displayTick.C:
@@ -176,7 +174,7 @@ func (r *Runtime) Run() error {
 			// Check if the kube-apiserver is healthy
 			err := r.httpProbe("http://127.0.0.1:8080/healthz")
 			if err != nil {
-				r.state.setAPIServerProbeLastError(err.Error())
+				r.state.SetAPIServerProbeLastError(err.Error())
 				continue
 			}
 			// kubectl apply -f manifests-api
@@ -188,7 +186,7 @@ func (r *Runtime) Run() error {
 				continue
 			}
 			// Mark the current state as ready
-			r.state.setReady()
+			r.state.SetReady()
 			glog.V(2).Infof("Pupernetes is ready")
 			readinessTick.Stop()
 		}
@@ -201,11 +199,14 @@ func (r *Runtime) runDisplay() {
 		glog.Errorf("Cannot read dir: %v", err)
 		return
 	}
-	r.state.setKubeletLogsPodRunning(len(podLogs))
-	pods, err := r.GetKubeletRunningPods()
-	if err != nil {
-		glog.Warningf("Cannot runDisplay some state: %v", err)
+	r.state.SetKubeletLogsPodRunning(len(podLogs))
+	if !r.state.IsReady() {
 		return
 	}
-	r.state.setKubeletAPIPodRunning(len(pods))
+	pods, err := r.GetKubeletRunningPods()
+	if err != nil {
+		glog.Warningf("Cannot display the current state: %v", err)
+		return
+	}
+	r.state.SetKubeletAPIPodRunning(len(pods))
 }

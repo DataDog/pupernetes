@@ -109,11 +109,11 @@ func (e *Environment) writeSystemdUnit(unitOpt []*unit2.UnitOption, unitName str
 		glog.V(2).Infof("Already created systemd unit: %s, untouched", unitName)
 
 		// Validate the content
-		onDiskOpts, err := getUnitOptions(unitABSPath)
+		runSystemdSystemUnit, err := getUnitOptions(unitABSPath)
 		if err != nil {
 			return err
 		}
-		if !e.isUnitUpToDate(onDiskOpts, unitOpt) {
+		if !e.isUnitUpToDate(runSystemdSystemUnit, unitOpt) {
 			if e.cleanOptions.Systemd {
 				err = fmt.Errorf("non uptodate systemd unit %s", unitABSPath)
 				glog.Errorf("Unexpected error: %v", err)
@@ -121,7 +121,7 @@ func (e *Environment) writeSystemdUnit(unitOpt []*unit2.UnitOption, unitName str
 			}
 			glog.Warningf(`The already created unit %q doesn't match the generated one, used clean options are %q use instead "%s,systemd"`, unitName, e.cleanOptions.StringCLI(), e.cleanOptions.StringCLI())
 		}
-		err = statExecStart(onDiskOpts)
+		err = statExecStart(runSystemdSystemUnit)
 		if err != nil {
 			glog.Errorf("Current ExecStart in %s unit is incorrect: %v", unitABSPath, err)
 			return err
