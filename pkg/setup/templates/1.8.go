@@ -209,9 +209,9 @@ spec:
     - --leader-elect-lease-duration=150s
     - --leader-elect-renew-deadline=100s
     - --leader-elect-retry-period=20s
-    - --cluster-signing-cert-file=/etc/secrets/kubernetes.certificate
-    - --cluster-signing-key-file=/etc/secrets/kubernetes.private_key
-    - --root-ca-file=/etc/secrets/kubernetes.issuing_ca
+    - --cluster-signing-cert-file=/etc/secrets/kube-controller-manager.certificate
+    - --cluster-signing-key-file=/etc/secrets/kube-controller-manager.private_key
+    - --root-ca-file=/etc/secrets/kube-controller-manager.bundle
     - --service-account-private-key-file=/etc/secrets/service-accounts.rsa
     - --concurrent-deployment-syncs=2
     - --concurrent-endpoint-syncs=2
