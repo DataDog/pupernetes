@@ -40,11 +40,14 @@ type Runtime struct {
 	runTimeout       time.Duration
 	waitKubeletGC    time.Duration
 	kubeDeleteOption *v1.DeleteOptions
+
+	ReApplyChan chan struct{}
 }
 
 func NewRunner(env *setup.Environment) *Runtime {
 	var zero int64 = 0
 	sigChan := make(chan os.Signal, 2)
+	reApplyChan := make(chan struct{})
 
 	run := &Runtime{
 		env:     env,
@@ -60,19 +63,22 @@ func NewRunner(env *setup.Environment) *Runtime {
 		kubeDeleteOption: &v1.DeleteOptions{
 			GracePeriodSeconds: &zero,
 		},
+		ReApplyChan: reApplyChan,
 	}
 	signal.Notify(run.SigChan, syscall.SIGTERM, syscall.SIGINT)
-	run.api = api.NewAPI(run.SigChan, run.DeleteAPIManifests, run.state.IsReady)
+	run.api = api.NewAPI(run.SigChan, run.DeleteAPIManifests, run.state.IsReady, reApplyChan)
 	return run
 }
 
 func (r *Runtime) Run() error {
+	defer close(r.ReApplyChan)
+
 	glog.Infof("Timeout for this current run is %s", r.runTimeout.String())
 	timeout := time.NewTimer(r.runTimeout)
+	defer timeout.Stop()
 
 	go r.api.ListenAndServe()
 
-	defer timeout.Stop()
 	err := r.startUnit(fmt.Sprintf("%setcd.service", config.ViperConfig.GetString("systemd-unit-prefix")))
 	if err != nil {
 		return err
@@ -125,6 +131,17 @@ func (r *Runtime) Run() error {
 
 		case <-displayChan.C:
 			r.runDisplay()
+
+		case <-r.ReApplyChan:
+			if !r.state.IsReady() {
+				glog.Warningf("Cannot re-apply when not ready, retry later")
+				continue
+			}
+			// kubectl apply -f manifests-api
+			err := r.applyManifests()
+			if err != nil {
+				glog.Errorf("Cannot apply manifests in %s", r.env.GetManifestsABSPathToApply())
+			}
 
 		case <-readinessChan.C:
 			if r.state.IsReady() {

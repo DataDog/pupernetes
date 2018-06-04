@@ -153,14 +153,110 @@ func (r *Runtime) deletePods(namespaces *corev1.NamespaceList) error {
 	return nil
 }
 
+func (r *Runtime) deleteServices(namespaces *corev1.NamespaceList) error {
+	var errs []string
+	for _, ns := range namespaces.Items {
+		toDelete, err := r.env.GetKubernetesClient().CoreV1().Services(ns.Name).List(v1.ListOptions{})
+		if err != nil {
+			glog.Errorf("Cannot get Services -n %s: %v", ns.Name, err)
+			return err
+		}
+		glog.V(4).Infof("Deleting %d Services in ns %s ...", len(toDelete.Items), ns.Name)
+		for _, elt := range toDelete.Items {
+			err = r.env.GetKubernetesClient().CoreV1().Services(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
+			if err != nil && !errors.IsNotFound(err) {
+				glog.Errorf("Cannot delete Services %s -n %q: %v", elt.Name, elt.Namespace, err)
+				errs = append(errs, err.Error())
+			}
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("unexpected errors during delete Services: %s", strings.Join(errs, ", "))
+	}
+	return nil
+}
+
+func (r *Runtime) deleteEndpoints(namespaces *corev1.NamespaceList) error {
+	var errs []string
+	for _, ns := range namespaces.Items {
+		toDelete, err := r.env.GetKubernetesClient().CoreV1().Endpoints(ns.Name).List(v1.ListOptions{})
+		if err != nil {
+			glog.Errorf("Cannot get Endpoints -n %s: %v", ns.Name, err)
+			return err
+		}
+		glog.V(4).Infof("Deleting %d Endpoints in ns %s ...", len(toDelete.Items), ns.Name)
+		for _, elt := range toDelete.Items {
+			err = r.env.GetKubernetesClient().CoreV1().Endpoints(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
+			if err != nil && !errors.IsNotFound(err) {
+				glog.Errorf("Cannot delete Endpoints %s -n %q: %v", elt.Name, elt.Namespace, err)
+				errs = append(errs, err.Error())
+			}
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("unexpected errors during delete Endpoints: %s", strings.Join(errs, ", "))
+	}
+	return nil
+}
+
+func (r *Runtime) deleteConfigMaps(namespaces *corev1.NamespaceList) error {
+	var errs []string
+	for _, ns := range namespaces.Items {
+		toDelete, err := r.env.GetKubernetesClient().CoreV1().ConfigMaps(ns.Name).List(v1.ListOptions{})
+		if err != nil {
+			glog.Errorf("Cannot get ConfigMaps -n %s: %v", ns.Name, err)
+			return err
+		}
+		glog.V(4).Infof("Deleting %d ConfigMaps in ns %s ...", len(toDelete.Items), ns.Name)
+		for _, elt := range toDelete.Items {
+			err = r.env.GetKubernetesClient().CoreV1().ConfigMaps(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
+			if err != nil && !errors.IsNotFound(err) {
+				glog.Errorf("Cannot delete ConfigMaps %s -n %q: %v", elt.Name, elt.Namespace, err)
+				errs = append(errs, err.Error())
+			}
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("unexpected errors during delete ConfigMaps: %s", strings.Join(errs, ", "))
+	}
+	return nil
+}
+
+func (r *Runtime) deleteSecrets(namespaces *corev1.NamespaceList) error {
+	var errs []string
+	for _, ns := range namespaces.Items {
+		toDelete, err := r.env.GetKubernetesClient().CoreV1().Secrets(ns.Name).List(v1.ListOptions{})
+		if err != nil {
+			glog.Errorf("Cannot get Secrets -n %s: %v", ns.Name, err)
+			return err
+		}
+		glog.V(4).Infof("Deleting %d Secrets in ns %s ...", len(toDelete.Items), ns.Name)
+		for _, elt := range toDelete.Items {
+			err = r.env.GetKubernetesClient().CoreV1().Secrets(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
+			if err != nil && !errors.IsNotFound(err) {
+				glog.Errorf("Cannot delete Secrets %s -n %q: %v", elt.Name, elt.Namespace, err)
+				errs = append(errs, err.Error())
+			}
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("unexpected errors during delete Secrets: %s", strings.Join(errs, ", "))
+	}
+	return nil
+}
+
 func (r *Runtime) DeleteAPIManifests(namespaces *corev1.NamespaceList) error {
 	fnList := []func(ns *corev1.NamespaceList) error{
+		r.deleteServices,
 		r.deleteJobs,
 		r.deleteDeployments,
 		r.deleteDaemonset,
 		r.deleteReplicationController,
 		r.deleteReplicaSets,
 		r.deletePods,
+		r.deleteEndpoints,
+		r.deleteConfigMaps,
+		r.deleteSecrets,
 	}
 	errChan := make(chan error, len(fnList))
 
@@ -185,8 +281,8 @@ func (r *Runtime) DeleteAPIManifests(namespaces *corev1.NamespaceList) error {
 		errMsgList = append(errMsgList, err.Error())
 	}
 	if len(errMsgList) == 0 {
-		glog.Infof("Graceful deleted API manifests in %d namespaces", len(namespaces.Items))
+		glog.Infof("Graceful deleted API resources in %d namespaces", len(namespaces.Items))
 		return nil
 	}
-	return fmt.Errorf("cannot delete API manifests: %v", strings.Join(errMsgList, ","))
+	return fmt.Errorf("cannot delete API resources: %v", strings.Join(errMsgList, ","))
 }
