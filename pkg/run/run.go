@@ -99,6 +99,10 @@ func (r *Runtime) Run() error {
 	readinessChan := time.NewTicker(time.Second * 1)
 	defer readinessChan.Stop()
 
+	sigStopChan := make(chan os.Signal, 2)
+	defer close(sigStopChan)
+	signal.Notify(sigStopChan, syscall.SIGTSTP)
+
 	kubeletProbeURL := fmt.Sprintf("http://127.0.0.1:%d/healthz", r.env.GetKubeletHealthzPort())
 	for {
 		select {
@@ -139,6 +143,22 @@ func (r *Runtime) Run() error {
 			}
 			// kubectl apply -f manifests-api
 			err := r.applyManifests()
+			if err != nil {
+				glog.Errorf("Cannot apply manifests in %s", r.env.GetManifestsABSPathToApply())
+			}
+
+		case <-sigStopChan:
+			if !r.state.IsReady() {
+				glog.Warningf("Cannot re-apply when not ready, retry later")
+				continue
+			}
+			err := r.gracefulDeleteAPIResources()
+			if err != nil {
+				glog.Errorf("Cannot reset API resources: %v", err)
+				continue
+			}
+			// kubectl apply -f manifests-api
+			err = r.applyManifests()
 			if err != nil {
 				glog.Errorf("Cannot apply manifests in %s", r.env.GetManifestsABSPathToApply())
 			}
