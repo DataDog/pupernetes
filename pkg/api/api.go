@@ -17,15 +17,26 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+const (
+	stopRoute  = "/stop"
+	applyRoute = "/apply"
+	resetRoute = "/reset"
+)
+
 // HandlerAPI handles the API calls
 type HandlerAPI struct {
 	sigChan        chan os.Signal
 	resetNamespace func(namespaces *corev1.NamespaceList) error
 	isReady        func() bool
+	apply          chan struct{}
 }
 
 func (h *HandlerAPI) stopHandler(_ http.ResponseWriter, _ *http.Request) {
 	h.sigChan <- syscall.SIGTERM
+}
+
+func (h *HandlerAPI) applyHandler(_ http.ResponseWriter, _ *http.Request) {
+	h.apply <- struct{}{}
 }
 
 func (h *HandlerAPI) resetHandler(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +49,7 @@ func (h *HandlerAPI) resetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	namespaceItem := corev1.Namespace{}
 	namespaceItem.Name = namespaceName
-	glog.Infof("Resetting namespace %s ...", namespaceItem.Name)
+	glog.Infof("Resetting namespace %q ...", namespaceItem.Name)
 	err := h.resetNamespace(&corev1.NamespaceList{
 		Items: []corev1.Namespace{namespaceItem},
 	})
@@ -62,15 +73,21 @@ func (h *HandlerAPI) isReadyHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 // NewAPI returns the API HTTP server
-func NewAPI(sigChan chan os.Signal, resetNamespaceFn func(namespaces *corev1.NamespaceList) error, isReadyFn func() bool) *http.Server {
+func NewAPI(sigChan chan os.Signal, resetNamespaceFn func(namespaces *corev1.NamespaceList) error, isReadyFn func() bool, apply chan struct{}) *http.Server {
 	h := HandlerAPI{
 		sigChan:        sigChan,
 		resetNamespace: resetNamespaceFn,
 		isReady:        isReadyFn,
+		apply:          apply,
 	}
 	r := mux.NewRouter()
+
+	// POSTs
 	r.Methods("POST").Path("/stop").HandlerFunc(h.stopHandler)
-	r.Methods("POST").Path("/reset/{namespace}").HandlerFunc(h.resetHandler)
+	r.Methods("POST").Path(applyRoute).HandlerFunc(h.applyHandler)
+	r.Methods("POST").Path(resetRoute + "/{namespace}").HandlerFunc(h.resetHandler)
+
+	// GETs
 	r.Methods("GET").Path("/ready").HandlerFunc(h.isReadyHandler)
 
 	srv := &http.Server{

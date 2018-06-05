@@ -27,6 +27,7 @@ func init() {
 
 	ViperConfig.SetDefault("kubernetes-cluster-ip-range", "192.168.254.0/24")
 	ViperConfig.SetDefault("bind-address", "127.0.0.1:8989")
+	ViperConfig.SetDefault("api-address", "127.0.0.1:8989")
 	ViperConfig.SetDefault("kubelet-root-dir", "/var/lib/p8s-kubelet")
 	ViperConfig.SetDefault("systemd-unit-prefix", "p8s-")
 
@@ -44,4 +45,6 @@ func init() {
 	ViperConfig.SetDefault("systemd-job-name", "pupernetes")
 
 	ViperConfig.SetDefault("kubelet-cadvisor-port", 0)
+
+	ViperConfig.SetDefault("apply", false)
 }

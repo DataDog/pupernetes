@@ -35,8 +35,8 @@ func (r *Runtime) isAPIServerHookDone() bool {
 	return r.state.ready
 }
 
-func (r *Runtime) gracefulDeleteManifests() error {
-	glog.Infof("Graceful deleting API manifests ...")
+func (r *Runtime) gracefulDeleteAPIResources() error {
+	glog.Infof("Graceful deleting API resources ...")
 	ns, err := r.getNamespaces()
 	if err == nil {
 		r.DeleteAPIManifests(ns)
@@ -66,7 +66,7 @@ func (r *Runtime) gracefulDeleteManifests() error {
 			glog.V(3).Infof("Kubelet still reports %d API Pods", len(stillRunningPods)-len(staticPods))
 
 		case <-timeout.C:
-			err := fmt.Errorf("timeout reached during delete manifests")
+			err := fmt.Errorf("timeout reached during delete API resources")
 			glog.Errorf("Unexpected %v", err)
 			return err
 		}
@@ -81,7 +81,7 @@ func (r *Runtime) drainingPods() error {
 	}
 	glog.Infof("Draining kubelet's pods ...")
 
-	err := r.gracefulDeleteManifests()
+	err := r.gracefulDeleteAPIResources()
 	if err != nil {
 		glog.Warningf("Failed to handle a graceful delete of API resources: %v", err)
 	}

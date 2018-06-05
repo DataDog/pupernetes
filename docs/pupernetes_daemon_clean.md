@@ -1,4 +1,4 @@
-## pupernetes clean
+## pupernetes daemon clean
 
 Clean the environment created by setup and altered by a run
 
@@ -7,7 +7,7 @@ Clean the environment created by setup and altered by a run
 Clean the environment created by setup and altered by a run
 
 ```
-pupernetes clean [directory] [flags]
+pupernetes daemon clean [directory] [flags]
 ```
 
 ### Examples
@@ -15,13 +15,13 @@ pupernetes clean [directory] [flags]
 ```
 
 # Clean the environment default:
-pupernetes clean state/
+pupernetes daemon clean state/
 
 # Clean everything:
-pupernetes clean state/ -c all
+pupernetes daemon clean state/ -c all
 
 # Clean the etcd data-dir, the network configuration and the secrets:
-pupernetes clean state/ -c etcd,network,secrets
+pupernetes daemon clean state/ -c etcd,network,secrets
 
 ```
 
@@ -48,5 +48,5 @@ pupernetes clean state/ -c etcd,network,secrets
 
 ### SEE ALSO
 
-* [pupernetes](pupernetes.md)	 - Use this command to clean setup and run a Kubernetes local environment
+* [pupernetes daemon](pupernetes_daemon.md)	 - Use this command to clean setup and run a Kubernetes local environment
 
