@@ -25,35 +25,20 @@ func ResetNamespace(apiAddress, namespace string) error {
 		return err
 	}
 	glog.Infof("Resetting namespace %q ...", namespace)
-	c := &http.Client{}
-	c.Timeout = time.Second * 5
-
-	u, err := url.Parse(fmt.Sprintf("http://%s/reset/%s", apiAddress, namespace))
-	if err != nil {
-		glog.Errorf("Error during urlParse: %v", err)
-		return err
-	}
-	glog.V(3).Infof("Using url: %s", u.String())
-	resp, err := c.Post(u.String(), "application/json", nil)
-	if err != nil {
-		glog.Errorf("Unexpected error during reset namespace %s: %v", namespace, err)
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		err := fmt.Errorf("non OK status code when deleting ns %s: %d", namespace, resp.StatusCode)
-		glog.Errorf("Cannot delete namespace: %v", err)
-		return err
-	}
-	glog.Infof("Namespace %q successfully reset", namespace)
-	return nil
+	return doPOST(apiAddress, fmt.Sprintf("%s/%s", resetRoute, namespace))
 }
 
-func ReApply(apiAddress string) error {
-	glog.Infof("Re-applying ...")
+func Apply(apiAddress string) error {
+	glog.Infof("Applying ...")
+	return doPOST(apiAddress, applyRoute)
+}
+
+func doPOST(apiAddress, apiRoute string) error {
+	glog.Infof("Calling POST %s ...", apiRoute)
 	c := &http.Client{}
 	c.Timeout = time.Second * 5
 
-	u, err := url.Parse(fmt.Sprintf("http://%s/re-apply", apiAddress))
+	u, err := url.Parse(fmt.Sprintf("http://%s%s", apiAddress, apiRoute))
 	if err != nil {
 		glog.Errorf("Error during urlParse: %v", err)
 		return err
@@ -61,14 +46,14 @@ func ReApply(apiAddress string) error {
 	glog.V(3).Infof("Using url: %s", u.String())
 	resp, err := c.Post(u.String(), "application/json", nil)
 	if err != nil {
-		glog.Errorf("Unexpected error during re-applying: %v", err)
+		glog.Errorf("Unexpected error during POST %s: %v", u.String(), err)
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		err := fmt.Errorf("non OK status code when re-applying: %d", resp.StatusCode)
-		glog.Errorf("Cannot re-apply: %v", err)
+		err := fmt.Errorf("non OK status code when POST %s: %d", u.String(), resp.StatusCode)
+		glog.Errorf("Cannot POST: %v", err)
 		return err
 	}
-	glog.Infof("Re-apply successful")
+	glog.Infof("POST on %s successfully executed: %d", u.String(), resp.StatusCode)
 	return nil
 }

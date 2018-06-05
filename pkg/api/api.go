@@ -17,6 +17,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+const (
+	stopRoute  = "/stop"
+	applyRoute = "/apply"
+	resetRoute = "/reset"
+)
+
 // HandlerAPI handles the API calls
 type HandlerAPI struct {
 	sigChan        chan os.Signal
@@ -75,11 +81,14 @@ func NewAPI(sigChan chan os.Signal, resetNamespaceFn func(namespaces *corev1.Nam
 		apply:          apply,
 	}
 	r := mux.NewRouter()
+
+	// POSTs
 	r.Methods("POST").Path("/stop").HandlerFunc(h.stopHandler)
-	r.Methods("POST").Path("/apply").HandlerFunc(h.applyHandler)
-	r.Methods("POST").Path("/reset/{namespace}").HandlerFunc(h.resetHandler)
+	r.Methods("POST").Path(applyRoute).HandlerFunc(h.applyHandler)
+	r.Methods("POST").Path(resetRoute + "/{namespace}").HandlerFunc(h.resetHandler)
+
+	// GETs
 	r.Methods("GET").Path("/ready").HandlerFunc(h.isReadyHandler)
-	r.Methods("GET").Path("/re-apply").HandlerFunc(h.isReadyHandler)
 
 	srv := &http.Server{
 		Handler:      r,

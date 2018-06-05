@@ -20,14 +20,14 @@ func (r *Runtime) deleteDeployments(namespaces *corev1.NamespaceList) error {
 	for _, ns := range namespaces.Items {
 		toDelete, err := r.env.GetKubernetesClient().AppsV1beta1().Deployments(ns.Name).List(v1.ListOptions{})
 		if err != nil {
-			glog.Errorf("Cannot get Deployments -n %s: %v", ns.Name, err)
+			glog.Errorf("Cannot get Deployments in ns %q: %v", ns.Name, err)
 			return err
 		}
 		glog.V(4).Infof("Deleting %d Deployments in ns %q ...", len(toDelete.Items), ns.Name)
 		for _, elt := range toDelete.Items {
 			err = r.env.GetKubernetesClient().AppsV1beta1().Deployments(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
 			if err != nil {
-				glog.Errorf("Cannot delete Deployments %s -n %q: %v", elt.Name, elt.Namespace, err)
+				glog.Errorf("Cannot delete Deployments %s in ns %q: %v", elt.Name, elt.Namespace, err)
 				errs = append(errs, err.Error())
 			}
 		}
@@ -43,14 +43,14 @@ func (r *Runtime) deleteDaemonset(namespaces *corev1.NamespaceList) error {
 	for _, ns := range namespaces.Items {
 		toDelete, err := r.env.GetKubernetesClient().AppsV1().DaemonSets(ns.Name).List(v1.ListOptions{})
 		if err != nil {
-			glog.Errorf("Cannot get DaemonSets -n %s: %v", ns.Name, err)
+			glog.Errorf("Cannot get DaemonSets in ns %q: %v", ns.Name, err)
 			return err
 		}
 		glog.V(4).Infof("Deleting %d DaemonSets in ns %q ...", len(toDelete.Items), ns.Name)
 		for _, elt := range toDelete.Items {
 			err = r.env.GetKubernetesClient().AppsV1().DaemonSets(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
 			if err != nil {
-				glog.Errorf("Cannot delete DaemonSets %s -n %q: %v", elt.Name, elt.Namespace, err)
+				glog.Errorf("Cannot delete DaemonSets %s in ns %q: %v", elt.Name, elt.Namespace, err)
 				errs = append(errs, err.Error())
 			}
 		}
@@ -66,14 +66,14 @@ func (r *Runtime) deleteReplicationController(namespaces *corev1.NamespaceList) 
 	for _, ns := range namespaces.Items {
 		toDelete, err := r.env.GetKubernetesClient().CoreV1().ReplicationControllers(ns.Name).List(v1.ListOptions{})
 		if err != nil {
-			glog.Errorf("Cannot get ReplicationControllers -n %s: %v", ns.Name, err)
+			glog.Errorf("Cannot get ReplicationControllers in ns %q: %v", ns.Name, err)
 			return err
 		}
 		glog.V(4).Infof("Deleting %d ReplicationControllers in ns %q ...", len(toDelete.Items), ns.Name)
 		for _, elt := range toDelete.Items {
 			err = r.env.GetKubernetesClient().AppsV1().DaemonSets(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
 			if err != nil {
-				glog.Errorf("Cannot delete ReplicationControllers %s -n %q: %v", elt.Name, elt.Namespace, err)
+				glog.Errorf("Cannot delete ReplicationControllers %s in ns %q: %v", elt.Name, elt.Namespace, err)
 				errs = append(errs, err.Error())
 			}
 		}
@@ -89,14 +89,14 @@ func (r *Runtime) deleteReplicaSets(namespaces *corev1.NamespaceList) error {
 	for _, ns := range namespaces.Items {
 		toDelete, err := r.env.GetKubernetesClient().AppsV1().ReplicaSets(ns.Name).List(v1.ListOptions{})
 		if err != nil {
-			glog.Errorf("Cannot get ReplicaSets -n %s: %v", ns.Name, err)
+			glog.Errorf("Cannot get ReplicaSets in ns %q: %v", ns.Name, err)
 			return err
 		}
 		glog.V(4).Infof("Deleting %d ReplicaSets in ns %q ...", len(toDelete.Items), ns.Name)
 		for _, elt := range toDelete.Items {
 			err = r.env.GetKubernetesClient().AppsV1().ReplicaSets(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
 			if err != nil && !errors.IsNotFound(err) {
-				glog.Errorf("Cannot delete ReplicaSets %s -n %q: %v", elt.Name, elt.Namespace, err)
+				glog.Errorf("Cannot delete ReplicaSets %s in ns %q: %v", elt.Name, elt.Namespace, err)
 				errs = append(errs, err.Error())
 			}
 		}
@@ -112,14 +112,14 @@ func (r *Runtime) deleteJobs(namespaces *corev1.NamespaceList) error {
 	for _, ns := range namespaces.Items {
 		toDelete, err := r.env.GetKubernetesClient().BatchV1().Jobs(ns.Name).List(v1.ListOptions{})
 		if err != nil {
-			glog.Errorf("Cannot get Jobs -n %s: %v", ns.Name, err)
+			glog.Errorf("Cannot get Jobs in ns %q: %v", ns.Name, err)
 			return err
 		}
 		glog.V(4).Infof("Deleting %d Jobs in ns %q ...", len(toDelete.Items), ns.Name)
 		for _, elt := range toDelete.Items {
 			err = r.env.GetKubernetesClient().BatchV1().Jobs(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
 			if err != nil && !errors.IsNotFound(err) {
-				glog.Errorf("Cannot delete Jobs %s -n %q: %v", elt.Name, elt.Namespace, err)
+				glog.Errorf("Cannot delete Jobs %s in ns %q: %v", elt.Name, elt.Namespace, err)
 				errs = append(errs, err.Error())
 			}
 		}
@@ -135,14 +135,14 @@ func (r *Runtime) deletePods(namespaces *corev1.NamespaceList) error {
 	for _, ns := range namespaces.Items {
 		toDelete, err := r.env.GetKubernetesClient().CoreV1().Pods(ns.Name).List(v1.ListOptions{})
 		if err != nil {
-			glog.Errorf("Cannot get Pods -n %s: %v", ns.Name, err)
+			glog.Errorf("Cannot get Pods in ns %q: %v", ns.Name, err)
 			return err
 		}
 		glog.V(4).Infof("Deleting %d Pods in ns %s ...", len(toDelete.Items), ns.Name)
 		for _, elt := range toDelete.Items {
 			err = r.env.GetKubernetesClient().CoreV1().Pods(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
 			if err != nil && !errors.IsNotFound(err) {
-				glog.Errorf("Cannot delete Pods %s -n %q: %v", elt.Name, elt.Namespace, err)
+				glog.Errorf("Cannot delete Pods %s in ns %q: %v", elt.Name, elt.Namespace, err)
 				errs = append(errs, err.Error())
 			}
 		}
@@ -158,14 +158,14 @@ func (r *Runtime) deleteServices(namespaces *corev1.NamespaceList) error {
 	for _, ns := range namespaces.Items {
 		toDelete, err := r.env.GetKubernetesClient().CoreV1().Services(ns.Name).List(v1.ListOptions{})
 		if err != nil {
-			glog.Errorf("Cannot get Services -n %s: %v", ns.Name, err)
+			glog.Errorf("Cannot get Services in ns %q: %v", ns.Name, err)
 			return err
 		}
 		glog.V(4).Infof("Deleting %d Services in ns %s ...", len(toDelete.Items), ns.Name)
 		for _, elt := range toDelete.Items {
 			err = r.env.GetKubernetesClient().CoreV1().Services(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
 			if err != nil && !errors.IsNotFound(err) {
-				glog.Errorf("Cannot delete Services %s -n %q: %v", elt.Name, elt.Namespace, err)
+				glog.Errorf("Cannot delete Services %s in ns %q: %v", elt.Name, elt.Namespace, err)
 				errs = append(errs, err.Error())
 			}
 		}
@@ -181,14 +181,14 @@ func (r *Runtime) deleteEndpoints(namespaces *corev1.NamespaceList) error {
 	for _, ns := range namespaces.Items {
 		toDelete, err := r.env.GetKubernetesClient().CoreV1().Endpoints(ns.Name).List(v1.ListOptions{})
 		if err != nil {
-			glog.Errorf("Cannot get Endpoints -n %s: %v", ns.Name, err)
+			glog.Errorf("Cannot get Endpoints in ns %q: %v", ns.Name, err)
 			return err
 		}
 		glog.V(4).Infof("Deleting %d Endpoints in ns %s ...", len(toDelete.Items), ns.Name)
 		for _, elt := range toDelete.Items {
 			err = r.env.GetKubernetesClient().CoreV1().Endpoints(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
 			if err != nil && !errors.IsNotFound(err) {
-				glog.Errorf("Cannot delete Endpoints %s -n %q: %v", elt.Name, elt.Namespace, err)
+				glog.Errorf("Cannot delete Endpoints %s in ns %q: %v", elt.Name, elt.Namespace, err)
 				errs = append(errs, err.Error())
 			}
 		}
@@ -204,14 +204,14 @@ func (r *Runtime) deleteConfigMaps(namespaces *corev1.NamespaceList) error {
 	for _, ns := range namespaces.Items {
 		toDelete, err := r.env.GetKubernetesClient().CoreV1().ConfigMaps(ns.Name).List(v1.ListOptions{})
 		if err != nil {
-			glog.Errorf("Cannot get ConfigMaps -n %s: %v", ns.Name, err)
+			glog.Errorf("Cannot get ConfigMaps in ns %q: %v", ns.Name, err)
 			return err
 		}
 		glog.V(4).Infof("Deleting %d ConfigMaps in ns %s ...", len(toDelete.Items), ns.Name)
 		for _, elt := range toDelete.Items {
 			err = r.env.GetKubernetesClient().CoreV1().ConfigMaps(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
 			if err != nil && !errors.IsNotFound(err) {
-				glog.Errorf("Cannot delete ConfigMaps %s -n %q: %v", elt.Name, elt.Namespace, err)
+				glog.Errorf("Cannot delete ConfigMaps %s in ns %q: %v", elt.Name, elt.Namespace, err)
 				errs = append(errs, err.Error())
 			}
 		}
@@ -227,14 +227,14 @@ func (r *Runtime) deleteSecrets(namespaces *corev1.NamespaceList) error {
 	for _, ns := range namespaces.Items {
 		toDelete, err := r.env.GetKubernetesClient().CoreV1().Secrets(ns.Name).List(v1.ListOptions{})
 		if err != nil {
-			glog.Errorf("Cannot get Secrets -n %s: %v", ns.Name, err)
+			glog.Errorf("Cannot get Secrets in ns %q: %v", ns.Name, err)
 			return err
 		}
 		glog.V(4).Infof("Deleting %d Secrets in ns %s ...", len(toDelete.Items), ns.Name)
 		for _, elt := range toDelete.Items {
 			err = r.env.GetKubernetesClient().CoreV1().Secrets(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
 			if err != nil && !errors.IsNotFound(err) {
-				glog.Errorf("Cannot delete Secrets %s -n %q: %v", elt.Name, elt.Namespace, err)
+				glog.Errorf("Cannot delete Secrets %s in ns %q: %v", elt.Name, elt.Namespace, err)
 				errs = append(errs, err.Error())
 			}
 		}
@@ -250,14 +250,14 @@ func (r *Runtime) deleteServiceAccounts(namespaces *corev1.NamespaceList) error 
 	for _, ns := range namespaces.Items {
 		toDelete, err := r.env.GetKubernetesClient().CoreV1().ServiceAccounts(ns.Name).List(v1.ListOptions{})
 		if err != nil {
-			glog.Errorf("Cannot get ServiceAccounts -n %s: %v", ns.Name, err)
+			glog.Errorf("Cannot get ServiceAccounts in ns %q: %v", ns.Name, err)
 			return err
 		}
 		glog.V(4).Infof("Deleting %d ServiceAccounts in ns %s ...", len(toDelete.Items), ns.Name)
 		for _, elt := range toDelete.Items {
 			err = r.env.GetKubernetesClient().CoreV1().ServiceAccounts(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
 			if err != nil && !errors.IsNotFound(err) {
-				glog.Errorf("Cannot delete ServiceAccounts %s -n %q: %v", elt.Name, elt.Namespace, err)
+				glog.Errorf("Cannot delete ServiceAccounts %s in ns %q: %v", elt.Name, elt.Namespace, err)
 				errs = append(errs, err.Error())
 			}
 		}

@@ -39,7 +39,7 @@ pupernetes daemon run state/ --job-type systemd
 ### Options
 
 ```
-      --bind-address string       bind address for the API ip:port (default "127.0.0.1:8989")
+      --bind-address string       Bind address for pupernetes API ip:port (default "127.0.0.1:8989")
   -d, --drain string              drain options after run: iptables,kubeletgc,pods,all,none (default "all")
       --gc duration               grace period for the kubelet GC trigger when draining run, no-op if not draining (default 1m0s)
   -h, --help                      help for run

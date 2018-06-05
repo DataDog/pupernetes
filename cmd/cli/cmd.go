@@ -182,13 +182,13 @@ func NewCommand() (*cobra.Command, *int) {
 		Short:      "Reset the Kubernetes resources in the given namespace",
 		Args:       cobra.MinimumNArgs(1), // namespace
 		Example: fmt.Sprintf(`
-# Reset the namespace default:
+# Reset the default namespace:
 %s reset default
 
-# Reset the namespace kube-system and redeploy the initial setup:
+# Reset the kube-system namespace and redeploy the initial setup:
 %s reset kube-system --apply
 
-# Reset the namespaces default and kube-system then redeploy the initial setup:
+# Reset the default and kube-system namespaces then redeploy the initial setup:
 %s reset default kube-system --apply
 
 # Reset all namespaces and redeploy the initial setup:
@@ -210,7 +210,7 @@ func NewCommand() (*cobra.Command, *int) {
 			if !config.ViperConfig.GetBool("apply") {
 				return
 			}
-			err := api.ReApply(config.ViperConfig.GetString("api-address"))
+			err := api.Apply(config.ViperConfig.GetString("api-address"))
 			if err != nil {
 				exitCode = 2
 				return
@@ -269,7 +269,7 @@ func NewCommand() (*cobra.Command, *int) {
 	runCommand.PersistentFlags().Duration("gc", config.ViperConfig.GetDuration("gc"), fmt.Sprintf("grace period for the kubelet GC trigger when draining %s, no-op if not draining", runCommand.Name()))
 	config.ViperConfig.BindPFlag("gc", runCommand.PersistentFlags().Lookup("gc"))
 
-	runCommand.PersistentFlags().String("bind-address", config.ViperConfig.GetString("bind-address"), "bind address for the API ip:port")
+	runCommand.PersistentFlags().String("bind-address", config.ViperConfig.GetString("bind-address"), fmt.Sprintf("Bind address for %s API ip:port", programName))
 	config.ViperConfig.BindPFlag("bind-address", runCommand.PersistentFlags().Lookup("bind-address"))
 
 	runCommand.PersistentFlags().String("systemd-job-name", config.ViperConfig.GetString("systemd-job-name"), "unit name used when running as systemd service")
@@ -280,7 +280,7 @@ func NewCommand() (*cobra.Command, *int) {
 
 	// Reset
 	rootCommand.AddCommand(resetCommand)
-	resetCommand.PersistentFlags().String("api-address", config.ViperConfig.GetString("api-address"), "Address for the API ip:port")
+	resetCommand.PersistentFlags().String("api-address", config.ViperConfig.GetString("api-address"), fmt.Sprintf("Address for the %s API ip:port", programName))
 	config.ViperConfig.BindPFlag("api-address", resetCommand.PersistentFlags().Lookup("api-address"))
 
 	resetCommand.PersistentFlags().BoolP("apply", "a", config.ViperConfig.GetBool("apply"), "Apply manifests-api after reset, useful when resetting kube-system namespace")
