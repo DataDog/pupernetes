@@ -245,6 +245,29 @@ func (r *Runtime) deleteSecrets(namespaces *corev1.NamespaceList) error {
 	return nil
 }
 
+func (r *Runtime) deleteServiceAccounts(namespaces *corev1.NamespaceList) error {
+	var errs []string
+	for _, ns := range namespaces.Items {
+		toDelete, err := r.env.GetKubernetesClient().CoreV1().ServiceAccounts(ns.Name).List(v1.ListOptions{})
+		if err != nil {
+			glog.Errorf("Cannot get ServiceAccounts -n %s: %v", ns.Name, err)
+			return err
+		}
+		glog.V(4).Infof("Deleting %d ServiceAccounts in ns %s ...", len(toDelete.Items), ns.Name)
+		for _, elt := range toDelete.Items {
+			err = r.env.GetKubernetesClient().CoreV1().ServiceAccounts(elt.Namespace).Delete(elt.Name, r.kubeDeleteOption)
+			if err != nil && !errors.IsNotFound(err) {
+				glog.Errorf("Cannot delete ServiceAccounts %s -n %q: %v", elt.Name, elt.Namespace, err)
+				errs = append(errs, err.Error())
+			}
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("unexpected errors during delete ServiceAccounts: %s", strings.Join(errs, ", "))
+	}
+	return nil
+}
+
 func (r *Runtime) DeleteAPIManifests(namespaces *corev1.NamespaceList) error {
 	fnList := []func(ns *corev1.NamespaceList) error{
 		r.deleteServices,
@@ -257,6 +280,7 @@ func (r *Runtime) DeleteAPIManifests(namespaces *corev1.NamespaceList) error {
 		r.deleteEndpoints,
 		r.deleteConfigMaps,
 		r.deleteSecrets,
+		r.deleteServiceAccounts,
 	}
 	errChan := make(chan error, len(fnList))
 
