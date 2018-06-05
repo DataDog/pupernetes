@@ -30,6 +30,8 @@ type exeBinary struct {
 	commandVersion []string
 }
 
+const downloadBinaryRetryDelay = time.Second * 5
+
 func (x *exeBinary) isUpToDate() bool {
 	b, err := exec.Command(x.binaryABSPath, x.commandVersion...).CombinedOutput()
 	output := strings.Trim(string(b), "\n")
@@ -46,13 +48,7 @@ func (x *exeBinary) isUpToDate() bool {
 	return false
 }
 
-func (d *depBinary) download() error {
-	_, err := os.Stat(d.archivePath)
-	if err == nil {
-		glog.V(2).Infof("Archive already here: %s", d.archivePath)
-		return nil
-	}
-
+func (d *depBinary) downloadToFile() error {
 	glog.V(2).Infof("Downloading the archive %s to %s", d.archiveURL, d.archivePath)
 	client := &http.Client{Timeout: time.Minute * 15}
 	resp, err := client.Get(d.archiveURL)
@@ -72,11 +68,6 @@ func (d *depBinary) download() error {
 			glog.Errorf("Cannot open %s: %v", d.archivePath, err)
 			return err
 		}
-		f, err = os.Create(d.archivePath)
-		if err != nil {
-			glog.Errorf("Cannot create %s: %v", d.archivePath, err)
-			return err
-		}
 	}
 	defer f.Close()
 	dst := bufio.NewWriter(f)
@@ -88,4 +79,21 @@ func (d *depBinary) download() error {
 	}
 	glog.V(2).Infof("Successfully downloaded %s to %s", d.archiveURL, d.archivePath)
 	return dst.Flush()
+}
+
+func (d *depBinary) download() error {
+	_, err := os.Stat(d.archivePath)
+	if err == nil {
+		glog.V(2).Infof("Archive already here: %s", d.archivePath)
+		return nil
+	}
+	err = d.downloadToFile()
+	if err != nil {
+		glog.Errorf("Fail to download %s: %v", d.archiveURL, err)
+		glog.Infof("Retrying to download in %s ...", downloadBinaryRetryDelay.String())
+		time.Sleep(downloadBinaryRetryDelay)
+		// we don't need to delete the file as we open it with O_TRUNC
+		return d.downloadToFile()
+	}
+	return nil
 }
