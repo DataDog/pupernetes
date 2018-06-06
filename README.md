@@ -1,6 +1,14 @@
 # pupernetes - p8s
 
-Run a Kubernetes setup in 45 seconds.
+Run a managed Kubernetes setup.
+
+This project purpose is to provide a simple Kubernetes setup to validate any software on top of it.
+
+You can use it to validate a software dependence on Kubernetes itself or just to run some classic app workflows with [argo](https://github.com/argoproj/argo)
+
+Our main use-case is the end to end testing pipeline of the [datadog-agent](https://github.com/DataDog/datadog-agent)
+
+[![asciicast](https://asciinema.org/a/K1Q2eBlCpYfpqXBjOmXGmx4Jy.png)](https://asciinema.org/a/K1Q2eBlCpYfpqXBjOmXGmx4Jy)
 
 ![img](docs/pupernetes.jpg)
 
@@ -17,7 +25,8 @@ Run a Kubernetes setup in 45 seconds.
 
 The default setup is secured with:
 
-* x509 certificates provided by an embedded vault PKI
+* valid x509 certificates provided by an embedded vault PKI
+    * Able to use the Kubernetes CSR and the service account root-ca
 * HTTPS webhook to provide token lookups for the kubelet API
 * RBAC
 
@@ -25,7 +34,7 @@ The default setup is secured with:
 - [Requirements](#requirements)
   * [Runtime](#runtime)
   * [Development](#development)
-    + [Install VMWare Fusion](#install-vmware-fusion)
+    + [Install VMware Fusion](#install-vmware-fusion)
     + [Create Ubuntu VM](#create-ubuntu-vm)
     + [Install Docker](#install-docker)
 - [Build it](#build-it)
@@ -60,7 +69,7 @@ Setup a linux environment for running `pupernetes`. **This is only a suggested e
 
 #### Install VMWare Fusion
 
-`pupernetes` must be run on linux. To run a linux VM install [VMWare Fusion](https://www.vmware.com/products/fusion/fusion-evaluation.html) or your preferred virtualization software. You can use the VMWare Fusion Pro 30-day trial.
+`pupernetes` must be run on linux. To run a linux VM install [VMware Fusion](https://www.vmware.com/products/fusion/fusion-evaluation.html) or your preferred virtualization software. You can use the VMware Fusion Pro 30-day trial.
 
 #### Create Ubuntu VM
 
@@ -99,37 +108,7 @@ To manage docker as a non-root user (so you don't have to keep using `sudo`) fol
 ## Run it
 
 ```bash
-sudo ./pupernetes run sandbox/
-```
-
-```text
-I0412 19:24:01.349686   38841 clean.go:30] Removed /home/jb/go/src/github.com/DataDog/pupernetes/sandbox/etcd-data
-I0412 19:24:01.350733   38841 clean.go:136] Cleanup successfully finished
-I0412 19:24:03.788224   38841 systemd.go:31] Already created systemd unit: /run/systemd/system/p8s-kubelet.service
-I0412 19:24:03.788277   38841 systemd.go:31] Already created systemd unit: /run/systemd/system/p8s-etcd.service
-I0412 19:24:05.277634   38841 setup.go:249] Setup ready /home/jb/go/src/github.com/DataDog/pupernetes/sandbox
-I0412 19:24:05.278049   38841 run.go:95] Timeout for this current run is 6h0m0s
-I0412 19:24:05.278124   38841 systemd.go:40] Starting systemd unit: p8s-etcd.service ...
-I0412 19:24:06.024161   38841 systemd.go:40] Starting systemd unit: p8s-kubelet.service ...
-W0412 19:24:07.034545   38841 run.go:192] Kubenertes apiserver not ready yet: Get http://127.0.0.1:8080/healthz: dial tcp 127.0.0.1:8080: connect: connection refused
-W0412 19:24:21.031852   38841 run.go:192] Kubenertes apiserver not ready yet: bad status code for http://127.0.0.1:8080/healthz: 500
-I0412 19:24:24.031872   38841 kubectl.go:14] Calling kubectl apply -f /home/jb/go/src/github.com/DataDog/pupernetes/sandbox/manifest-api ...
-I0412 19:24:25.541348   38841 kubectl.go:21] Successfully applied manifests:
-serviceaccount "coredns" created
-clusterrole.rbac.authorization.k8s.io "system:coredns" created
-clusterrolebinding.rbac.authorization.k8s.io "system:coredns" created
-configmap "coredns" created
-deployment.extensions "coredns" created
-service "coredns" created
-clusterrolebinding.rbac.authorization.k8s.io "p8s-admin" created
-serviceaccount "kube-controller-manager" created
-pod "kube-controller-manager" created
-daemonset.extensions "kube-proxy" created
-daemonset.extensions "kube-scheduler" created
-I0412 19:24:25.541409   38841 run.go:156] Kubernetes apiserver hooks done
-I0412 19:24:26.091092   38841 run.go:176] Kubelet is running 1 pods
-I0412 19:24:36.035496   38841 run.go:176] Kubelet is running 4 pods
-I0412 19:24:46.044459   38841 run.go:176] Kubelet is running 5 pods
+sudo ./pupernetes daemon run sandbox/
 ```
 
 ## Use it
@@ -162,11 +141,24 @@ kube-system   coredns   1         1         1            1           3m
 
 NAMESPACE     NAME                       READY     STATUS    RESTARTS   AGE
 kube-system   coredns-747dbcf5df-p2lhq   1/1       Running   0          3m
-kube-system   kube-apiserver-v1704       1/1       Running   0          2m
 kube-system   kube-controller-manager    1/1       Running   0          3m
 kube-system   kube-proxy-wggdn           1/1       Running   0          3m
 kube-system   kube-scheduler-92zrj       1/1       Running   0          3m
 ```
+
+## Hyperkube version:
+
+Example: `--hyperkube-version=1.9.3`
+
+- [x] 1.11
+- [x] 1.10
+- [x] 1.9
+- [x] 1.8
+- [x] 1.7
+- [x] 1.6
+- [x] 1.5
+- [] 1.4
+- [] 1.3
 
 ### Command line
 
@@ -176,7 +168,7 @@ The full documentation is available [here](docs).
 
 ```bash
 make
-sudo ./pupernetes run sandbox/
+sudo ./pupernetes daemon run sandbox/
 ```
 
 Graceful stop it with:
@@ -189,7 +181,7 @@ Graceful stop it with:
 ### Quick systemd-run
 
 ```bash
-sudo systemd-run ./pupernetes run ${PWD}/sandbox
+sudo systemd-run ./pupernetes daemon run ${PWD}/sandbox
 ```
 
 Graceful stop it with:
@@ -232,7 +224,5 @@ Graceful stop it with:
 * Secrets
   * IP SAN
     * Statically configured with the given Kubernetes cluster IP range
-* Draining
-  * The garbage collection can't be done without adding some delay during the drain phase
 * Versions
   * You just can minimally change the version of the downloaded binaries in the state directory during the `run` phase but the compatibility isn't granted
