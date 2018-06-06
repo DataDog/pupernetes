@@ -18,7 +18,7 @@ import (
 
 func remove(path string) error {
 	glog.V(4).Infof("Trying to remove %s ...", path)
-	_, err := os.Stat(path)
+	_, err := os.Lstat(path)
 	if err != nil && os.IsNotExist(err) {
 		glog.V(4).Infof("Not existing path: %s", path)
 		return nil

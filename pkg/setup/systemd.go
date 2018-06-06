@@ -7,7 +7,6 @@ package setup
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strconv"
@@ -25,7 +24,10 @@ const (
 )
 
 var (
-	fieldsToCompare = []string{"ExecStart", "RootPath"}
+	fieldsToCompare = []string{
+		"ExecStart",
+		//"RootPath", TODO
+	}
 )
 
 func getUnitOptions(unitABSPath string) ([]*unit2.UnitOption, error) {
@@ -102,7 +104,7 @@ func statExecStart(opts []*unit2.UnitOption) error {
 	return fmt.Errorf("cannot find ExecStart in systemd options")
 }
 
-func (e *Environment) writeSystemdUnit(unitOpt []*unit2.UnitOption, unitName string) error {
+func (e *Environment) linkSystemdUnit(unitOpt []*unit2.UnitOption, manifestUnitName, unitName string) error {
 	unitABSPath := path.Join(UnitPath, unitName)
 	_, err := os.Stat(unitABSPath)
 	if err == nil {
@@ -129,20 +131,14 @@ func (e *Environment) writeSystemdUnit(unitOpt []*unit2.UnitOption, unitName str
 		return nil
 	}
 
-	// Write
+	// Link
 	glog.V(4).Infof("Creating systemd unit %s ...", unitName)
-	c := unit2.Serialize(unitOpt)
-	b, err := ioutil.ReadAll(c)
+	err = os.Symlink(manifestUnitName, unitABSPath)
 	if err != nil {
-		glog.Errorf("Cannot read %s systemd unit: %v", unitName, err)
+		glog.Errorf("Fail to link systemd unit %s -> %s: %v", manifestUnitName, unitABSPath, err)
 		return err
 	}
-	err = ioutil.WriteFile(unitABSPath, b, 0444)
-	if err != nil {
-		glog.Errorf("Fail to write systemd unit %s: %v", unitABSPath, err)
-		return err
-	}
-	glog.V(4).Infof("Successfully wrote systemd unit %s", unitABSPath)
+	glog.V(4).Infof("Successfully linked systemd unit %%s -> %s", manifestUnitName, unitABSPath)
 	return nil
 }
 
@@ -183,7 +179,8 @@ func (e *Environment) createEnd2EndSection() []*unit2.UnitOption {
 
 func (e *Environment) createUnitFromTemplate(unitName string) error {
 	unitNameNoPrefix := strings.TrimPrefix(unitName, e.systemdUnitPrefix)
-	fd, err := os.OpenFile(path.Join(e.manifestSystemdUnit, unitNameNoPrefix), os.O_RDONLY, 0)
+	manifestUnitName := path.Join(e.manifestSystemdUnit, unitNameNoPrefix)
+	fd, err := os.OpenFile(manifestUnitName, os.O_RDONLY, 0)
 	if err != nil {
 		glog.Errorf("Cannot read %s: %v", unitNameNoPrefix, err)
 		return err
@@ -194,8 +191,8 @@ func (e *Environment) createUnitFromTemplate(unitName string) error {
 		glog.Errorf("Unexpected error during parsing s: %v", unitNameNoPrefix, err)
 		return err
 	}
-	unitOptions = append(unitOptions, e.systemdEnd2EndSection...)
-	err = e.writeSystemdUnit(unitOptions, unitName)
+	//unitOptions = append(unitOptions, e.systemdEnd2EndSection...) TODO see how to insert that
+	err = e.linkSystemdUnit(unitOptions, manifestUnitName, unitName)
 	if err != nil {
 		return err
 	}

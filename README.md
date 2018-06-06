@@ -8,7 +8,7 @@ You can use it to validate a software dependence on Kubernetes itself or just to
 
 Our main use-case is the end to end testing pipeline of the [datadog-agent](https://github.com/DataDog/datadog-agent)
 
-[![asciicast](https://asciinema.org/a/K1Q2eBlCpYfpqXBjOmXGmx4Jy.png)](https://asciinema.org/a/K1Q2eBlCpYfpqXBjOmXGmx4Jy)
+[![asciicast](https://asciinema.org/a/5fvTb9iEcvwO3EhqOSmDMIT9O.png)](https://asciinema.org/a/5fvTb9iEcvwO3EhqOSmDMIT9O)
 
 ![img](docs/pupernetes.jpg)
 
