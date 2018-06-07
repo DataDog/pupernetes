@@ -30,8 +30,8 @@ func createManifest(filePath string, content []byte) error {
 
 func (e *Environment) populateDefaultTemplates() error {
 	glog.V(4).Infof("Creating default templates, if needed ...")
-	for _, manifest := range defaultTemplates.Manifests {
-		filePath := path.Join(e.manifestTemplatesABSPath, manifest.Destination, fmt.Sprintf("%s.yaml", manifest.Name))
+	for _, manifest := range defaultTemplates.Manifests[e.templateVersion] {
+		filePath := path.Join(e.manifestTemplatesABSPath, manifest.Destination, manifest.Name)
 		_, err := os.Stat(filePath)
 		if err == nil {
 			glog.V(4).Infof("Default template already here, not creating: %s", filePath)
@@ -44,21 +44,6 @@ func (e *Environment) populateDefaultTemplates() error {
 		}
 	}
 	return nil
-}
-
-// TODO keep the information
-func (e *Environment) isStaticPod(filename string) bool {
-	for _, manifest := range defaultTemplates.Manifests {
-		if manifest.Destination == "/manifest-files" {
-			glog.V(5).Infof("This is marked as API pod: %s.yaml", manifest.Name)
-			continue
-		}
-		if filename == fmt.Sprintf("%s.yaml", manifest.Name) {
-			glog.V(5).Infof("This is marked as static pod: %s.yaml", manifest.Name)
-			return true
-		}
-	}
-	return false
 }
 
 func (e *Environment) renderTemplates(category string) error {
@@ -106,11 +91,22 @@ func (e *Environment) renderTemplates(category string) error {
 }
 
 func (e *Environment) setupManifests() error {
+	glog.V(2).Infof("Using template collection of Kubernetes %s", e.templateVersion)
+	_, ok := defaultTemplates.Manifests[e.templateVersion]
+	if !ok {
+		err := fmt.Errorf("manifest collection for %s isn't provided", e.templateVersion)
+		glog.Errorf("Cannot setup manifests: %v", err)
+		return err
+	}
+	// Adding runtime metadata - depending on network stage
+	e.templateMetadata.NodeIP = e.GetPublicIP()
+
 	err := e.populateDefaultTemplates()
 	if err != nil {
 		return err
 	}
 	for _, t := range []string{
+		defaultTemplates.ManifestSystemdUnit,
 		defaultTemplates.ManifestStaticPod,
 		defaultTemplates.ManifestConfig,
 		defaultTemplates.ManifestAPI,

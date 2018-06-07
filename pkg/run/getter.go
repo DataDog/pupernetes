@@ -23,7 +23,7 @@ func (r *Runtime) GetKubeletPods() ([]v1.Pod, error) {
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		err = fmt.Errorf("unexpected non 200 status code: %d", resp.StatusCode)
-		glog.Errorf("Cannot get Pods, %v", err)
+		glog.Errorf("Cannot get kubelet /pods, %v", err)
 		return nil, err
 	}
 	deco := json.NewDecoder(resp.Body)

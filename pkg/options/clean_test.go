@@ -178,6 +178,46 @@ func TestNewCleanOptions(t *testing.T) {
 			"binaries,etcd,secrets",
 		},
 		{
+			"-binaries",
+			&Clean{
+				common{
+					false,
+					false,
+				},
+				true,
+				false,
+				true,
+				true,
+				true,
+				true,
+				true,
+				true,
+				true,
+				true,
+			},
+			"etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets,systemd",
+		},
+		{
+			"-binaries,binaries",
+			&Clean{
+				common{
+					false,
+					false,
+				},
+				true,
+				false,
+				true,
+				true,
+				true,
+				true,
+				true,
+				true,
+				true,
+				true,
+			},
+			"etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets,systemd",
+		},
+		{
 			"none,etcd",
 			&Clean{
 				common{

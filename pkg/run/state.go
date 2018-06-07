@@ -11,11 +11,9 @@ type State struct {
 	apiServerProbeLastError string
 	ready                   bool
 
-	kubeletProbeFail      int
+	kubeletProbeFailures  int
 	kubeletAPIPodRunning  int
 	kubeletLogsPodRunning int
-
-	kubeAPIServerRestartNb int
 }
 
 func (s *State) IsReady() bool {
@@ -24,7 +22,7 @@ func (s *State) IsReady() bool {
 	return s.ready
 }
 
-func (s *State) setReady() {
+func (s *State) SetReady() {
 	s.Lock()
 	s.ready = true
 	s.Unlock()
@@ -32,7 +30,7 @@ func (s *State) setReady() {
 	notifySystemd()
 }
 
-func (s *State) setAPIServerProbeLastError(msg string) {
+func (s *State) SetAPIServerProbeLastError(msg string) {
 	s.Lock()
 	if s.apiServerProbeLastError != msg {
 		glog.Infof("Kubenertes apiserver not ready yet: %s", msg)
@@ -41,19 +39,19 @@ func (s *State) setAPIServerProbeLastError(msg string) {
 	s.Unlock()
 }
 
-func (s *State) incKubeletProbeFail() {
+func (s *State) IncKubeletProbeFailures() {
 	s.Lock()
-	s.kubeletProbeFail++
+	s.kubeletProbeFailures++
 	s.Unlock()
 }
 
-func (s *State) getKubeletProbeFail() int {
+func (s *State) GetKubeletProbeFail() int {
 	s.RLock()
 	defer s.RUnlock()
-	return s.kubeletProbeFail
+	return s.kubeletProbeFailures
 }
 
-func (s *State) setKubeletAPIPodRunning(nb int) {
+func (s *State) SetKubeletAPIPodRunning(nb int) {
 	s.Lock()
 	if s.kubeletAPIPodRunning != nb {
 		glog.Infof("Kubelet API reports %d running pods", nb)
@@ -62,7 +60,7 @@ func (s *State) setKubeletAPIPodRunning(nb int) {
 	s.Unlock()
 }
 
-func (s *State) setKubeletLogsPodRunning(nb int) {
+func (s *State) SetKubeletLogsPodRunning(nb int) {
 	s.Lock()
 	if s.kubeletLogsPodRunning != nb {
 		glog.Infof("Kubelet log reports %d running pods", nb)
@@ -71,11 +69,8 @@ func (s *State) setKubeletLogsPodRunning(nb int) {
 	s.Unlock()
 }
 
-func (s *State) setKubeAPIServerRestartNb(nb int) {
-	s.Lock()
-	if s.kubeAPIServerRestartNb != nb {
-		glog.Infof("Kube apiserver restart count: %d", nb)
-		s.kubeAPIServerRestartNb = nb
-	}
-	s.Unlock()
+func (s *State) GetKubeletLogsPodRunning() int {
+	s.RLock()
+	defer s.RUnlock()
+	return s.kubeletLogsPodRunning
 }

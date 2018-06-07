@@ -8,17 +8,17 @@ package setup
 import (
 	"os"
 	"os/exec"
-	"path"
 	"strings"
 	"syscall"
 
-	"fmt"
-	"github.com/DataDog/pupernetes/pkg/config"
+	"github.com/DataDog/pupernetes/pkg/util"
+	"github.com/coreos/go-systemd/dbus"
 	"github.com/golang/glog"
 )
 
 func remove(path string) error {
-	_, err := os.Stat(path)
+	glog.V(4).Infof("Trying to remove %s ...", path)
+	_, err := os.Lstat(path)
 	if err != nil && os.IsNotExist(err) {
 		glog.V(4).Infof("Not existing path: %s", path)
 		return nil
@@ -100,7 +100,13 @@ func (e *Environment) Clean() error {
 		toRemove = append(toRemove, e.etcdDataABSPath)
 	}
 	if e.cleanOptions.Manifests {
-		toRemove = append(toRemove, e.manifestTemplatesABSPath, e.manifestStaticPodABSPath, e.manifestAPIABSPath, e.manifestConfigABSPath)
+		toRemove = append(toRemove,
+			e.manifestTemplatesABSPath,
+			e.manifestStaticPodABSPath,
+			e.manifestAPIABSPath,
+			e.manifestConfigABSPath,
+			e.manifestSystemdUnit,
+		)
 	}
 	if e.cleanOptions.Binaries {
 		toRemove = append(toRemove, e.binABSPath)
@@ -112,8 +118,22 @@ func (e *Environment) Clean() error {
 		toRemove = append(toRemove, e.networkABSPath)
 	}
 	if e.cleanOptions.Systemd {
-		toRemove = append(toRemove, path.Join(UnitPath, fmt.Sprintf("%setcd.service", config.ViperConfig.GetString("systemd-unit-prefix"))))
-		toRemove = append(toRemove, path.Join(UnitPath, fmt.Sprintf("%skubelet.service", config.ViperConfig.GetString("systemd-unit-prefix"))))
+		glog.V(3).Infof("Shutting down systemd units")
+		conn, err := dbus.NewSystemdConnection()
+		if err != nil {
+			glog.Errorf("Cannot connect to dbus: %v", err)
+			return err
+		}
+		defer conn.Reload()
+		defer conn.Close()
+		for _, u := range e.systemdUnitNames {
+			toRemove = append(toRemove, UnitPath+u)
+			err = util.StopUnit(conn, u)
+			if err != nil {
+				glog.Errorf("Cannot stop systemd unit %s: %v", u, err)
+				// don't return
+			}
+		}
 	}
 	if e.cleanOptions.All {
 		toRemove = append(toRemove, e.rootABSPath)
@@ -126,21 +146,20 @@ func (e *Environment) Clean() error {
 		if !e.cleanOptions.Mounts {
 			e.cleanMounts()
 		}
-		toRemove = append(toRemove, e.kubeletRootDir)
-		toRemove = append(toRemove, KubeletCRILogPath)
+		toRemove = append(toRemove, e.kubeletRootDir, KubeletCRILogPath)
 	}
 
-	for _, dir := range toRemove {
-		err := remove(dir)
+	for _, elt := range toRemove {
+		err := remove(elt)
 		if err != nil {
-			if dir == e.kubeletRootDir && strings.Contains(err.Error(), "device or resource busy") {
-				glog.Warningf("Mounts still present in %s ?", e.kubeletRootDir)
+			if elt == e.kubeletRootDir && strings.Contains(err.Error(), "device or resource busy") {
+				glog.Warningf("Mounts still present in %s?", e.kubeletRootDir)
 				continue
 			}
 			return err
 		}
 	}
 
-	glog.Infof("Cleanup successfully finished")
+	glog.Infof("Cleanup finished")
 	return nil
 }

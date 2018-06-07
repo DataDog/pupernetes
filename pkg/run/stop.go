@@ -8,15 +8,19 @@ package run
 import (
 	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
-	"github.com/DataDog/pupernetes/pkg/config"
+	"github.com/DataDog/pupernetes/pkg/logging"
+	"github.com/DataDog/pupernetes/pkg/setup"
+	"github.com/DataDog/pupernetes/pkg/util"
 	"github.com/golang/glog"
+	"io/ioutil"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os/exec"
+	"os/signal"
+	"strings"
+	"syscall"
 )
 
 func (r *Runtime) getNamespaces() (*corev1.NamespaceList, error) {
@@ -60,7 +64,7 @@ func (r *Runtime) gracefulDeleteAPIResources() error {
 			}
 			staticPods := r.SearchStaticPods(stillRunningPods)
 			if len(staticPods) == len(stillRunningPods) {
-				glog.V(2).Infof("Kubelet run only %d static pods", len(staticPods))
+				glog.V(2).Infof("Kubelet run %d static pods", len(staticPods))
 				return nil
 			}
 			glog.V(3).Infof("Kubelet still reports %d API Pods", len(stillRunningPods)-len(staticPods))
@@ -106,40 +110,53 @@ func (r *Runtime) drainingPods() error {
 		glog.V(4).Infof("Removed %s", absPath)
 	}
 
-	stateTicker := time.NewTicker(1 * time.Second)
+	stateTicker := time.NewTicker(3 * time.Second)
 	defer stateTicker.Stop()
-	timeoutDelay := 15 * time.Second
+
+	timeoutDelay := r.waitKubeletGC
 	if !r.isAPIServerHookDone() {
 		timeoutDelay = timeoutDelay / 3
-		glog.Warningf("APIserver hooks aren't deployed, RBAC-less ? Lowering the timeout to %s for static pods polling", timeoutDelay.String())
+		glog.Warningf("APIserver hooks aren't deployed, RBAC-less? Lowering the timeout to %s for static pods polling", timeoutDelay.String())
 	}
 	timeout := time.NewTimer(timeoutDelay)
 	defer timeout.Stop()
+
+	sigChan := make(chan os.Signal)
+	defer close(sigChan)
+	signal.Notify(sigChan, syscall.SIGINT)
+
+	glog.V(2).Infof("Waiting for the kubelet GC or SIGINT ...")
 	for {
 		select {
+		case <-sigChan:
+			glog.Info("Skipping the GC period, want to garbage collect manually?")
+			signal.Reset(syscall.SIGINT)
+			return nil
+
 		case <-stateTicker.C:
 			remainStaticPods, err := r.GetKubeletStaticPods()
 			if err != nil {
 				continue
 			}
-			if len(remainStaticPods) == 0 {
-				glog.V(2).Infof("Kubelet doesn't run any pod, waiting %s for the kubelet's gc or SIGINT", r.waitKubeletGC.String())
-				sigChan := make(chan os.Signal)
-				signal.Notify(sigChan, syscall.SIGINT)
-				select {
-				case <-sigChan:
-					glog.Info("Skipping the GC period, want to garbage collect manually ?")
-				case <-time.After(r.waitKubeletGC):
-					glog.Info("GC period reached")
-				}
-				close(sigChan)
-				signal.Reset(syscall.SIGINT)
-				return nil
+			if len(remainStaticPods) != 0 {
+				glog.V(2).Infof("Kubelet still has static pods running: %d", len(remainStaticPods))
+				continue
 			}
-			glog.V(2).Infof("Kubelet still have static pods running: %d", len(remainStaticPods))
+			podLogs, err := ioutil.ReadDir(setup.KubeletCRILogPath)
+			if err != nil {
+				glog.Errorf("Cannot read dir: %v", err)
+				continue
+			}
+			if len(podLogs) != 0 {
+				glog.V(2).Infof("Kubelet still has %d pods in %s", len(podLogs), setup.KubeletCRILogPath)
+				continue
+			}
+			glog.V(2).Infof("Kubelet GC all pods")
+			return nil
+
 		case <-timeout.C:
-			err := fmt.Errorf("timeout reached during kubelet stop")
-			glog.Errorf("Cannot properly delete static pods: %v", err)
+			err := fmt.Errorf("timeout %s reached during pod draining", timeoutDelay.String())
+			glog.Errorf("Cannot properly delete pods: %v", err)
 			return err
 		}
 	}
@@ -153,10 +170,41 @@ func (r *Runtime) cleanIptables() error {
 	b, err := exec.Command(r.env.GetHyperkubePath(), "proxy", "--cleanup").CombinedOutput()
 	output := string(b)
 	if err != nil {
-		glog.V(4).Infof("Issue during kube-proxy --cleanup: %s, %v", output, err)
+		glog.V(5).Infof("Issue during kube-proxy --cleanup: %s, %v", output, err)
 		return err
 	}
 	return nil
+}
+
+func (r *Runtime) runJournalTailers(failedUnits []string) error {
+	var errs []string
+
+	// Display the logs of the failed units
+	for _, unitName := range failedUnits {
+		jt, err := logging.NewJournalTailer(unitName, r.runTimestamp, false)
+		if err != nil {
+			msg := fmt.Sprintf("cannot create journal tailer for %s: %v", unitName, err)
+			errs = append(errs, msg)
+			glog.Errorf("Unexpected error: %s", msg)
+			continue
+		}
+		err = jt.StartTail()
+		if err != nil {
+			msg := fmt.Sprintf("cannot start journal tailer for %s: %v", unitName, err)
+			errs = append(errs, msg)
+			glog.Errorf("Unexpected error: %s", msg)
+			continue
+		}
+		err = jt.Wait()
+		if err != nil {
+			errs = append(errs, err.Error())
+			glog.Errorf("Fail to wait on journal tailer of %s: %v", unitName, err)
+		}
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return fmt.Errorf("failed to start journal tailers: %s", strings.Join(errs, ", "))
 }
 
 func (r *Runtime) Stop() error {
@@ -165,22 +213,42 @@ func (r *Runtime) Stop() error {
 		return nil
 	}
 
+	var errs []string
+
 	err := r.drainingPods()
 	if err != nil {
-		glog.Errorf("Failed to stop kubelet: %v", err)
+		glog.Errorf("Failed to drain the node: %v", err)
+		errs = append(errs, err.Error())
 	}
 
-	err = r.stopUnit(fmt.Sprintf("%skubelet.service", config.ViperConfig.GetString("systemd-unit-prefix")))
-	if err != nil {
+	failed, err := r.probeUnitStatuses()
+	if err != nil && len(failed) == 0 {
+		glog.Errorf("Probe units in failed: %v", err)
 		return err
 	}
 
-	err = r.stopUnit(fmt.Sprintf("%setcd.service", config.ViperConfig.GetString("systemd-unit-prefix")))
-	if err != nil {
-		return err
+	if len(failed) != 0 {
+		errs = append(errs, fmt.Sprintf("systemd units unhealthy: %s", strings.Join(failed, ", ")))
+		err := r.runJournalTailers(failed)
+		if err != nil {
+			glog.Errorf("Fail to run journalTailers: %v", err)
+			errs = append(errs, err.Error())
+		}
 	}
 
-	// ignore any error here
+	for _, u := range r.env.GetSystemdUnits() {
+		err = util.StopUnit(r.env.GetDBUSClient(), u)
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+
+	// iptables always fail
 	r.cleanIptables()
-	return nil
+	if len(errs) == 0 {
+		return nil
+	}
+	err = fmt.Errorf("errors during stop: %s", strings.Join(errs, ", "))
+	glog.Errorf("Unexpected errors: %v", err)
+	return err
 }

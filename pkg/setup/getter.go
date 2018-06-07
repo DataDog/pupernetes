@@ -96,3 +96,7 @@ func (e *Environment) GetResolvConfPath() string {
 func (e *Environment) GetPublicIP() string {
 	return e.outboundIP.String()
 }
+
+func (e *Environment) GetSystemdUnits() []string {
+	return e.systemdUnitNames
+}

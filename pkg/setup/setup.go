@@ -47,6 +47,7 @@ type Environment struct {
 
 	manifestTemplatesABSPath string
 	manifestAPIABSPath       string
+	manifestSystemdUnit      string
 	manifestStaticPodABSPath string
 	manifestConfigABSPath    string
 	secretsABSPath           string
@@ -61,8 +62,16 @@ type Environment struct {
 	cleanOptions *options.Clean
 	drainOptions *options.Drain
 
-	hostname   string
-	dbusClient *dbus.Conn
+	hostname string
+
+	// Systemd
+	dbusClient        *dbus.Conn
+	systemdUnitPrefix string
+
+	etcdUnitName          string
+	kubeletUnitName       string
+	kubeAPIServerUnitName string
+	systemdUnitNames      []string
 
 	// executable dependencies
 	binaryHyperkube *exeBinary
@@ -73,6 +82,9 @@ type Environment struct {
 	binaryCNI *depBinary
 
 	templateMetadata *templateMetadata
+
+	// Kubernetes Major.Minor
+	templateVersion string
 
 	systemdEnd2EndSection []*unit.UnitOption
 
@@ -103,6 +115,8 @@ type templateMetadata struct {
 	ServiceClusterIPRange string  `json:"service-cluster-ip-range"`
 	KubernetesClusterIP   string  `json:"kubernetes-cluster-ip"`
 	DNSClusterIP          string  `json:"dns-cluster-ip"`
+	NodeIP                string  `json:"node-ip"`
+	KubeletRootDirABSPath string  `json:"kubelet-root-dir"`
 }
 
 func NewConfigSetup(givenRootPath string) (*Environment, error) {
@@ -125,9 +139,11 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		manifestStaticPodABSPath: path.Join(rootABSPath, defaultTemplates.ManifestStaticPod),
 		manifestAPIABSPath:       path.Join(rootABSPath, defaultTemplates.ManifestAPI),
 		manifestConfigABSPath:    path.Join(rootABSPath, defaultTemplates.ManifestConfig),
+		manifestSystemdUnit:      path.Join(rootABSPath, defaultTemplates.ManifestSystemdUnit),
 		kubeletRootDir:           config.ViperConfig.GetString("kubelet-root-dir"),
 		secretsABSPath:           path.Join(rootABSPath, defaultSecretDirName),
 		networkABSPath:           path.Join(rootABSPath, defaultNetworkDirName),
+		templateVersion:          getMajorMinorVersion(config.ViperConfig.GetString("hyperkube-version")),
 
 		kubeConfigAuthPath:     path.Join(rootABSPath, defaultTemplates.ManifestConfig, "kubeconfig-auth.yaml"),
 		kubeConfigInsecurePath: path.Join(rootABSPath, defaultTemplates.ManifestConfig, "kubeconfig-insecure.yaml"),
@@ -135,8 +151,18 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		cleanOptions:           options.NewCleanOptions(config.ViperConfig.GetString("clean")),
 		drainOptions:           options.NewDrainOptions(config.ViperConfig.GetString("drain")),
 		kubectlLink:            config.ViperConfig.GetString("kubectl-link"),
+
+		systemdUnitPrefix:     config.ViperConfig.GetString("systemd-unit-prefix"),
+		etcdUnitName:          config.ViperConfig.GetString("systemd-unit-prefix") + "etcd.service",
+		kubeletUnitName:       config.ViperConfig.GetString("systemd-unit-prefix") + "kubelet.service",
+		kubeAPIServerUnitName: config.ViperConfig.GetString("systemd-unit-prefix") + "kube-apiserver.service",
 	}
 
+	e.systemdUnitNames = []string{
+		e.etcdUnitName,
+		e.kubeletUnitName,
+		e.kubeAPIServerUnitName,
+	}
 	// Kubernetes
 	e.binaryHyperkube = &exeBinary{
 		depBinary: depBinary{
@@ -202,6 +228,8 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		ServiceClusterIPRange: config.ViperConfig.GetString("kubernetes-cluster-ip-range"),
 		KubernetesClusterIP:   e.kubernetesClusterIP.String(),
 		DNSClusterIP:          e.dnsClusterIP.String(),
+		KubeletRootDirABSPath: e.kubeletRootDir,
+		// NodeIP: during network phase
 	}
 
 	// Vault root token
@@ -219,6 +247,8 @@ func (e *Environment) setupDirectories() error {
 		e.manifestTemplatesABSPath,
 		e.manifestStaticPodABSPath,
 		e.manifestConfigABSPath,
+		e.manifestSystemdUnit,
+		path.Join(e.manifestTemplatesABSPath, defaultTemplates.ManifestSystemdUnit),
 		path.Join(e.manifestTemplatesABSPath, defaultTemplates.ManifestStaticPod),
 		e.manifestAPIABSPath,
 		path.Join(e.manifestTemplatesABSPath, defaultTemplates.ManifestAPI),
@@ -251,8 +281,8 @@ func (e *Environment) Setup() error {
 		e.setupBinaryVault,
 		e.setupBinaryHyperkube,
 		e.setupNetwork,
-		e.setupSystemd,
 		e.setupManifests,
+		e.setupSystemd,
 		e.setupSecrets,
 		e.setupKubeClients,
 	} {

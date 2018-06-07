@@ -7,25 +7,28 @@ package setup
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/DataDog/pupernetes/pkg/config"
 	"github.com/coreos/go-systemd/dbus"
 	unit2 "github.com/coreos/go-systemd/unit"
 	"github.com/golang/glog"
 )
 
 const (
-	UnitPath             = "/run/systemd/system"
+	UnitPath             = "/run/systemd/system/"
 	customSystemdSection = "X-p8s"
 )
 
-var fieldsToCompare = []string{"ExecStart", "RootPath"}
+var (
+	fieldsToCompare = []string{
+		"ExecStart",
+		//"RootPath", TODO
+	}
+)
 
 func getUnitOptions(unitABSPath string) ([]*unit2.UnitOption, error) {
 	f, err := os.OpenFile(unitABSPath, os.O_RDONLY, 0)
@@ -101,21 +104,26 @@ func statExecStart(opts []*unit2.UnitOption) error {
 	return fmt.Errorf("cannot find ExecStart in systemd options")
 }
 
-func (e *Environment) writeSystemdUnit(unitOpt []*unit2.UnitOption, unitName string) error {
+func (e *Environment) linkSystemdUnit(unitOpt []*unit2.UnitOption, manifestUnitName, unitName string) error {
 	unitABSPath := path.Join(UnitPath, unitName)
 	_, err := os.Stat(unitABSPath)
 	if err == nil {
 		glog.V(2).Infof("Already created systemd unit: %s, untouched", unitName)
 
 		// Validate the content
-		onDiskOpts, err := getUnitOptions(unitABSPath)
+		runSystemdSystemUnit, err := getUnitOptions(unitABSPath)
 		if err != nil {
 			return err
 		}
-		if !e.isUnitUpToDate(onDiskOpts, unitOpt) {
+		if !e.isUnitUpToDate(runSystemdSystemUnit, unitOpt) {
+			if e.cleanOptions.Systemd {
+				err = fmt.Errorf("non uptodate systemd unit %s", unitABSPath)
+				glog.Errorf("Unexpected error: %v", err)
+				return err
+			}
 			glog.Warningf(`The already created unit %q doesn't match the generated one, used clean options are %q use instead "%s,systemd"`, unitName, e.cleanOptions.StringCLI(), e.cleanOptions.StringCLI())
 		}
-		err = statExecStart(onDiskOpts)
+		err = statExecStart(runSystemdSystemUnit)
 		if err != nil {
 			glog.Errorf("Current ExecStart in %s unit is incorrect: %v", unitABSPath, err)
 			return err
@@ -123,20 +131,14 @@ func (e *Environment) writeSystemdUnit(unitOpt []*unit2.UnitOption, unitName str
 		return nil
 	}
 
-	// Write
+	// Link
 	glog.V(4).Infof("Creating systemd unit %s ...", unitName)
-	c := unit2.Serialize(unitOpt)
-	b, err := ioutil.ReadAll(c)
+	err = os.Symlink(manifestUnitName, unitABSPath)
 	if err != nil {
-		glog.Errorf("Cannot read kubelet systemd unit: %v", err)
+		glog.Errorf("Fail to link systemd unit %s -> %s: %v", manifestUnitName, unitABSPath, err)
 		return err
 	}
-	err = ioutil.WriteFile(unitABSPath, b, 0444)
-	if err != nil {
-		glog.Errorf("Fail to write systemd unit %s: %v", unitABSPath, err)
-		return err
-	}
-	glog.V(4).Infof("Successfully wrote systemd unit %s", unitABSPath)
+	glog.V(4).Infof("Successfully linked systemd unit %%s -> %s", manifestUnitName, unitABSPath)
 	return nil
 }
 
@@ -175,140 +177,22 @@ func (e *Environment) createEnd2EndSection() []*unit2.UnitOption {
 	}
 }
 
-func (e *Environment) createKubeletUnit() error {
-	networkPluginArgs := ""
-	if !e.isDockerBridge {
-		networkPluginArgs = "--network-plugin=cni"
-	}
-	sdKubelet := []*unit2.UnitOption{
-		{
-			Section: "Unit",
-			Name:    "Description",
-			Value:   "Hyperkube kubelet for pupernetes",
-		},
-		{
-			Section: "Unit",
-			Name:    "After",
-			Value:   "network.target",
-		},
-		{
-			Section: "Service",
-			Name:    "ExecStart",
-			Value: strings.Join([]string{
-				e.binaryHyperkube.binaryABSPath,
-				"kubelet",
-				"--v=4",
-				"--allow-privileged",
-				"--fail-swap-on=false",
-				"--hairpin-mode=none",
-				"--pod-manifest-path=" + e.manifestStaticPodABSPath,
-				"--hostname-override=" + e.GetHostname(),
-				"--root-dir=" + e.kubeletRootDir,
-				"--healthz-port=" + strconv.Itoa(e.GetKubeletHealthzPort()), // TODO conf this
-				"--cert-dir=" + path.Join(e.kubeletRootDir, "pki"),          // not used
-				"--kubeconfig=" + e.GetKubeconfigInsecurePath(),
-				`--cloud-provider=""`,
-
-				"--resolv-conf=" + e.GetResolvConfPath(),
-				"--cluster-dns=" + e.dnsClusterIP.String(),
-				"--cluster-domain=cluster.local",
-
-				"--cert-dir=" + path.Join(e.secretsABSPath),
-				"--client-ca-file=" + path.Join(e.secretsABSPath, "kubernetes.issuing_ca"),
-				// TODO dedicated certs
-				"--tls-cert-file=" + path.Join(e.secretsABSPath, "kubernetes.certificate"),
-				"--tls-private-key-file=" + path.Join(e.secretsABSPath, "kubernetes.private_key"),
-
-				"--read-only-port=0",
-				"--anonymous-auth=false",
-
-				"--authentication-token-webhook",
-				"--authentication-token-webhook-cache-ttl=5s",
-				"--authorization-mode=Webhook",
-
-				//"--cni-conf-dir=" + e.networkABSPath, // no-op if
-				//"--cni-bin-dir=" + e.binABSPath,      // --network-plugin is unset
-				networkPluginArgs, // TODO
-
-				"--cadvisor-port=" + config.ViperConfig.GetString("kubelet-cadvisor-port"), // TODO switch to a catalog
-				"--cgroups-per-qos=true",                                                   // TODO
-				"--max-pods=60",
-				"--node-ip=" + e.outboundIP.String(),
-				"--node-labels=p8s=mononode",
-				"--application-metrics-count-limit=50",
-			},
-				" "),
-		},
-		{
-			Section: "Service",
-			Name:    "Restart",
-			Value:   "no",
-		},
-		{
-			Section: customSystemdSection,
-			Name:    "ProbeURL",
-			Value:   fmt.Sprintf("http://127.0.0.1:10248/healthz"),
-		},
-	}
-	sdKubelet = append(sdKubelet, e.systemdEnd2EndSection...)
-	err := e.writeSystemdUnit(sdKubelet, fmt.Sprintf("%skubelet.service", config.ViperConfig.GetString("systemd-unit-prefix")))
+func (e *Environment) createUnitFromTemplate(unitName string) error {
+	unitNameNoPrefix := strings.TrimPrefix(unitName, e.systemdUnitPrefix)
+	manifestUnitName := path.Join(e.manifestSystemdUnit, unitNameNoPrefix)
+	fd, err := os.OpenFile(manifestUnitName, os.O_RDONLY, 0)
 	if err != nil {
+		glog.Errorf("Cannot read %s: %v", unitNameNoPrefix, err)
 		return err
 	}
-	return nil
-}
-
-func (e *Environment) createEtcdUnit() error {
-	sdKubelet := []*unit2.UnitOption{
-		{
-			Section: "Unit",
-			Name:    "Description",
-			Value:   "etcd for pupernetes",
-		},
-		{
-			Section: "Unit",
-			Name:    "After",
-			Value:   "network.target",
-		},
-		{
-			Section: "Service",
-			Name:    "Type",
-			Value:   "notify",
-		},
-		{
-			Section: "Service",
-			Name:    "ExecStart",
-			Value: strings.Join([]string{
-				e.binaryEtcd.binaryABSPath,
-				"--name=etcdv" + e.binaryEtcd.version,
-				"--data-dir=" + e.etcdDataABSPath,
-				"--auto-compaction-retention=0",
-				"--quota-backend-bytes=0",
-				"--metrics=basic",
-				// TODO use dedicated certs
-				"--ca-file=" + path.Join(e.secretsABSPath, "etcd.issuing_ca"),
-				"--cert-file=" + path.Join(e.secretsABSPath, "etcd.certificate"),
-				"--key-file=" + path.Join(e.secretsABSPath, "etcd.private_key"),
-				"--client-cert-auth=true",
-				"--trusted-ca-file=" + path.Join(e.secretsABSPath, "etcd.issuing_ca"),
-				fmt.Sprintf("--listen-client-urls=http://127.0.0.1:2379,https://%s:2379", e.GetPublicIP()),
-				fmt.Sprintf("--advertise-client-urls=http://127.0.0.1:2379,https://%s:2379", e.GetPublicIP()),
-			},
-				" "),
-		},
-		{
-			Section: "Service",
-			Name:    "Restart",
-			Value:   "no",
-		},
-		{
-			Section: customSystemdSection,
-			Name:    "ProbeURL",
-			Value:   fmt.Sprintf("http://127.0.0.1:2379/health"),
-		},
+	defer fd.Close()
+	unitOptions, err := unit2.Deserialize(fd)
+	if err != nil {
+		glog.Errorf("Unexpected error during parsing s: %v", unitNameNoPrefix, err)
+		return err
 	}
-	sdKubelet = append(sdKubelet, e.systemdEnd2EndSection...)
-	err := e.writeSystemdUnit(sdKubelet, fmt.Sprintf("%setcd.service", config.ViperConfig.GetString("systemd-unit-prefix")))
+	// TODO see how to insert e.systemdEnd2EndSection
+	err = e.linkSystemdUnit(unitOptions, manifestUnitName, unitName)
 	if err != nil {
 		return err
 	}
@@ -323,14 +207,12 @@ func (e *Environment) setupSystemd() error {
 	}
 	e.dbusClient = conn
 
-	err = e.createKubeletUnit()
-	if err != nil {
-		return err
-	}
-
-	err = e.createEtcdUnit()
-	if err != nil {
-		return err
+	for _, u := range e.systemdUnitNames {
+		glog.V(4).Infof("Creating systemd unit %s ...", u)
+		err = e.createUnitFromTemplate(u)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = conn.Reload()
