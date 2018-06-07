@@ -6,7 +6,7 @@ This project purpose is to provide a simple Kubernetes setup to validate any sof
 
 You can use it to validate a software dependence on Kubernetes itself or just to run some classic app workflows with [argo](https://github.com/argoproj/argo)
 
-Our main use-case is the end to end testing pipeline of the [datadog-agent](https://github.com/DataDog/datadog-agent)
+Our main use case is the end to end testing pipeline of the [datadog-agent](https://github.com/DataDog/datadog-agent)
 
 [![asciicast](https://asciinema.org/a/5fvTb9iEcvwO3EhqOSmDMIT9O.png)](https://asciinema.org/a/5fvTb9iEcvwO3EhqOSmDMIT9O)
 
@@ -25,7 +25,7 @@ Our main use-case is the end to end testing pipeline of the [datadog-agent](http
 
 The default setup is secured with:
 
-* valid x509 certificates provided by an embedded vault PKI
+* Valid x509 certificates provided by an embedded vault PKI
     * Able to use the Kubernetes CSR and the service account root-ca
 * HTTPS webhook to provide token lookups for the kubelet API
 * RBAC
@@ -34,8 +34,7 @@ The default setup is secured with:
 - [Requirements](#requirements)
   * [Runtime](#runtime)
   * [Development](#development)
-    + [Install VMware Fusion](#install-vmware-fusion)
-    + [Create Ubuntu VM](#create-ubuntu-vm)
+    + [Create Ubuntu VM](#ubuntu-vm)
     + [Install Docker](#install-docker)
 - [Build it](#build-it)
 - [Run it](#run-it)
@@ -67,13 +66,17 @@ A systemd environment.
 
 Setup a linux environment for running `pupernetes`. **This is only a suggested environment for running pupernetes. You could also create a VM using Vagrant (not yet documented here).**
 
-#### Install VMWare Fusion
+```bash
+curl -LOf https://github.com/DataDog/pupernetes/releases/download/v${VERSION}/pupernetes
+chmod +x ./pupernetes
+```
 
-`pupernetes` must be run on linux. To run a linux VM install [VMware Fusion](https://www.vmware.com/products/fusion/fusion-evaluation.html) or your preferred virtualization software. You can use the VMware Fusion Pro 30-day trial.
+#### Ubuntu VM
 
-#### Create Ubuntu VM
+`pupernetes` must be run on linux (or linux VM).
 
-Download the latest version of [Ubuntu Desktop](https://www.ubuntu.com/download/desktop) and create the Ubuntu VM with VMWare Fusion or whichever virtualization software you prefer.
+Example:
+Download the latest version of [Ubuntu Desktop](https://www.ubuntu.com/download/desktop) and create the Ubuntu VM with your preferred virtualization software.
 
 #### Install Docker
 
@@ -157,8 +160,8 @@ Example: `--hyperkube-version=1.9.3`
 - [x] 1.7
 - [x] 1.6
 - [x] 1.5
-- [] 1.4
-- [] 1.3
+- [ ] 1.4
+- [ ] 1.3
 
 ### Command line
 

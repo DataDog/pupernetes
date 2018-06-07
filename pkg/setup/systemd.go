@@ -191,7 +191,7 @@ func (e *Environment) createUnitFromTemplate(unitName string) error {
 		glog.Errorf("Unexpected error during parsing s: %v", unitNameNoPrefix, err)
 		return err
 	}
-	//unitOptions = append(unitOptions, e.systemdEnd2EndSection...) TODO see how to insert that
+	// TODO see how to insert e.systemdEnd2EndSection
 	err = e.linkSystemdUnit(unitOptions, manifestUnitName, unitName)
 	if err != nil {
 		return err

@@ -48,7 +48,6 @@ func (r *Runtime) probeUnitStatuses() ([]string, error) {
 		}
 		glog.Errorf("Unexpected state of: %s", s)
 		failed = append(failed, u.Name)
-
 	}
 	if len(failed) > 0 {
 		return failed, fmt.Errorf("failed units: %s", strings.Join(failed, ", "))
