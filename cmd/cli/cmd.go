@@ -19,6 +19,7 @@ import (
 	"github.com/DataDog/pupernetes/pkg/options"
 	"github.com/DataDog/pupernetes/pkg/run"
 	"github.com/DataDog/pupernetes/pkg/setup"
+	"github.com/DataDog/pupernetes/pkg/wait"
 )
 
 const programName = "pupernetes"
@@ -218,6 +219,21 @@ func NewCommand() (*cobra.Command, *int) {
 		},
 	}
 
+	waitCommand := &cobra.Command{
+		SuggestFor: []string{"tail", "watch"},
+		Use:        "wait [systemd unit name]",
+		Aliases:    []string{"w"},
+		Short:      "Wait for systemd unit name to be Running",
+		Args:       cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			err := wait.NewWaiter(args[0], config.ViperConfig.GetDuration("timeout"), config.ViperConfig.GetDuration("logging-since")).Wait()
+			if err != nil {
+				exitCode = 2
+				return
+			}
+		},
+	}
+
 	// root
 	rootCommand.PersistentFlags().IntVarP(&verbose, "verbose", "v", 2, "verbose level")
 
@@ -282,6 +298,15 @@ func NewCommand() (*cobra.Command, *int) {
 
 	resetCommand.PersistentFlags().BoolP("apply", "a", config.ViperConfig.GetBool("apply"), "Apply manifests-api after reset, useful when resetting kube-system namespace")
 	config.ViperConfig.BindPFlag("apply", resetCommand.PersistentFlags().Lookup("apply"))
+
+	// Wait
+	rootCommand.AddCommand(waitCommand)
+
+	waitCommand.PersistentFlags().Duration("timeout", config.ViperConfig.GetDuration("timeout"), fmt.Sprintf("Timeout for %s", waitCommand.Name()))
+	config.ViperConfig.BindPFlag("timeout", waitCommand.PersistentFlags().Lookup("timeout"))
+
+	waitCommand.PersistentFlags().Duration("logging-since", config.ViperConfig.GetDuration("logging-since"), "Display the logs of the unit since")
+	config.ViperConfig.BindPFlag("logging-since", waitCommand.PersistentFlags().Lookup("logging-since"))
 
 	return rootCommand, &exitCode
 }

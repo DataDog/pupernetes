@@ -45,4 +45,6 @@ func init() {
 	ViperConfig.SetDefault("systemd-job-name", "pupernetes")
 
 	ViperConfig.SetDefault("apply", false)
+
+	ViperConfig.SetDefault("logging-since", time.Minute*5)
 }
