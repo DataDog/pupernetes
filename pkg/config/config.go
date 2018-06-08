@@ -47,4 +47,5 @@ func init() {
 	ViperConfig.SetDefault("apply", false)
 
 	ViperConfig.SetDefault("logging-since", time.Minute*5)
+	ViperConfig.SetDefault("unit-to-watch", "pupernetes.service")
 }

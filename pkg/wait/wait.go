@@ -16,7 +16,7 @@ type Wait struct {
 
 func NewWaiter(systemdUnitName string, timeout, loggingSince time.Duration) *Wait {
 	if !strings.HasSuffix(systemdUnitName, ".service") {
-		systemdUnitName = ".service"
+		systemdUnitName = systemdUnitName + ".service"
 	}
 	return &Wait{
 		systemdUnitName: systemdUnitName,

@@ -20,6 +20,7 @@ import (
 	"github.com/DataDog/pupernetes/pkg/run"
 	"github.com/DataDog/pupernetes/pkg/setup"
 	"github.com/DataDog/pupernetes/pkg/wait"
+	"time"
 )
 
 const programName = "pupernetes"
@@ -221,12 +222,18 @@ func NewCommand() (*cobra.Command, *int) {
 
 	waitCommand := &cobra.Command{
 		SuggestFor: []string{"tail", "watch"},
-		Use:        "wait [systemd unit name]",
+		Use:        "wait a systemd unit",
 		Aliases:    []string{"w"},
 		Short:      "Wait for systemd unit name to be Running",
-		Args:       cobra.ExactArgs(1),
+		Args:       cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			err := wait.NewWaiter(args[0], config.ViperConfig.GetDuration("timeout"), config.ViperConfig.GetDuration("logging-since")).Wait()
+			unitToWatch := config.ViperConfig.GetString("unit-to-watch")
+			if unitToWatch == "" {
+				glog.Errorf("Empty unit name")
+				exitCode = 1
+				return
+			}
+			err := wait.NewWaiter(unitToWatch, config.ViperConfig.GetDuration("timeout"), config.ViperConfig.GetDuration("logging-since")).Wait()
 			if err != nil {
 				exitCode = 2
 				return
@@ -302,11 +309,14 @@ func NewCommand() (*cobra.Command, *int) {
 	// Wait
 	rootCommand.AddCommand(waitCommand)
 
-	waitCommand.PersistentFlags().Duration("timeout", config.ViperConfig.GetDuration("timeout"), fmt.Sprintf("Timeout for %s", waitCommand.Name()))
+	waitCommand.PersistentFlags().Duration("timeout", time.Minute*15, fmt.Sprintf("Timeout for %s", waitCommand.Name()))
 	config.ViperConfig.BindPFlag("timeout", waitCommand.PersistentFlags().Lookup("timeout"))
 
 	waitCommand.PersistentFlags().Duration("logging-since", config.ViperConfig.GetDuration("logging-since"), "Display the logs of the unit since")
 	config.ViperConfig.BindPFlag("logging-since", waitCommand.PersistentFlags().Lookup("logging-since"))
+
+	waitCommand.PersistentFlags().StringP("unit-to-watch", "u", config.ViperConfig.GetString("unit-to-watch"), "Systemd unit name to watch")
+	config.ViperConfig.BindPFlag("unit-to-watch", waitCommand.PersistentFlags().Lookup("unit-to-watch"))
 
 	return rootCommand, &exitCode
 }

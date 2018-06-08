@@ -7,7 +7,7 @@ Wait for systemd unit name to be Running
 Wait for systemd unit name to be Running
 
 ```
-pupernetes wait [systemd unit name] [flags]
+pupernetes wait a systemd unit [flags]
 ```
 
 ### Options
@@ -15,7 +15,8 @@ pupernetes wait [systemd unit name] [flags]
 ```
   -h, --help                     help for wait
       --logging-since duration   Display the logs of the unit since (default 5m0s)
-      --timeout duration         Timeout for wait (default 6h0m0s)
+      --timeout duration         Timeout for wait (default 15m0s)
+  -u, --unit-to-watch string     Systemd unit name to watch (default "pupernetes.service")
 ```
 
 ### Options inherited from parent commands
