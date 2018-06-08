@@ -19,6 +19,8 @@ import (
 	"github.com/DataDog/pupernetes/pkg/options"
 	"github.com/DataDog/pupernetes/pkg/run"
 	"github.com/DataDog/pupernetes/pkg/setup"
+	"github.com/DataDog/pupernetes/pkg/wait"
+	"time"
 )
 
 const programName = "pupernetes"
@@ -218,6 +220,37 @@ func NewCommand() (*cobra.Command, *int) {
 		},
 	}
 
+	waitCommand := &cobra.Command{
+		SuggestFor: []string{"tail", "watch"},
+		Use:        "wait a systemd unit",
+		Aliases:    []string{"w"},
+		Short:      `Wait for a systemd unit to be "running"`,
+		Args:       cobra.ExactArgs(0),
+		Example: fmt.Sprintf(`
+# Wait until the pupernetes.service systemd unit is running:
+%s wait
+
+# Wait until the p8s-kubelet.service systemd unit is running:
+%s wait -u p8s-kubelet
+`,
+			programName,
+			programName,
+		),
+		Run: func(cmd *cobra.Command, args []string) {
+			unitToWatch := config.ViperConfig.GetString("unit-to-watch")
+			if unitToWatch == "" {
+				glog.Errorf("Empty unit name")
+				exitCode = 1
+				return
+			}
+			err := wait.NewWaiter(unitToWatch, config.ViperConfig.GetDuration("timeout"), config.ViperConfig.GetDuration("logging-since")).Wait()
+			if err != nil {
+				exitCode = 2
+				return
+			}
+		},
+	}
+
 	// root
 	rootCommand.PersistentFlags().IntVarP(&verbose, "verbose", "v", 2, "verbose level")
 
@@ -282,6 +315,18 @@ func NewCommand() (*cobra.Command, *int) {
 
 	resetCommand.PersistentFlags().BoolP("apply", "a", config.ViperConfig.GetBool("apply"), "Apply manifests-api after reset, useful when resetting kube-system namespace")
 	config.ViperConfig.BindPFlag("apply", resetCommand.PersistentFlags().Lookup("apply"))
+
+	// Wait
+	rootCommand.AddCommand(waitCommand)
+
+	waitCommand.PersistentFlags().Duration("timeout", time.Minute*15, fmt.Sprintf("Timeout for %s", waitCommand.Name()))
+	config.ViperConfig.BindPFlag("timeout", waitCommand.PersistentFlags().Lookup("timeout"))
+
+	waitCommand.PersistentFlags().Duration("logging-since", config.ViperConfig.GetDuration("logging-since"), "Display the logs of the unit since")
+	config.ViperConfig.BindPFlag("logging-since", waitCommand.PersistentFlags().Lookup("logging-since"))
+
+	waitCommand.PersistentFlags().StringP("unit-to-watch", "u", config.ViperConfig.GetString("unit-to-watch"), "Systemd unit name to watch")
+	config.ViperConfig.BindPFlag("unit-to-watch", waitCommand.PersistentFlags().Lookup("unit-to-watch"))
 
 	return rootCommand, &exitCode
 }

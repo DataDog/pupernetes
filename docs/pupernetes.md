@@ -17,4 +17,5 @@ Use this command to manage a Kubernetes local environment
 
 * [pupernetes daemon](pupernetes_daemon.md)	 - Use this command to clean setup and run a Kubernetes local environment
 * [pupernetes reset](pupernetes_reset.md)	 - Reset the Kubernetes resources in the given namespace
+* [pupernetes wait](pupernetes_wait.md)	 - Wait for a systemd unit to be "running"
 
