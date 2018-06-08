@@ -178,17 +178,16 @@ func (e *Environment) createEnd2EndSection() []*unit2.UnitOption {
 }
 
 func (e *Environment) createUnitFromTemplate(unitName string) error {
-	unitNameNoPrefix := strings.TrimPrefix(unitName, e.systemdUnitPrefix)
-	manifestUnitName := path.Join(e.manifestSystemdUnit, unitNameNoPrefix)
+	manifestUnitName := path.Join(e.manifestSystemdUnit, unitName)
 	fd, err := os.OpenFile(manifestUnitName, os.O_RDONLY, 0)
 	if err != nil {
-		glog.Errorf("Cannot read %s: %v", unitNameNoPrefix, err)
+		glog.Errorf("Cannot read %s: %v", manifestUnitName, err)
 		return err
 	}
 	defer fd.Close()
 	unitOptions, err := unit2.Deserialize(fd)
 	if err != nil {
-		glog.Errorf("Unexpected error during parsing s: %v", unitNameNoPrefix, err)
+		glog.Errorf("Unexpected error during parsing s: %v", manifestUnitName, err)
 		return err
 	}
 	// TODO see how to insert e.systemdEnd2EndSection

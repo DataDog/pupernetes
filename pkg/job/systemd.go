@@ -16,6 +16,7 @@ import (
 
 	"github.com/DataDog/pupernetes/pkg/config"
 	"github.com/DataDog/pupernetes/pkg/logging"
+	"github.com/DataDog/pupernetes/pkg/util"
 )
 
 const (
@@ -65,7 +66,7 @@ func RunSystemdJob(givenRootPath string) error {
 	if !strings.HasSuffix(unitName, ".service") {
 		unitName = unitName + ".service"
 	}
-	units, err := dbus.ListUnitsByNames([]string{unitName})
+	units, err := util.GetUnitStates(dbus, []string{unitName})
 	if err != nil {
 		glog.Errorf("Cannot get the status of %s: %v", unitName, err)
 		return err

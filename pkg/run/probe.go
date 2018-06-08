@@ -2,6 +2,7 @@ package run
 
 import (
 	"fmt"
+	"github.com/DataDog/pupernetes/pkg/util"
 	"github.com/golang/glog"
 	"io/ioutil"
 	"net/http"
@@ -31,7 +32,7 @@ func (r *Runtime) httpProbe(url string) error {
 }
 
 func (r *Runtime) probeUnitStatuses() ([]string, error) {
-	units, err := r.env.GetDBUSClient().ListUnitsByNames(r.env.GetSystemdUnits())
+	units, err := util.GetUnitStates(r.env.GetDBUSClient(), r.env.GetSystemdUnits())
 	if err != nil {
 		glog.Errorf("Unexpected error: %v", err)
 		return nil, err
@@ -39,7 +40,7 @@ func (r *Runtime) probeUnitStatuses() ([]string, error) {
 	var failed []string
 	for _, u := range units {
 		s := fmt.Sprintf("unit %q with load state %q is %q", u.Name, u.LoadState, u.SubState)
-		glog.V(3).Infof("%s", s)
+		glog.V(3).Infof("Current state: %s", s)
 		switch u.SubState {
 		case "running":
 			continue

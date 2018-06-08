@@ -59,6 +59,11 @@ func (e *Environment) renderTemplates(category string) error {
 		return err
 	}
 	glog.V(4).Infof("Rendering templates with the following metadata: %v", string(b))
+	prefix := ""
+	if category == defaultTemplates.ManifestSystemdUnit {
+		prefix = e.systemdUnitPrefix
+		glog.V(4).Infof("Currently rendering %s with file prefix %q", category, prefix)
+	}
 	for _, f := range files {
 		p := path.Join(sourceDir, f.Name())
 
@@ -73,7 +78,7 @@ func (e *Environment) renderTemplates(category string) error {
 			return err
 		}
 
-		destPath := path.Join(e.rootABSPath, category, f.Name())
+		destPath := path.Join(e.rootABSPath, category, prefix+f.Name())
 		glog.V(4).Infof("Rendering manifest %s to %s", f.Name(), destPath)
 		dest, err := os.OpenFile(destPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0444)
 		if err != nil {

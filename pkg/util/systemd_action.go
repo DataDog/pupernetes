@@ -11,6 +11,7 @@ import (
 
 	"github.com/coreos/go-systemd/dbus"
 	"github.com/golang/glog"
+	"strings"
 )
 
 func executeSystemdAction(unitName string, systemdAction func(string, string, chan<- string) (int, error)) error {
@@ -45,4 +46,31 @@ func StartUnit(d *dbus.Conn, unitName string) error {
 func StopUnit(d *dbus.Conn, unitName string) error {
 	glog.Infof("Stopping systemd unit: %s ...", unitName)
 	return executeSystemdAction(unitName, d.StopUnit)
+}
+
+func GetUnitStates(d *dbus.Conn, unitNames []string) ([]dbus.UnitStatus, error) {
+	var units []dbus.UnitStatus
+
+	allUnits, err := d.ListUnits()
+	if err != nil {
+		glog.Errorf("Cannot ListUnits: %v", err)
+		return nil, err
+	}
+	intersect := make(map[string]dbus.UnitStatus)
+	for _, elt := range allUnits {
+		if !strings.HasSuffix(elt.Name, ".service") {
+			continue
+		}
+		intersect[elt.Name] = elt
+	}
+	for _, wantedUnit := range unitNames {
+		unit, ok := intersect[wantedUnit]
+		if !ok {
+			glog.V(2).Infof("cannot find %s in actual running units", wantedUnit)
+			continue
+		}
+		glog.V(4).Infof("Found wanted unit %s", wantedUnit)
+		units = append(units, unit)
+	}
+	return units, nil
 }
