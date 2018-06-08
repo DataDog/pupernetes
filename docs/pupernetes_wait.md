@@ -1,13 +1,25 @@
 ## pupernetes wait
 
-Wait for systemd unit name to be Running
+Wait for a systemd unit to be "running"
 
 ### Synopsis
 
-Wait for systemd unit name to be Running
+Wait for a systemd unit to be "running"
 
 ```
 pupernetes wait a systemd unit [flags]
+```
+
+### Examples
+
+```
+
+# Wait until the pupernetes.service systemd unit is running:
+pupernetes wait
+
+# Wait until the p8s-kubelet.service systemd unit is running:
+pupernetes wait -u p8s-kubelet
+
 ```
 
 ### Options

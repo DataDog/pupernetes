@@ -224,8 +224,18 @@ func NewCommand() (*cobra.Command, *int) {
 		SuggestFor: []string{"tail", "watch"},
 		Use:        "wait a systemd unit",
 		Aliases:    []string{"w"},
-		Short:      "Wait for systemd unit name to be Running",
+		Short:      `Wait for a systemd unit to be "running"`,
 		Args:       cobra.ExactArgs(0),
+		Example: fmt.Sprintf(`
+# Wait until the pupernetes.service systemd unit is running:
+%s wait
+
+# Wait until the p8s-kubelet.service systemd unit is running:
+%s wait -u p8s-kubelet
+`,
+			programName,
+			programName,
+		),
 		Run: func(cmd *cobra.Command, args []string) {
 			unitToWatch := config.ViperConfig.GetString("unit-to-watch")
 			if unitToWatch == "" {
