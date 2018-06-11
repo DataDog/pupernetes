@@ -1,6 +1,6 @@
 # Release process
 
-### Submit a PR
+## Local check
 
 Updated master branch:
 ```bash
@@ -41,6 +41,25 @@ sha512sum -c pupernetes.sha512sum
 ./pupernetes: OK
 ```
 
+### Submit a PR
+
+Pupernetes follows Semantic Versionning ([_SemVer_](https://semver.org/)):
+```text
+# Patch update
+0.3.0 -> 0.3.1
+
+# Minor update
+0.3.0 -> 0.4.0
+0.9.0 -> 0.10.0
+
+# Major update
+0.3.0 -> 1.0.0
+1.15.4 -> 2.0.0
+...
+```
+
+Create a PR named as example: `release-v0.3.0`
+
 Update the [ignition example](environments/container-linux/ignition.yaml) on the storage/files section:
 * /opt/bin/setup-pupernetes
 * /opt/bin/pupernetes.sha512sum
@@ -58,21 +77,6 @@ Tag the release with the new version (e.g. v0.3.0):
 ```bash
 git tag v0.3.0
 git push --tags
-```
-
-Pupernetes follows Semantic Versionning ([_SemVer_](https://semver.org/)):
-```text
-# Patch update
-0.3.0 -> 0.3.1
-
-# Minor update
-0.3.0 -> 0.4.0
-0.9.0 -> 0.10.0
-
-# Major update
-0.3.0 -> 1.0.0
-1.15.4 -> 2.0.0
-...
 ```
 
 Then upload `pupernetes` + `pupernetes.sha512sum` in the release page.
