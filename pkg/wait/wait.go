@@ -3,6 +3,7 @@ package wait
 import (
 	"fmt"
 	"github.com/DataDog/pupernetes/pkg/logging"
+	"github.com/DataDog/pupernetes/pkg/util"
 	"github.com/coreos/go-systemd/dbus"
 	"github.com/golang/glog"
 	"strings"
@@ -26,7 +27,7 @@ func NewWaiter(systemdUnitName string, timeout, loggingSince time.Duration) *Wai
 }
 
 func getSystemdUnitState(conn *dbus.Conn, unitName string) (string, error) {
-	units, err := conn.ListUnitsByNames([]string{unitName})
+	units, err := util.GetUnitStates(conn, []string{unitName})
 	if err != nil {
 		glog.Errorf("Cannot list units: %v", err)
 		return "", err
@@ -82,6 +83,7 @@ func (w *Wait) Wait() error {
 			if err != nil {
 				return err
 			}
+			glog.V(4).Infof("Systemd unit %s is %s", w.systemdUnitName, state)
 			if state == "running" {
 				glog.Infof("Systemd unit %s is %s", w.systemdUnitName, state)
 				return nil
