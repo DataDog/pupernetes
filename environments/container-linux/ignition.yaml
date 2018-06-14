@@ -52,6 +52,7 @@ systemd:
       ExecStart=/opt/bin/pupernetes daemon run /opt/sandbox --kubectl-link /opt/bin/kubectl -v 5 --timeout 6h
       Restart=on-failure
       RestartSec=5
+      Type=notify
 
       [Install]
       WantedBy=multi-user.target
