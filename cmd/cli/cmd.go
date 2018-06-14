@@ -39,8 +39,9 @@ func NewCommand() (*cobra.Command, *int) {
 	}
 
 	daemonCommand := &cobra.Command{
-		Use:   "daemon command line",
-		Short: "Use this command to clean setup and run a Kubernetes local environment",
+		Use:     "daemon command line",
+		Aliases: []string{"d"},
+		Short:   "Use this command to clean setup and run a Kubernetes local environment",
 	}
 	daemonName := fmt.Sprintf("%s %s", programName, daemonCommand.Name())
 
