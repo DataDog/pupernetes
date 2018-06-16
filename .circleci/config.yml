@@ -1,14 +1,22 @@
 version: 2
 
 templates:
-  job_template: &job_template
+  docker_job_template: &docker_job_template
     docker:
       - image: golang:1.10
     working_directory: /go/src/github.com/DataDog/pupernetes
 
+  machine_job_template: &machine_job_template
+    machine: true
+    working_directory: /home/circleci/.go_workspace/src/github.com/DataDog/pupernetes
+    environment:
+      CFLAGS: ""
+      CGO_ENABLED: "1"
+      DEBIAN_FRONTEND: "noninteractive"
+
 jobs:
   make:
-    <<: *job_template
+    <<: *docker_job_template
     steps:
       - checkout
       - run:
@@ -16,7 +24,7 @@ jobs:
           command: make
 
   tests:
-    <<: *job_template
+    <<: *docker_job_template
     steps:
       - checkout
       - run:
@@ -24,7 +32,7 @@ jobs:
           command: make check
 
   gofmt:
-    <<: *job_template
+    <<: *docker_job_template
     steps:
       - checkout
       - run:
@@ -32,7 +40,7 @@ jobs:
           command: make verify-gofmt
 
   docs:
-    <<: *job_template
+    <<: *docker_job_template
     steps:
       - checkout
       - run:
@@ -40,20 +48,15 @@ jobs:
           command: make verify-docs
 
   license:
-    <<: *job_template
+    <<: *docker_job_template
     steps:
       - checkout
       - run:
           name: verify-license
           command: make verify-license
 
-  daemon:
-    machine: true
-    working_directory: /home/circleci/.go_workspace/src/github.com/DataDog/pupernetes
-    environment:
-      CFLAGS: ""
-      CGO_ENABLED: "1"
-      DEBIAN_FRONTEND: "noninteractive"
+  setup:
+    <<: *machine_job_template
     steps:
       - checkout
       - run:
@@ -66,7 +69,7 @@ jobs:
 
       - run:
           name: setup
-          command: sudo ./pupernetes daemon setup sandbox/ -v 6
+          command: sudo ./pupernetes daemon setup sandbox/ -v 5
 
       - run:
           name: already-setup
@@ -84,17 +87,61 @@ jobs:
           command: sudo ./pupernetes daemon setup sandbox/ --hyperkube-version 1.9.4 -c -binaries
 
       - run:
+          name: clean
+          command: sudo ./pupernetes daemon clean sandbox/ -c all
+
+  fg:
+    <<: *machine_job_template
+    steps:
+      - checkout
+      - run:
+          name: make
+          command: make
+
+      - run:
+          name: apt
+          command: sudo apt-get update -q && sudo apt-get install -yq systemd
+
+      - run:
+          name: setup
+          command: sudo ./pupernetes daemon setup sandbox/ -v 5
+
+      - run:
           name: copy-validation
           # Copy a batch validation job where the manifests are applied once pupernetes is ready =)
           command: sudo cp -v .circleci/pupernetes-validation.yaml sandbox/manifest-api/pupernetes-validation.yaml
 
       - run:
           name: run
-          command: sudo ./pupernetes daemon run sandbox/ -c none --bind-address 0.0.0.0:8989 # TODO use https + authN/Z
+          command: sudo ./pupernetes daemon run sandbox/ --bind-address 0.0.0.0:8989 # TODO use https + authN/Z
 
       - run:
           name: clean
           command: sudo ./pupernetes daemon clean sandbox/ -c all
+
+  systemd:
+    <<: *machine_job_template
+    steps:
+      - checkout
+      - run:
+          name: make
+          command: make
+
+      - run:
+          name: apt
+          command: sudo apt-get update -q && sudo apt-get install -yq systemd
+
+      - run:
+          name: run
+          command: sudo ./pupernetes daemon run sandbox/ -c none --job-type systemd -v 5 --kubectl-link /usr/local/bin/kubectl --bind-address 0.0.0.0:8989
+
+      - run:
+          name: kubectl
+          command: kubectl get no,svc,deploy,ds,job,po --all-namespaces -o wide --show-all
+
+      - run:
+          name: validate
+          command: kubectl apply -f .circleci/pupernetes-validation.yaml
 
 workflows:
   version: 2
@@ -112,6 +159,8 @@ workflows:
       - docs
       - license
 
-  cli:
+  daemon:
     jobs:
-      - daemon
+      - setup
+      - fg
+      - systemd

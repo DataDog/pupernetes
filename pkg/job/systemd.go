@@ -66,7 +66,7 @@ func RunSystemdJob(givenRootPath string) error {
 	if !strings.HasSuffix(unitName, ".service") {
 		unitName = unitName + ".service"
 	}
-	units, err := util.MustGetUnitStates(dbus, []string{unitName})
+	units, err := util.GetUnitStates(dbus, []string{unitName})
 	if err != nil {
 		glog.Errorf("Cannot get the status of %s: %v", unitName, err)
 		return err
@@ -172,6 +172,9 @@ func RunSystemdJob(givenRootPath string) error {
 	}
 
 	// Poll the status of the started unit
+	restartChan := time.NewTicker(500 * time.Millisecond)
+	defer restartChan.Stop()
+
 	timeout := time.After(time.Minute * 5)
 
 	sigChan := make(chan os.Signal, 2)
@@ -184,6 +187,17 @@ func RunSystemdJob(givenRootPath string) error {
 	glog.V(2).Infof("Polling the status of %s ... SIGTERM or SIGINT to interrupt", unitName)
 	for {
 		select {
+		case <-restartChan.C:
+			if jt.IsRunning() {
+				continue
+			}
+			glog.Warningf("Restarting journal tailer of %s ...", jt.GetUnitName())
+			err = jt.RestartTail()
+			if err != nil {
+				glog.Errorf("Cannot restart the journal-tail of %s: %v", unitName, err)
+				return err
+			}
+
 		case s := <-statusChan:
 			glog.V(2).Infof("Status of %s job: %q", unitName, s)
 			if s != "done" {
