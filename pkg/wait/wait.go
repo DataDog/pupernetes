@@ -27,7 +27,7 @@ func NewWaiter(systemdUnitName string, timeout, loggingSince time.Duration) *Wai
 }
 
 func getSystemdUnitState(conn *dbus.Conn, unitName string) (string, error) {
-	units, err := util.GetUnitStates(conn, []string{unitName})
+	units, err := util.MustGetUnitStates(conn, []string{unitName})
 	if err != nil {
 		glog.Errorf("Cannot list units: %v", err)
 		return "", err

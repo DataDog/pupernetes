@@ -66,7 +66,7 @@ func RunSystemdJob(givenRootPath string) error {
 	if !strings.HasSuffix(unitName, ".service") {
 		unitName = unitName + ".service"
 	}
-	units, err := util.GetUnitStates(dbus, []string{unitName})
+	units, err := util.MustGetUnitStates(dbus, []string{unitName})
 	if err != nil {
 		glog.Errorf("Cannot get the status of %s: %v", unitName, err)
 		return err

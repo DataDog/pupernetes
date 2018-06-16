@@ -66,7 +66,7 @@ jobs:
 
       - run:
           name: setup
-          command: sudo ./pupernetes daemon setup sandbox/
+          command: sudo ./pupernetes daemon run sandbox/ -v 6
 
       - run:
           name: already-setup
