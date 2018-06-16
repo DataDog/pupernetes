@@ -47,7 +47,7 @@ jobs:
           name: verify-license
           command: make verify-license
 
-  setup:
+  daemon:
     machine: true
     working_directory: /home/circleci/.go_workspace/src/github.com/DataDog/pupernetes
     environment:
@@ -66,22 +66,31 @@ jobs:
 
       - run:
           name: setup
-          command: sudo ./pupernetes daemon run sandbox/ -v 6
+          command: sudo ./pupernetes daemon setup sandbox/ -v 6
 
       - run:
           name: already-setup
           # As it's already setup, pupernetes should be very fast
-          command: sudo timeout 10 ./pupernetes daemon setup sandbox/
+          command: sudo timeout 15 ./pupernetes daemon setup sandbox/
 
       - run:
           name: clean-setup
           # As we kept the binaries, pupernetes should be very fast
-          command: sudo timeout 10 ./pupernetes daemon setup sandbox/ -c etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets
+          command: sudo timeout 15 ./pupernetes daemon setup sandbox/ -c etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets
 
       - run:
           name: version-setup
-          # it should download and extract the hyperkube tarball
-          command: sudo ./pupernetes daemon setup sandbox/ --hyperkube-version 1.9.4
+          # It should download and extract the hyperkube tarball and clean everything but the binaries
+          command: sudo ./pupernetes daemon setup sandbox/ --hyperkube-version 1.9.4 -c -binaries
+
+      - run:
+          name: copy-validation
+          # Copy a batch validation job where the manifests are applied once pupernetes is ready =)
+          command: sudo cp -v .circleci/pupernetes-validation.yaml sandbox/manifest-api/pupernetes-validation.yaml
+
+      - run:
+          name: run
+          command: sudo ./pupernetes daemon run sandbox/ -c none --bind-address 0.0.0.0:8989 # TODO use https + authN/Z
 
       - run:
           name: clean
@@ -105,4 +114,4 @@ workflows:
 
   cli:
     jobs:
-      - setup
+      - daemon
