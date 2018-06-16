@@ -55,7 +55,7 @@ jobs:
           name: verify-license
           command: make verify-license
 
-  setup:
+  setup_fg:
     <<: *machine_job_template
     steps:
       - checkout
@@ -90,7 +90,7 @@ jobs:
           name: clean
           command: sudo ./pupernetes daemon clean sandbox/ -c all
 
-  fg:
+  run_fg:
     <<: *machine_job_template
     steps:
       - checkout
@@ -119,7 +119,7 @@ jobs:
           name: clean
           command: sudo ./pupernetes daemon clean sandbox/ -c all
 
-  systemd:
+  run_systemd:
     <<: *machine_job_template
     steps:
       - checkout
@@ -133,7 +133,7 @@ jobs:
 
       - run:
           name: run
-          command: sudo ./pupernetes daemon run sandbox/ -c none --job-type systemd -v 5 --kubectl-link /usr/local/bin/kubectl --bind-address 0.0.0.0:8989
+          command: sudo ./pupernetes daemon run sandbox/ --job-type systemd -v 5 --kubectl-link /usr/local/bin/kubectl --bind-address 0.0.0.0:8989
 
       - run:
           name: kubectl
@@ -161,6 +161,6 @@ workflows:
 
   daemon:
     jobs:
-      - setup
-      - fg
-      - systemd
+      - setup_fg
+      - run_fg
+      - run_systemd
