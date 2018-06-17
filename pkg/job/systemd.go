@@ -181,7 +181,7 @@ func RunSystemdJob(givenRootPath string) error {
 	defer close(sigChan)
 	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 
-	displayChan := time.NewTicker(5 * time.Second)
+	displayChan := time.NewTicker(10 * time.Second)
 	defer displayChan.Stop()
 
 	glog.V(2).Infof("Polling the status of %s ... SIGTERM or SIGINT to interrupt", unitName)

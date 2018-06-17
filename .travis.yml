@@ -1,0 +1,38 @@
+language: go
+
+go: "1.10"
+
+os:
+  - linux
+
+sudo: required
+dist: trusty
+
+env:
+  matrix:
+    - HYPERKUBE_VERSION=1.10.1
+    - HYPERKUBE_VERSION=1.9.1
+    - HYPERKUBE_VERSION=1.8.6
+#    - HYPERKUBE_VERSION=1.7.6
+#    - HYPERKUBE_VERSION=1.6.6
+#    - HYPERKUBE_VERSION=1.5.6
+
+before_install:
+  - sudo apt-get update
+
+install:
+  - sudo apt-get install -yq systemd
+
+before_script:
+  - make
+
+script:
+  - sudo ./pupernetes daemon setup sandbox/ -v 6 --hyperkube-version $HYPERKUBE_VERSION
+  - sudo cp -v .ci/pupernetes-validation.yaml sandbox/manifest-api/pupernetes-validation.yaml
+  - sudo ./pupernetes daemon run sandbox/ -v 4 --bind-address 0.0.0.0:8989 --hyperkube-version $HYPERKUBE_VERSION
+  - sudo ./pupernetes daemon clean sandbox/ -c all
+
+after_failure:
+  - sudo journalctl -e --no-pager -o cat -u p8s-etcd.service
+  - sudo journalctl -e --no-pager -o cat -u p8s-kubelet.service
+  - sudo journalctl -e --no-pager -o cat -u p8s-kube-apiserver.service

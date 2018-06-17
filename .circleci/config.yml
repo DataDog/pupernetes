@@ -109,7 +109,7 @@ jobs:
       - run:
           name: copy-validation
           # Copy a batch validation job where the manifests are applied once pupernetes is ready =)
-          command: sudo cp -v .circleci/pupernetes-validation.yaml sandbox/manifest-api/pupernetes-validation.yaml
+          command: sudo cp -v .ci//pupernetes-validation.yaml sandbox/manifest-api/pupernetes-validation.yaml
 
       - run:
           name: run
@@ -137,11 +137,11 @@ jobs:
 
       - run:
           name: kubectl
-          command: kubectl get no,svc,deploy,ds,job,po --all-namespaces -o wide --show-all
+          command: kubectl get no,svc,deploy,ds,job,po --all-namespaces -o wide
 
       - run:
           name: validate
-          command: kubectl apply -f .circleci/pupernetes-validation.yaml
+          command: kubectl apply -f .ci/pupernetes-validation.yaml
 
 workflows:
   version: 2
