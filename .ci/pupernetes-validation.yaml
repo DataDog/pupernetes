@@ -36,7 +36,6 @@ metadata:
   name: validation
   namespace: validation
 spec:
-  backoffLimit: 10
   activeDeadlineSeconds: 300
   template:
     spec:
@@ -61,4 +60,4 @@ spec:
       restartPolicy: Never
       terminationGracePeriodSeconds: 1
       serviceAccount: validation
-
+---
