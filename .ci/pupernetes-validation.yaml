@@ -29,6 +29,7 @@ data:
 
     # Stop pupernetes
     curl -XPOST ${NODE_IP}:8989/stop
+    echo "pupernetes is awesome" > /dev/termination-log
 ---
 apiVersion: batch/v1
 kind: Job
@@ -38,6 +39,9 @@ metadata:
 spec:
   activeDeadlineSeconds: 300
   template:
+    metadata:
+      labels:
+        app: validation
     spec:
       containers:
       - name: validation
