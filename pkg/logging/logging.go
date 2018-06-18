@@ -7,12 +7,12 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/coreos/go-systemd/dbus"
 	"github.com/golang/glog"
-	"sync"
 )
 
 type JournalTailer struct {

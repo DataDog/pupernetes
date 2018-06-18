@@ -151,7 +151,8 @@ func GetUnitStates(d *dbus.Conn, unitNames []string) ([]dbus.UnitStatus, error) 
 	return units, nil
 }
 
-// GetUnitStates returns the dbus UnitStates of unit names passed in parameter
+// MustGetUnitStates returns the dbus UnitStates of unit names passed in parameter,
+// an error is returned if the UnitStatus return more or less than asked
 func MustGetUnitStates(d *dbus.Conn, unitNames []string) ([]dbus.UnitStatus, error) {
 	units, err := GetUnitStates(d, unitNames)
 	if err != nil {

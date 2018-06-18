@@ -84,7 +84,7 @@ func (r *Runtime) Run() error {
 	for _, u := range r.env.GetSystemdUnits() {
 		err := util.StartUnit(r.env.GetDBUSClient(), u)
 		if err != nil {
-			return err
+			return r.Stop(err)
 		}
 	}
 
@@ -100,18 +100,18 @@ func (r *Runtime) Run() error {
 	sigStopChan := make(chan os.Signal, 2)
 	defer close(sigStopChan)
 	signal.Notify(sigStopChan, syscall.SIGTSTP)
+	defer signal.Reset(syscall.SIGTERM, syscall.SIGINT)
 
 	kubeletProbeURL := fmt.Sprintf("http://127.0.0.1:%d/healthz", r.env.GetKubeletHealthzPort())
 	for {
 		select {
 		case sig := <-r.SigChan:
 			glog.Warningf("Signal received: %q, propagating ...", sig.String())
-			signal.Reset(syscall.SIGTERM, syscall.SIGINT)
-			return r.Stop()
+			return r.Stop(nil)
 
 		case <-timeoutTimer.C:
 			glog.Warningf("Timeout %s reached, stopping ...", r.runTimeout.String())
-			r.SigChan <- syscall.SIGTERM
+			return r.Stop(fmt.Errorf("timeout reached during run phase: %s", r.runTimeout.String()))
 
 		case <-probeTick.C:
 			_, err := r.probeUnitStatuses()
@@ -130,8 +130,7 @@ func (r *Runtime) Run() error {
 				glog.Infof("Investigate the kubelet logs with: journalctl -u %skubelet.service -o cat -e --no-pager", config.ViperConfig.GetString("systemd-unit-prefix"))
 				glog.Infof("Investigate the kubelet status with: systemctl status %skubelet.service -l --no-pager", config.ViperConfig.GetString("systemd-unit-prefix"))
 				// Propagate a stop
-				r.SigChan <- syscall.SIGTERM
-				continue
+				return r.Stop(fmt.Errorf("failure threshold reached %d/%d", failures, appProbeThreshold))
 			}
 			r.state.IncKubeletProbeFailures()
 			glog.Warningf("Kubelet probe threshold is %d/%d", failures+1, appProbeThreshold)
