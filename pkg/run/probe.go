@@ -32,7 +32,7 @@ func (r *Runtime) httpProbe(url string) error {
 }
 
 func (r *Runtime) probeUnitStatuses() ([]string, error) {
-	units, err := util.GetUnitStates(r.env.GetDBUSClient(), r.env.GetSystemdUnits())
+	units, err := util.MustGetUnitStates(r.env.GetDBUSClient(), r.env.GetSystemdUnits())
 	if err != nil {
 		glog.Errorf("Unexpected error: %v", err)
 		return nil, err

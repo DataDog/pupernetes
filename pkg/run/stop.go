@@ -207,14 +207,16 @@ func (r *Runtime) runJournalTailers(failedUnits []string) error {
 	return fmt.Errorf("failed to start journal tailers: %s", strings.Join(errs, ", "))
 }
 
-func (r *Runtime) Stop() error {
+func (r *Runtime) Stop(withError error) error {
 	if r.env.IsSkippingStop() {
 		glog.Infof("Skipping stop")
-		return nil
+		return withError
 	}
 
 	var errs []string
-
+	if withError != nil {
+		errs = append(errs, withError.Error())
+	}
 	err := r.drainingPods()
 	if err != nil {
 		glog.Errorf("Failed to drain the node: %v", err)
@@ -246,7 +248,7 @@ func (r *Runtime) Stop() error {
 	// iptables always fail
 	r.cleanIptables()
 	if len(errs) == 0 {
-		return nil
+		return withError
 	}
 	err = fmt.Errorf("errors during stop: %s", strings.Join(errs, ", "))
 	glog.Errorf("Unexpected errors: %v", err)

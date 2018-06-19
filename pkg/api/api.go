@@ -83,7 +83,7 @@ func NewAPI(sigChan chan os.Signal, resetNamespaceFn func(namespaces *corev1.Nam
 	r := mux.NewRouter()
 
 	// POSTs
-	r.Methods("POST").Path("/stop").HandlerFunc(h.stopHandler)
+	r.Methods("POST").Path(stopRoute).HandlerFunc(h.stopHandler)
 	r.Methods("POST").Path(applyRoute).HandlerFunc(h.applyHandler)
 	r.Methods("POST").Path(resetRoute + "/{namespace}").HandlerFunc(h.resetHandler)
 

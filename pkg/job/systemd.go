@@ -172,18 +172,32 @@ func RunSystemdJob(givenRootPath string) error {
 	}
 
 	// Poll the status of the started unit
+	restartChan := time.NewTicker(500 * time.Millisecond)
+	defer restartChan.Stop()
+
 	timeout := time.After(time.Minute * 5)
 
 	sigChan := make(chan os.Signal, 2)
 	defer close(sigChan)
 	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 
-	displayChan := time.NewTicker(5 * time.Second)
+	displayChan := time.NewTicker(10 * time.Second)
 	defer displayChan.Stop()
 
 	glog.V(2).Infof("Polling the status of %s ... SIGTERM or SIGINT to interrupt", unitName)
 	for {
 		select {
+		case <-restartChan.C:
+			if jt.IsRunning() {
+				continue
+			}
+			glog.Warningf("Restarting journal tailer of %s ...", jt.GetUnitName())
+			err = jt.RestartTail()
+			if err != nil {
+				glog.Errorf("Cannot restart the journal-tail of %s: %v", unitName, err)
+				return err
+			}
+
 		case s := <-statusChan:
 			glog.V(2).Infof("Status of %s job: %q", unitName, s)
 			if s != "done" {

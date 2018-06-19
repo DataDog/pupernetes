@@ -22,7 +22,6 @@ ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
 	--cert-dir=/var/lib/p8s-kubelet/pki \
 	--kubeconfig={{.RootABSPath}}/manifest-config/kubeconfig-insecure.yaml \
 	--require-kubeconfig \
-	--cloud-provider="" \
 	--resolv-conf={{.RootABSPath}}/net.d/resolv.conf \
 	--cluster-dns={{ .DNSClusterIP }} \
 	--cluster-domain=cluster.local \
