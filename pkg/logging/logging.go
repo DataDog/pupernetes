@@ -15,6 +15,7 @@ import (
 	"github.com/golang/glog"
 )
 
+// JournalTailer is an exec of the journalctl command line
 type JournalTailer struct {
 	// setup
 	unitName   string
@@ -30,6 +31,10 @@ type JournalTailer struct {
 	mu      sync.RWMutex
 }
 
+// NewJournalTailer instantiate a new JournalTailer. The parameter are:
+// - unit name "example.service"
+// - since show entries not older than the specified date
+// - follow to enable the tailing
 func NewJournalTailer(unitName string, since time.Time, follow bool) (*JournalTailer, error) {
 	s := []string{
 		"journalctl",
@@ -64,6 +69,7 @@ func NewJournalTailer(unitName string, since time.Time, follow bool) (*JournalTa
 	}, nil
 }
 
+// StopTail close the pipe, send a SIGTERM to the journalctl process and then wait its completion
 func (j *JournalTailer) StopTail() error {
 	glog.V(3).Infof("Stopping command %s ...", j.GetCommandLine())
 	err := j.stdoutPipe.Close()
@@ -80,12 +86,14 @@ func (j *JournalTailer) StopTail() error {
 	return nil
 }
 
+// IsRunning returns if the process and the pipe are still running
 func (j *JournalTailer) IsRunning() bool {
 	j.mu.RLock()
 	defer j.mu.RUnlock()
 	return j.running
 }
 
+// RestartTail execute a StopTail and a StartTail. Basically it allows to stop and start over
 func (j *JournalTailer) RestartTail() error {
 	glog.V(2).Infof("Restarting Journal Tailer of %s", j.GetUnitName())
 	err := j.StopTail()
@@ -108,6 +116,8 @@ func (j *JournalTailer) display() {
 	j.running = false
 }
 
+// StartTail build and start the journalctl process with the adapted flags
+// It creates a pipe to display the logs over stdout
 func (j *JournalTailer) StartTail() error {
 	var err error
 
@@ -138,6 +148,7 @@ func (j *JournalTailer) StartTail() error {
 	return nil
 }
 
+// Wait on the journalctl process, needed to reap the process
 func (j *JournalTailer) Wait() error {
 	err := j.cmd.Wait()
 	if err == nil {
@@ -148,10 +159,12 @@ func (j *JournalTailer) Wait() error {
 	return err
 }
 
+// GetUnitName is a getter to returns the unit name to display
 func (j *JournalTailer) GetUnitName() string {
 	return j.unitName
 }
 
+// GetCommandLine returns the command line as a single joined string
 func (j *JournalTailer) GetCommandLine() string {
 	return j.cmdLineStr
 }

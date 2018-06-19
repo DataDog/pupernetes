@@ -14,6 +14,8 @@ import (
 	"k8s.io/api/core/v1"
 )
 
+// GetKubeletPods returns the pods reported by the kubelet API /pods
+// The certificate setup needs to be valid
 func (r *Runtime) GetKubeletPods() ([]v1.Pod, error) {
 	resp, err := r.env.GetKubeletClient().Do(r.env.GetKubeletPodListReq())
 	if err != nil {
@@ -36,6 +38,7 @@ func (r *Runtime) GetKubeletPods() ([]v1.Pod, error) {
 	return podList.Items, nil
 }
 
+// GetKubeletRunningPods run GetKubeletPods and then only filter the running ones. It excludes static pods
 func (r *Runtime) GetKubeletRunningPods() ([]v1.Pod, error) {
 	pods, err := r.GetKubeletPods()
 	if err != nil {
@@ -55,15 +58,16 @@ func (r *Runtime) GetKubeletRunningPods() ([]v1.Pod, error) {
 	return runningPods, nil
 }
 
+// GetKubeletStaticPods returns the kubelet running static pods
 func (r *Runtime) GetKubeletStaticPods() ([]v1.Pod, error) {
 	pods, err := r.GetKubeletPods()
 	if err != nil {
 		return nil, err
 	}
-	return r.SearchStaticPods(pods), nil
+	return r.searchStaticPods(pods), nil
 }
 
-func (r *Runtime) SearchStaticPods(pods []v1.Pod) []v1.Pod {
+func (r *Runtime) searchStaticPods(pods []v1.Pod) []v1.Pod {
 	var staticPods []v1.Pod
 	for _, pod := range pods {
 		if pod.Annotations["kubernetes.io/config.source"] != "file" {

@@ -62,7 +62,7 @@ func (r *Runtime) gracefulDeleteAPIResources() error {
 				glog.Errorf("Stop called too early: %v", err)
 				return err
 			}
-			staticPods := r.SearchStaticPods(stillRunningPods)
+			staticPods := r.searchStaticPods(stillRunningPods)
 			if len(staticPods) == len(stillRunningPods) {
 				glog.V(2).Infof("Kubelet run %d static pods", len(staticPods))
 				return nil
@@ -207,6 +207,7 @@ func (r *Runtime) runJournalTailers(failedUnits []string) error {
 	return fmt.Errorf("failed to start journal tailers: %s", strings.Join(errs, ", "))
 }
 
+// Stop drain and tear down the current runtime, if withError is set, this error will be returned
 func (r *Runtime) Stop(withError error) error {
 	if r.env.IsSkippingStop() {
 		glog.Infof("Skipping stop")

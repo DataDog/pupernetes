@@ -15,31 +15,40 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// GetHyperkubePath returns the hyperkube binary abstract path
 func (e *Environment) GetHyperkubePath() string {
 	return e.binaryHyperkube.binaryABSPath
 }
 
+// GetHostname returns the currently used hostname
 func (e *Environment) GetHostname() string {
 	return e.hostname
 }
 
+// GetDBUSClient returns a connected dbus client
 func (e *Environment) GetDBUSClient() *dbus.Conn {
 	return e.dbusClient
 }
 
+// GetKubeletHealthzPort returns the healthz kubelet port
 // TODO conf this
 func (e *Environment) GetKubeletHealthzPort() int {
 	return 10248
 }
 
+// GetKubeconfigAuthPath returns the kube-config abstract path
+// containing secrets to connect to the kube-apiserver
 func (e *Environment) GetKubeconfigAuthPath() string {
 	return e.kubeConfigAuthPath
 }
 
+// GetKubeconfigInsecurePath returns the kube-config abstract path
+// to reach the kube-apiserver without any authN/Z
 func (e *Environment) GetKubeconfigInsecurePath() string {
 	return e.kubeConfigInsecurePath
 }
 
+// GetStaticPodPaths returns the abstract path where static pods are stored
 func (e *Environment) GetStaticPodPaths() ([]string, error) {
 	files, err := ioutil.ReadDir(e.manifestStaticPodABSPath)
 	if err != nil {
@@ -56,38 +65,47 @@ func (e *Environment) GetStaticPodPaths() ([]string, error) {
 	return manifestABSPaths, nil
 }
 
+// GetKubernetesClient returns a configured kubernetes client
 func (e *Environment) GetKubernetesClient() *kubernetes.Clientset {
 	return e.clientSet
 }
 
+// IsDrainingPods is a getter over the drainOptions
 func (e *Environment) IsDrainingPods() bool {
 	return e.drainOptions.Pods
 }
 
+// IsWaitingKubeletGC is a getter over the drainOptions
 func (e *Environment) IsWaitingKubeletGC() bool {
 	return e.drainOptions.KubeletGC
 }
 
+// IsSkippingStop  is a getter over the drainOptions
 func (e *Environment) IsSkippingStop() bool {
 	return e.drainOptions.None
 }
 
+// IsCleaningIptables  is a getter over the drainOptions
 func (e *Environment) IsCleaningIptables() bool {
 	return e.drainOptions.Iptables
 }
 
+// GetManifestsABSPathToApply returns the abstract path where Kubernetes manifests to apply are
 func (e *Environment) GetManifestsABSPathToApply() string {
 	return e.manifestAPIABSPath
 }
 
+// GetKubeletPodListReq returns an http request to query the kubelet API
 func (e *Environment) GetKubeletPodListReq() *http.Request {
 	return e.podListRequest
 }
 
+// GetKubeletClient returns a http client intended to query the kubelet API
 func (e *Environment) GetKubeletClient() *http.Client {
 	return e.kubeletClient
 }
 
+// GetResolvConfPath returns an abstract path of the resolv.conf file
 func (e *Environment) GetResolvConfPath() string {
 	return path.Join(e.networkABSPath, "resolv.conf")
 }
@@ -97,6 +115,10 @@ func (e *Environment) GetPublicIP() string {
 	return e.outboundIP.String()
 }
 
+// GetSystemdUnits returns the systemd units to manage:
+// - kubelet
+// - etcd
+// - kube-apiserver
 func (e *Environment) GetSystemdUnits() []string {
 	return e.systemdUnitNames
 }

@@ -14,6 +14,8 @@ import (
 	"strings"
 )
 
+// Clean is a convenient key / value bool struct to store which component
+// should be clean
 type Clean struct {
 	common
 	Etcd      bool `json:"etcd,omitempty"`
@@ -28,10 +30,13 @@ type Clean struct {
 	Iptables  bool `json:"iptables,omitempty"`
 }
 
+// NewCleanOptions instantiate a new Clean from the cleanString
+// The clean string is lowercase clean options comma separated like: etcd,binaries ...
 func NewCleanOptions(cleanString string) *Clean {
 	return newOptions(cleanString, &Clean{}).(*Clean)
 }
 
+// StringJSON represents the clean options as a JSON
 func (c *Clean) StringJSON() string {
 	b, err := json.Marshal(c)
 	if err != nil {
@@ -41,6 +46,7 @@ func (c *Clean) StringJSON() string {
 	return string(b)
 }
 
+// StringCLI returns the clean options as a command line representation
 func (c *Clean) StringCLI() string {
 	m := structs.Map(c)
 	var cli []string

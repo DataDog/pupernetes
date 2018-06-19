@@ -26,7 +26,7 @@ pupernetes daemon run state/ -c etcd,kubectl,kubelet,manifests,network,secrets,s
 # Setup and run the environment with a 5 minutes timeout: 
 pupernetes daemon run state/ --timeout 5m
 
-# Setup and run the environment, then garantee a kubelet garbage collection during the drain phase: 
+# Setup and run the environment, then guarantee a kubelet garbage collection during the drain phase: 
 pupernetes daemon run state/ --gc 1m
 
 # Setup and run the environment as a systemd service:

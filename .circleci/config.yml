@@ -55,6 +55,17 @@ jobs:
           name: verify-license
           command: make verify-license
 
+  misc:
+    <<: *docker_job_template
+    steps:
+      - checkout
+      - run:
+          name: goget
+          command: make goget
+      - run:
+          name: verify-misc
+          command: make verify-misc
+
   setup_fg:
     <<: *machine_job_template
     steps:
@@ -158,6 +169,7 @@ workflows:
       - gofmt
       - docs
       - license
+      - misc
 
   daemon:
     jobs:

@@ -10,13 +10,21 @@ import (
 	"time"
 )
 
+// ViperConfig is a global variable for the viper configuration
+// TODO move it to the cmd package and make it private see https://github.com/DataDog/pupernetes/issues/40
 var ViperConfig = viper.New()
 
 const (
-	// Job control
-	JobTypeKey    = "job-type"
-	JobSystemd    = "systemd"
+	// JobTypeKey is the key for daemon types
+	JobTypeKey = "job-type"
+
+	// JobSystemd is the value to daemonise in a systemd unit .service
+	JobSystemd = "systemd"
+
+	// JobForeground is the value to daemonise the current process
 	JobForeground = "fg"
+
+	defaultAPIAddress = "127.0.0.1:8989"
 )
 
 func init() {
@@ -26,8 +34,8 @@ func init() {
 	ViperConfig.SetDefault("cni-version", "0.7.0")
 
 	ViperConfig.SetDefault("kubernetes-cluster-ip-range", "192.168.254.0/24")
-	ViperConfig.SetDefault("bind-address", "127.0.0.1:8989")
-	ViperConfig.SetDefault("api-address", "127.0.0.1:8989")
+	ViperConfig.SetDefault("bind-address", defaultAPIAddress)
+	ViperConfig.SetDefault("api-address", defaultAPIAddress)
 	ViperConfig.SetDefault("kubelet-root-dir", "/var/lib/p8s-kubelet")
 	ViperConfig.SetDefault("systemd-unit-prefix", "p8s-")
 

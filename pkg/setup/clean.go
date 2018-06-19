@@ -60,6 +60,7 @@ func (e *Environment) cleanMounts() error {
 	return nil
 }
 
+// Clean the current environment on given cleanOptions
 func (e *Environment) Clean() error {
 	var toRemove []string
 

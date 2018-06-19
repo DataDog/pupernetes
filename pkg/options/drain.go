@@ -14,6 +14,8 @@ import (
 	"strings"
 )
 
+// Drain is a convenient key / value bool struct to store which component
+//// should be drain
 type Drain struct {
 	common
 	Pods      bool `json:"pods,omitempty"`
@@ -21,11 +23,14 @@ type Drain struct {
 	Iptables  bool `json:"iptables,omitempty"`
 }
 
+// NewDrainOptions instantiate a new Drain from the drainString
+// The drain string is lowercase drain options comma separated like: pods,iptables ...
 func NewDrainOptions(drainString string) *Drain {
 	return newOptions(drainString, &Drain{}).(*Drain)
 }
 
-func (c *Drain) String() string {
+// StringJSON represents the clean options as a JSON
+func (c *Drain) StringJSON() string {
 	b, err := json.Marshal(c)
 	if err != nil {
 		glog.Errorf("Cannot marshal the drain options: %v", err)
@@ -34,6 +39,7 @@ func (c *Drain) String() string {
 	return string(b)
 }
 
+// StringCLI returns the drain options as a command line representation
 func (c *Drain) StringCLI() string {
 	m := structs.Map(c)
 	var cli []string

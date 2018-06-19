@@ -61,6 +61,8 @@ func setNone(d interface{}) {
 	reflect.ValueOf(d).Elem().FieldByName("None").SetBool(true)
 }
 
+// GetOptionNames returns the options from the given interface
+// The interface must be a Clean or Drain one
 func GetOptionNames(opt interface{}) string {
 	var names []string
 	for _, elt := range structs.Names(opt) {

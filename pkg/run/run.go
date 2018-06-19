@@ -29,6 +29,7 @@ const (
 	appProbeThreshold = 10
 )
 
+// Runtime is the main state to execute a managed pupernetes Run
 type Runtime struct {
 	env *setup.Environment
 
@@ -48,8 +49,9 @@ type Runtime struct {
 	ApplyChan chan struct{}
 }
 
+// NewRunner instantiate a new Runtimer with the given Environment
 func NewRunner(env *setup.Environment) *Runtime {
-	var zero int64 = 0
+	var zero int64
 
 	run := &Runtime{
 		env:     env,
@@ -72,6 +74,7 @@ func NewRunner(env *setup.Environment) *Runtime {
 	return run
 }
 
+// Run daemonise pupernetes
 func (r *Runtime) Run() error {
 	defer close(r.ApplyChan)
 
