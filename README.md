@@ -1,5 +1,7 @@
 # pupernetes - p8s
 
+[![CircleCI](https://circleci.com/gh/DataDog/pupernetes.svg?style=svg)](https://circleci.com/gh/DataDog/pupernetes) [![Build Status](https://travis-ci.org/DataDog/pupernetes.svg?branch=master)](https://travis-ci.org/DataDog/pupernetes) [![Go Report Card](https://goreportcard.com/badge/github.com/DataDog/pupernetes)](https://goreportcard.com/report/github.com/DataDog/pupernetes)
+
 Run a managed Kubernetes setup.
 
 This project purpose is to provide a simple Kubernetes setup to validate any software on top of it.
@@ -207,6 +209,10 @@ It's possible to run pupernetes as a systemd service directly with the command l
 In this case, pupernetes asks to be started with the given arguments.
 See more info about it in the [run command](docs/pupernetes_run.md).
 
+This command line is very convenient to run `pupernetes` in SaaS CI like:
+* [travis](.travis.yml)
+* [circle-ci](.circleci/config.yml)
+
 Graceful stop it with:
 
 * `systemctl stop pupernetes.service`
@@ -227,5 +233,3 @@ Graceful stop it with:
 * Secrets
   * IP SAN
     * Statically configured with the given Kubernetes cluster IP range
-* Versions
-  * You just can minimally change the version of the downloaded binaries in the state directory during the `run` phase but the compatibility isn't granted
