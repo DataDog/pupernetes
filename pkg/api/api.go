@@ -11,10 +11,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/DataDog/pupernetes/pkg/config"
 	"github.com/golang/glog"
 	"github.com/gorilla/mux"
 	corev1 "k8s.io/api/core/v1"
+
+	"github.com/DataDog/pupernetes/pkg/config"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const (
@@ -89,6 +91,7 @@ func NewAPI(sigChan chan os.Signal, resetNamespaceFn func(namespaces *corev1.Nam
 
 	// GETs
 	r.Methods("GET").Path("/ready").HandlerFunc(h.isReadyHandler)
+	r.Methods("GET").Path("/metrics").Handler(promhttp.Handler())
 
 	srv := &http.Server{
 		Handler:      r,

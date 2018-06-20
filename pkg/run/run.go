@@ -18,6 +18,7 @@ import (
 	"github.com/DataDog/pupernetes/pkg/api"
 	"github.com/DataDog/pupernetes/pkg/config"
 	"github.com/DataDog/pupernetes/pkg/logging"
+	"github.com/DataDog/pupernetes/pkg/run/state"
 	"github.com/DataDog/pupernetes/pkg/setup"
 	"github.com/DataDog/pupernetes/pkg/util"
 	"io/ioutil"
@@ -37,7 +38,7 @@ type Runtime struct {
 
 	SigChan          chan os.Signal
 	httpClient       *http.Client
-	state            *State
+	state            *state.State
 	runTimeout       time.Duration
 	waitKubeletGC    time.Duration
 	kubeDeleteOption *v1.DeleteOptions
@@ -59,7 +60,6 @@ func NewRunner(env *setup.Environment) *Runtime {
 		httpClient: &http.Client{
 			Timeout: time.Millisecond * 500,
 		},
-		state:         &State{},
 		runTimeout:    config.ViperConfig.GetDuration("timeout"),
 		waitKubeletGC: config.ViperConfig.GetDuration("gc"),
 		kubeDeleteOption: &v1.DeleteOptions{
@@ -70,6 +70,7 @@ func NewRunner(env *setup.Environment) *Runtime {
 		ApplyChan:      make(chan struct{}),
 	}
 	run.api = api.NewAPI(run.SigChan, run.DeleteAPIManifests, run.state.IsReady, run.ApplyChan)
+	signal.Notify(run.SigChan, syscall.SIGTERM, syscall.SIGINT)
 	return run
 }
 
@@ -79,6 +80,12 @@ func (r *Runtime) Run() error {
 	signal.Notify(r.SigChan, syscall.SIGTERM, syscall.SIGINT)
 
 	defer close(r.ApplyChan)
+
+	s, err := state.NewState()
+	if err != nil {
+		return err
+	}
+	r.state = s
 
 	glog.Infof("Timeout for this current run is %s", r.runTimeout.String())
 	timeoutTimer := time.NewTimer(r.runTimeout)

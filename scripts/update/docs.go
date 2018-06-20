@@ -15,8 +15,11 @@ import (
 
 	"fmt"
 	"github.com/DataDog/pupernetes/cmd/cli"
+	"github.com/DataDog/pupernetes/pkg/run/state"
+	"github.com/prometheus/client_golang/prometheus"
 	"io/ioutil"
 	"os/exec"
+	"sort"
 	"strings"
 )
 
@@ -71,4 +74,32 @@ func main() {
 		glog.Infof("Successfully generated %s", path.Join(docDir, f.Name()))
 	}
 	glog.Infof("Generated command line documentation in %s", docDir)
+
+	_, err = state.NewState()
+	if err != nil {
+		glog.Exitf("%v", err)
+	}
+	metrics, err := prometheus.DefaultGatherer.Gather()
+	if err != nil {
+		glog.Exitf("%s", err)
+	}
+
+	var metricsToWrite []string
+	for _, m := range metrics {
+		metricsToWrite = append(metricsToWrite, fmt.Sprintf("%q,%q,%q\n", m.GetName(), m.GetType(), m.GetHelp()))
+	}
+
+	metricFile, err := os.OpenFile(path.Join(docDir, "metrics.csv"), os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		glog.Exitf("%s", err)
+	}
+	defer metricFile.Close()
+	metricFile.WriteString("name,type,help\n")
+	sort.Strings(metricsToWrite)
+	for _, elt := range metricsToWrite {
+		metricFile.WriteString(elt)
+	}
+	metricFile.Sync()
+	glog.Infof("Generated metrics file in %s", metricFile.Name())
+
 }
