@@ -80,12 +80,12 @@ func (e *Environment) IsWaitingKubeletGC() bool {
 	return e.drainOptions.KubeletGC
 }
 
-// IsSkippingStop  is a getter over the drainOptions
+// IsSkippingStop is a getter over the drainOptions
 func (e *Environment) IsSkippingStop() bool {
 	return e.drainOptions.None
 }
 
-// IsCleaningIptables  is a getter over the drainOptions
+// IsCleaningIptables is a getter over the drainOptions
 func (e *Environment) IsCleaningIptables() bool {
 	return e.drainOptions.Iptables
 }

@@ -15,7 +15,7 @@ import (
 )
 
 // Drain is a convenient key / value bool struct to store which component
-//// should be drain
+// should be drain
 type Drain struct {
 	common
 	Pods      bool `json:"pods,omitempty"`
