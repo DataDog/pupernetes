@@ -39,10 +39,6 @@ func checkRequirements() error {
 	if err != nil {
 		return err
 	}
-	err = checkCommand("openssl", "genrsa")
-	if err != nil {
-		return err
-	}
 	conn, err := dbus.NewSystemdConnection()
 	if err != nil {
 		glog.Errorf("Cannot connect to dbus: %v", err)

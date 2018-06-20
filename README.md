@@ -57,7 +57,6 @@ Executables in PATH:
 * unzip
 * systemctl
 * systemd-resolve (or a non-systemd managed `/etc/resolv.conf`)
-* openssl
 * mount
 
 Any implicit requirements for the **kubelet** like the container runtime and [more](https://github.com/kubernetes/kubernetes/issues/26093)
