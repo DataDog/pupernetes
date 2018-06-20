@@ -34,4 +34,4 @@ name,type,help
 "pupernetes_kubelet_logs_pods_running","GAUGE","Number of kubelet logs pods running"
 "pupernetes_kubelet_probe_failures","COUNTER","Total number of kubelet probe failures"
 "pupernetes_ready","GAUGE","Boolean for pupernetes readiness"
-"pupernetes_versions","GAUGE","Pupernetes versions"
+"pupernetes_version","GAUGE","Pupernetes version"
