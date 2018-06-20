@@ -268,6 +268,18 @@ func (r *Runtime) deleteServiceAccounts(namespaces *corev1.NamespaceList) error 
 	return nil
 }
 
+// DeleteAPIManifests execute Kubernetes delete API calls to delete the following resources:
+// - services
+// - Jobs
+// - Deployments
+// - Daemonset
+// - ReplicationController
+// - ReplicaSets
+// - Pods
+// - Endpoints
+// - ConfigMaps
+// - Secrets
+// - ServiceAccounts
 func (r *Runtime) DeleteAPIManifests(namespaces *corev1.NamespaceList) error {
 	fnList := []func(ns *corev1.NamespaceList) error{
 		r.deleteServices,

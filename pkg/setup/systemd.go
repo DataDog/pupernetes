@@ -19,6 +19,7 @@ import (
 )
 
 const (
+	// UnitPath is the systemd target where systemd links are created
 	UnitPath             = "/run/systemd/system/"
 	customSystemdSection = "X-p8s"
 )

@@ -75,7 +75,6 @@ func RunSystemdJob(givenRootPath string) error {
 		glog.V(3).Infof("Unit %q with load state %q is %q", u.Name, u.LoadState, u.SubState)
 		switch u.SubState {
 		case "running":
-			err = fmt.Errorf("%s is already running", u.Name)
 			glog.Warningf("Nothing to do: %s is already running: systemctl status %s --full", u.Name, u.Name)
 			return nil
 		case "start":

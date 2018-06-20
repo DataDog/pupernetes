@@ -13,6 +13,8 @@ const (
 	namespacePrefix = "namespace/"
 )
 
+// ResetNamespace executes an API call to the pupernetes API to reset
+// the namespace in parameter. The namespace can be like ns/default or just default
 func ResetNamespace(apiAddress, namespace string) error {
 	if strings.HasPrefix(namespace, namespacePrefix) {
 		glog.V(4).Infof("Stripping namespace %q", namespace)
@@ -28,6 +30,7 @@ func ResetNamespace(apiAddress, namespace string) error {
 	return doPOST(apiAddress, fmt.Sprintf("%s/%s", resetRoute, namespace))
 }
 
+// Apply executes an API call to the pupernetes API to force an apply of the "manifest-api" directory
 func Apply(apiAddress string) error {
 	glog.Infof("Applying ...")
 	return doPOST(apiAddress, applyRoute)

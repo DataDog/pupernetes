@@ -21,12 +21,23 @@ docs:
 license:
 	./scripts/update/license.sh
 
+goget:
+	@which ineffassign || go get github.com/gordonklaus/ineffassign
+	@which golint || go get golang.org/x/lint/golint
+	@which misspell || go get github.com/client9/misspell/cmd/misspell
+
 # Private targets
-PKG=.job .options .setup .util
+PKG=.cmd .pkg .docs
 $(PKG): %:
 	@# remove the leading '.'
-	$(CC) test -v ./pkg/$(subst .,,$@)
-check: $(PKG)
+	ineffassign $(subst .,,$@)
+	golint -set_exit_status $(subst .,,$@)/...
+	misspell -error $(subst .,,$@)
+
+check:
+	$(CC) test -v ./pkg/...
+
+verify-misc: goget $(PKG)
 
 verify-gofmt:
 	./scripts/verify/gofmt.sh
@@ -37,7 +48,7 @@ verify-docs:
 verify-license:
 	./scripts/verify/license.sh
 
-verify: verify-gofmt verify-docs verify-license
+verify: verify-misc verify-gofmt verify-docs verify-license
 
 sha512sum: pupernetes
 	$@ ./$^ > $^.$@

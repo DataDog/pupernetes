@@ -10,11 +10,13 @@ import (
 	"time"
 )
 
+// Wait is used to poll a given systemd unit until its ready
 type Wait struct {
 	systemdUnitName       string
 	timeout, loggingSince time.Duration
 }
 
+// NewWaiter instantiate a Wait with the given parameter
 func NewWaiter(systemdUnitName string, timeout, loggingSince time.Duration) *Wait {
 	if !strings.HasSuffix(systemdUnitName, ".service") {
 		systemdUnitName = systemdUnitName + ".service"
@@ -46,6 +48,7 @@ func getSystemdUnitState(conn *dbus.Conn, unitName string) (string, error) {
 	return units[0].SubState, nil
 }
 
+// Wait for the systemd unit being ready
 func (w *Wait) Wait() error {
 	conn, err := dbus.NewSystemdConnection()
 	if err != nil {

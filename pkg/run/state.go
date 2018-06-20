@@ -5,6 +5,7 @@ import (
 	"sync"
 )
 
+// State keeps track of the current stats
 type State struct {
 	sync.RWMutex
 
@@ -16,12 +17,15 @@ type State struct {
 	kubeletLogsPodRunning int
 }
 
+// IsReady returns if the kube-apiserver is available and the manifests are applied
 func (s *State) IsReady() bool {
 	s.RLock()
 	defer s.RUnlock()
 	return s.ready
 }
 
+// SetReady is the trigger to mark pupernetes as ready.
+// It notify systemd of its readiness
 func (s *State) SetReady() {
 	s.Lock()
 	s.ready = true
@@ -30,6 +34,8 @@ func (s *State) SetReady() {
 	notifySystemd()
 }
 
+// SetAPIServerProbeLastError keep track of the latest error message and display only
+// if there is a a diff from the last record
 func (s *State) SetAPIServerProbeLastError(msg string) {
 	s.Lock()
 	if s.apiServerProbeLastError != msg {
@@ -39,18 +45,22 @@ func (s *State) SetAPIServerProbeLastError(msg string) {
 	s.Unlock()
 }
 
+// IncKubeletProbeFailures increment the number of kubelet failures
 func (s *State) IncKubeletProbeFailures() {
 	s.Lock()
 	s.kubeletProbeFailures++
 	s.Unlock()
 }
 
+// GetKubeletProbeFail returns the number of kubelet failures
 func (s *State) GetKubeletProbeFail() int {
 	s.RLock()
 	defer s.RUnlock()
 	return s.kubeletProbeFailures
 }
 
+// SetKubeletAPIPodRunning keep track of the number of kubelet Pods and display only
+// if there is a a diff from the last record
 func (s *State) SetKubeletAPIPodRunning(nb int) {
 	s.Lock()
 	if s.kubeletAPIPodRunning != nb {
@@ -60,6 +70,8 @@ func (s *State) SetKubeletAPIPodRunning(nb int) {
 	s.Unlock()
 }
 
+// SetKubeletLogsPodRunning keep track of the number of kubelet Pods in /var/log/pods and display only
+// if there is a a diff from the last record
 func (s *State) SetKubeletLogsPodRunning(nb int) {
 	s.Lock()
 	if s.kubeletLogsPodRunning != nb {
@@ -69,6 +81,7 @@ func (s *State) SetKubeletLogsPodRunning(nb int) {
 	s.Unlock()
 }
 
+// GetKubeletLogsPodRunning returns the number of kubelet Pods in /var/log/pods
 func (s *State) GetKubeletLogsPodRunning() int {
 	s.RLock()
 	defer s.RUnlock()

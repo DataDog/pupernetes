@@ -6,18 +6,25 @@
 package templates
 
 const (
-	ManifestStaticPod   = "/manifest-static-pod"
-	ManifestAPI         = "/manifest-api"
-	ManifestConfig      = "/manifest-config"
+	// ManifestStaticPod path for static pods
+	ManifestStaticPod = "/manifest-static-pod"
+	// ManifestAPI path for kube-apiserver manifests
+	ManifestAPI = "/manifest-api"
+	// ManifestConfig path for configuration related to Kubernetes
+	// like kubeconfig, audit files, ...
+	ManifestConfig = "/manifest-config"
+	// ManifestSystemdUnit path where systemd units are stored
 	ManifestSystemdUnit = "/manifest-systemd-unit"
 )
 
+// Manifest represent a file to be rendered in a destination
 type Manifest struct {
 	Name        string
 	Destination string
 	Content     []byte
 }
 
+// Manifests is the map catalog where all Kubernetes major.minor are stored
 var Manifests map[string][]Manifest
 
 // TODO add a layer for flavor like, http, https

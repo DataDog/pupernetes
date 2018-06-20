@@ -26,6 +26,8 @@ import (
 )
 
 const (
+	// KubeletCRILogPath isn't configurable, it's a directory where the kubelet
+	// store Pods/containers logs
 	KubeletCRILogPath = "/var/log/pods/"
 
 	defaultBinaryDirName          = "bin"
@@ -39,6 +41,7 @@ const (
 	defaultKubectlContextName = "p8s"
 )
 
+// Environment is the main structure to configure the project
 type Environment struct {
 	// host
 	rootABSPath string
@@ -119,6 +122,9 @@ type templateMetadata struct {
 	KubeletRootDirABSPath string  `json:"kubelet-root-dir"`
 }
 
+// NewConfigSetup creates an Environment
+// TODO this should be refactored with the viper migration
+// TODO see https://github.com/DataDog/pupernetes/issues/40
 func NewConfigSetup(givenRootPath string) (*Environment, error) {
 	if givenRootPath == "" {
 		err := fmt.Errorf("must provide a path")
@@ -269,6 +275,7 @@ func (e *Environment) setupDirectories() error {
 	return nil
 }
 
+// Setup the Environment
 func (e *Environment) Setup() error {
 	var err error
 	glog.V(3).Infof("Setup starting %s", e.rootABSPath)

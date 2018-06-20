@@ -25,6 +25,7 @@ import (
 
 const programName = "pupernetes"
 
+// NewCommand constructs the cobra command line
 func NewCommand() (*cobra.Command, *int) {
 	var verbose int
 	var exitCode int
@@ -88,7 +89,7 @@ func NewCommand() (*cobra.Command, *int) {
 # Setup and run the environment with a 5 minutes timeout: 
 %s run state/ --timeout 5m
 
-# Setup and run the environment, then garantee a kubelet garbage collection during the drain phase: 
+# Setup and run the environment, then guarantee a kubelet garbage collection during the drain phase: 
 %s run state/ --gc 1m
 
 # Setup and run the environment as a systemd service:
