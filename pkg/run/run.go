@@ -51,11 +51,18 @@ type Runtime struct {
 }
 
 // NewRunner instantiate a new Runtimer with the given Environment
-func NewRunner(env *setup.Environment) *Runtime {
+func NewRunner(env *setup.Environment) (*Runtime, error) {
 	var zero int64
+
+	s, err := state.NewState()
+	if err != nil {
+		glog.Errorf("Cannot create the runner: %v", err)
+		return nil, err
+	}
 
 	run := &Runtime{
 		env:     env,
+		state:   s,
 		SigChan: make(chan os.Signal, 2),
 		httpClient: &http.Client{
 			Timeout: time.Millisecond * 500,
@@ -70,8 +77,7 @@ func NewRunner(env *setup.Environment) *Runtime {
 		ApplyChan:      make(chan struct{}),
 	}
 	run.api = api.NewAPI(run.SigChan, run.DeleteAPIManifests, run.state.IsReady, run.ApplyChan)
-	signal.Notify(run.SigChan, syscall.SIGTERM, syscall.SIGINT)
-	return run
+	return run, nil
 }
 
 // Run daemonise pupernetes
@@ -80,12 +86,6 @@ func (r *Runtime) Run() error {
 	signal.Notify(r.SigChan, syscall.SIGTERM, syscall.SIGINT)
 
 	defer close(r.ApplyChan)
-
-	s, err := state.NewState()
-	if err != nil {
-		return err
-	}
-	r.state = s
 
 	glog.Infof("Timeout for this current run is %s", r.runTimeout.String())
 	timeoutTimer := time.NewTimer(r.runTimeout)

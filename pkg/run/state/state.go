@@ -1,12 +1,12 @@
 package state
 
 import (
-	"sync"
-
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
+	"sync"
 )
 
+// State keeps track of the current stats
 type State struct {
 	sync.RWMutex
 
@@ -26,13 +26,14 @@ type State struct {
 	promKubeletProbeFailures prometheus.Counter
 }
 
+// NewState instantiate a state with the associated prometheus metrics
 func NewState() (*State, error) {
 	s := &State{
 		promVersion: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name:        "pupernetes_versions",
-			Help:        "Pupernetes versions",
+			Name:        "pupernetes_version",
+			Help:        "Pupernetes version",
 			ConstLabels: prometheus.Labels{},
-			// TODO record all versions
+			// TODO record all versions in labels. hyperkube: "1.10.1", etcd: "3.11.1", ...
 		}),
 		promStateReady: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "pupernetes_ready",
@@ -75,12 +76,15 @@ func NewState() (*State, error) {
 	return s, nil
 }
 
+// IsReady returns if the kube-apiserver is available and the manifests are applied
 func (s *State) IsReady() bool {
 	s.RLock()
 	defer s.RUnlock()
 	return s.ready
 }
 
+// SetReady is the trigger to mark pupernetes as ready.
+// It notify systemd of its readiness
 func (s *State) SetReady() {
 	s.Lock()
 	s.ready = true
@@ -90,6 +94,8 @@ func (s *State) SetReady() {
 	s.promStateReady.Set(1)
 }
 
+// SetAPIServerProbeLastError keep track of the latest error message and display only
+// if there is a a diff from the last record
 func (s *State) SetAPIServerProbeLastError(msg string) {
 	s.Lock()
 	if s.apiServerProbeLastError != msg {
@@ -99,6 +105,7 @@ func (s *State) SetAPIServerProbeLastError(msg string) {
 	s.Unlock()
 }
 
+// IncKubeletProbeFailures increment the number of kubelet failures
 func (s *State) IncKubeletProbeFailures() {
 	s.Lock()
 	s.kubeletProbeFailures++
@@ -106,12 +113,15 @@ func (s *State) IncKubeletProbeFailures() {
 	s.promKubeletProbeFailures.Inc()
 }
 
+// GetKubeletProbeFail returns the number of kubelet failures
 func (s *State) GetKubeletProbeFail() int {
 	s.RLock()
 	defer s.RUnlock()
 	return s.kubeletProbeFailures
 }
 
+// SetKubeletAPIPodRunning keep track of the number of kubelet Pods and display only
+// if there is a a diff from the last record
 func (s *State) SetKubeletAPIPodRunning(nb int) {
 	s.Lock()
 	if s.kubeletAPIPodRunning != nb {
@@ -122,6 +132,8 @@ func (s *State) SetKubeletAPIPodRunning(nb int) {
 	s.promKubeletAPIPodRunning.Set(float64(nb))
 }
 
+// SetKubeletLogsPodRunning keep track of the number of kubelet Pods in /var/log/pods and display only
+// if there is a a diff from the last record
 func (s *State) SetKubeletLogsPodRunning(nb int) {
 	s.Lock()
 	if s.kubeletLogsPodRunning != nb {
@@ -132,6 +144,7 @@ func (s *State) SetKubeletLogsPodRunning(nb int) {
 	s.promKubeletLogsPodRunning.Set(float64(nb))
 }
 
+// GetKubeletLogsPodRunning returns the number of kubelet Pods in /var/log/pods
 func (s *State) GetKubeletLogsPodRunning() int {
 	s.RLock()
 	defer s.RUnlock()
