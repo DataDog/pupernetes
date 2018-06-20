@@ -106,6 +106,7 @@ func StartUnit(d *dbus.Conn, unitName string) error {
 		expectedSubState: []string{"running"},
 		getUnitStates:    MustGetUnitStates,
 	}
+	glog.V(2).Infof("Starting %s ...", unitName)
 	return sd.executeSystemdAction()
 }
 
@@ -119,6 +120,7 @@ func StopUnit(d *dbus.Conn, unitName string) error {
 		expectedSubState: []string{"dead", "failed"},
 		getUnitStates:    GetUnitStates,
 	}
+	glog.V(2).Infof("Stopping %s ...", unitName)
 	return sd.executeSystemdAction()
 }
 

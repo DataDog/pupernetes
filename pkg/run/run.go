@@ -67,12 +67,14 @@ func NewRunner(env *setup.Environment) *Runtime {
 		runTimestamp:   time.Now(),
 		ApplyChan:      make(chan struct{}),
 	}
-	signal.Notify(run.SigChan, syscall.SIGTERM, syscall.SIGINT)
 	run.api = api.NewAPI(run.SigChan, run.DeleteAPIManifests, run.state.IsReady, run.ApplyChan)
 	return run
 }
 
 func (r *Runtime) Run() error {
+	// the associated signal.Reset is defer in r.Stop method
+	signal.Notify(r.SigChan, syscall.SIGTERM, syscall.SIGINT)
+
 	defer close(r.ApplyChan)
 
 	glog.Infof("Timeout for this current run is %s", r.runTimeout.String())
@@ -100,7 +102,6 @@ func (r *Runtime) Run() error {
 	sigStopChan := make(chan os.Signal, 2)
 	defer close(sigStopChan)
 	signal.Notify(sigStopChan, syscall.SIGTSTP)
-	defer signal.Reset(syscall.SIGTERM, syscall.SIGINT)
 
 	kubeletProbeURL := fmt.Sprintf("http://127.0.0.1:%d/healthz", r.env.GetKubeletHealthzPort())
 	for {
