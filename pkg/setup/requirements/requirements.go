@@ -45,6 +45,8 @@ func checkResources() error {
 	return err
 }
 
+// CheckRequirements returns an error if the hard coded requirements are not satisfied
+// TODO configure this
 func CheckRequirements() error {
 	if os.Geteuid() != 0 {
 		return fmt.Errorf("must run as root")
