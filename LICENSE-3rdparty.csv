@@ -1,8 +1,8 @@
 Component,Origin,License
 core,"github.com/frapposelli/wwhrd",MIT
+core,"github.com/beorn7/perks/quantile",MIT
 core,"github.com/cloudfoundry/gosigar",Apache-2.0
 core,"github.com/cloudfoundry/gosigar/sys/windows",Apache-2.0
-core,"github.com/beorn7/perks/quantile",MIT
 core,"github.com/coreos/go-systemd/daemon",Apache-2.0
 core,"github.com/coreos/go-systemd/dbus",Apache-2.0
 core,"github.com/coreos/go-systemd/unit",Apache-2.0

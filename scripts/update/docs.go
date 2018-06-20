@@ -101,5 +101,4 @@ func main() {
 	}
 	metricFile.Sync()
 	glog.Infof("Generated metrics file in %s", metricFile.Name())
-
 }
