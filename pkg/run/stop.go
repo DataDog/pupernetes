@@ -208,6 +208,9 @@ func (r *Runtime) runJournalTailers(failedUnits []string) error {
 }
 
 func (r *Runtime) Stop(withError error) error {
+	// reset run signals
+	signal.Reset(syscall.SIGTERM, syscall.SIGINT)
+
 	if r.env.IsSkippingStop() {
 		glog.Infof("Skipping stop")
 		return withError
@@ -226,7 +229,7 @@ func (r *Runtime) Stop(withError error) error {
 	failed, err := r.probeUnitStatuses()
 	if err != nil && len(failed) == 0 {
 		glog.Errorf("Probe units in failed: %v", err)
-		return err
+		errs = append(errs, err.Error())
 	}
 
 	if len(failed) != 0 {
