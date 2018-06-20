@@ -222,6 +222,12 @@ Graceful stop it with:
 * `--timeout`
 * `curl -XPOST 127.0.0.1:8989/stop`
 
+## Metrics
+
+Pupernetes exposes prometheus metrics to improve the observability.
+
+You can observe which metrics are available [here](./docs/metrics.csv).
+
 ## Current limitations
 
 * Container runtime
