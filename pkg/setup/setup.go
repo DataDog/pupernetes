@@ -21,6 +21,7 @@ import (
 
 	"github.com/DataDog/pupernetes/pkg/config"
 	"github.com/DataDog/pupernetes/pkg/options"
+	"github.com/DataDog/pupernetes/pkg/setup/requirements"
 	defaultTemplates "github.com/DataDog/pupernetes/pkg/setup/templates"
 	"github.com/DataDog/pupernetes/pkg/util"
 )
@@ -280,7 +281,7 @@ func (e *Environment) Setup() error {
 	var err error
 	glog.V(3).Infof("Setup starting %s", e.rootABSPath)
 	for _, f := range []func() error{
-		checkRequirements,
+		requirements.CheckRequirements,
 		e.setupHostname,
 		e.setupDirectories,
 		e.setupBinaryCNI,
