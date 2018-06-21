@@ -7,7 +7,7 @@ package api
 
 import (
 	"net/http"
-	// register pprof handlers with its package init
+	// Register pprof handlers with its package init
 	_ "net/http/pprof"
 	"os"
 	"syscall"
@@ -97,8 +97,8 @@ func NewAPI(sigChan chan os.Signal, resetNamespaceFn func(namespaces *corev1.Nam
 	// monitoring
 	r.Methods("GET").Path("/metrics").Handler(promhttp.Handler())
 
-	// this is the cleanest way I found to register all pprof routes,
-	// see https://stackoverflow.com/questions/19591065/profiling-go-web-application-built-with-gorillas-mux-with-net-http-pprof
+	// Known issue with Mux and the registering of pprof:
+	// https://stackoverflow.com/questions/19591065/profiling-go-web-application-built-with-gorillas-mux-with-net-http-pprof
 	r.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 
 	srv := &http.Server{
