@@ -2,6 +2,15 @@
 
 
 [[projects]]
+  name = "github.com/cloudfoundry/gosigar"
+  packages = [
+    ".",
+    "sys/windows"
+  ]
+  revision = "dcb1afc219e4c99f21c37fb1ec22ed9ffe443317"
+  version = "v1.1.0"
+
+[[projects]]
   name = "github.com/coreos/go-systemd"
   packages = [
     "daemon",
@@ -233,6 +242,12 @@
   packages = ["."]
   revision = "acdc4509485b587f5e675510c4f2c63e90ff68a8"
   version = "v1.1.0"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -511,6 +526,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "eb07c142266daf4f00c988ad56c265e3f078f52b2e6f8c7a2fb537f872226f26"
+  inputs-digest = "fa23a2343bd6d0289c9f4f39fcf1b6779214af8129dc27c6b4af82e5610cb6c8"
   solver-name = "gps-cdcl"
   solver-version = 1

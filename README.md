@@ -63,6 +63,10 @@ Any implicit requirements for the **kubelet** like the container runtime and [mo
 
 A systemd environment.
 
+Physical resources:
+* 4GB of memory is recommended
+* 5GB of free disk space for the binaries and the container images
+
 ### Development
 
 Setup a linux environment for running `pupernetes`. **This is only a suggested environment for running pupernetes. You could also create a VM using Vagrant (not yet documented here).**

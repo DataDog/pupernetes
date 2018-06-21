@@ -1,5 +1,7 @@
 Component,Origin,License
 core,"github.com/frapposelli/wwhrd",MIT
+core,"github.com/cloudfoundry/gosigar",Apache-2.0
+core,"github.com/cloudfoundry/gosigar/sys/windows",Apache-2.0
 core,"github.com/coreos/go-systemd/daemon",Apache-2.0
 core,"github.com/coreos/go-systemd/dbus",Apache-2.0
 core,"github.com/coreos/go-systemd/unit",Apache-2.0
@@ -54,6 +56,7 @@ core,"github.com/mitchellh/mapstructure",MIT
 core,"github.com/modern-go/concurrent",Apache-2.0
 core,"github.com/modern-go/reflect2",Apache-2.0
 core,"github.com/pelletier/go-toml",MIT
+core,"github.com/pkg/errors",FreeBSD
 core,"github.com/pmezard/go-difflib/difflib",FreeBSD
 core,"github.com/russross/blackfriday",FreeBSD
 core,"github.com/ryanuber/go-glob",MIT
