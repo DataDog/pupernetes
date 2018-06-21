@@ -44,8 +44,8 @@ pupernetes daemon run state/ --job-type systemd
       --gc duration               grace period for the kubelet GC trigger when draining run, no-op if not draining (default 1m0s)
   -h, --help                      help for run
       --job-type string           type of job: fg or systemd (default "fg")
+      --run-timeout duration      timeout for run (default 7h0m0s)
       --systemd-job-name string   unit name used when running as systemd service (default "pupernetes")
-      --timeout duration          timeout for run (default 6h0m0s)
 ```
 
 ### Options inherited from parent commands

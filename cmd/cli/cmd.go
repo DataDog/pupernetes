@@ -138,7 +138,7 @@ func NewCommand() (*cobra.Command, *int) {
 				exitCode = 1
 				return
 			}
-			r, err := run.NewRunner(env)
+			r, err := run.NewRunner(env, config.ViperConfig.GetDuration("run-timeout"), config.ViperConfig.GetDuration("gc"))
 			if err != nil {
 				exitCode = 2
 				return
@@ -210,7 +210,7 @@ func NewCommand() (*cobra.Command, *int) {
 		),
 		Run: func(cmd *cobra.Command, args []string) {
 			for i := 0; i < len(args); i++ {
-				err := api.ResetNamespace(config.ViperConfig.GetString("api-address"), args[i])
+				err := api.ResetNamespace(config.ViperConfig.GetDuration("client-timeout"), config.ViperConfig.GetString("api-address"), args[i])
 				if err != nil {
 					exitCode = 2
 					return
@@ -219,7 +219,7 @@ func NewCommand() (*cobra.Command, *int) {
 			if !config.ViperConfig.GetBool("apply") {
 				return
 			}
-			err := api.Apply(config.ViperConfig.GetString("api-address"))
+			err := api.Apply(config.ViperConfig.GetDuration("client-timeout"), config.ViperConfig.GetString("api-address"))
 			if err != nil {
 				exitCode = 2
 				return
@@ -250,7 +250,7 @@ func NewCommand() (*cobra.Command, *int) {
 				exitCode = 1
 				return
 			}
-			err := wait.NewWaiter(unitToWatch, config.ViperConfig.GetDuration("timeout"), config.ViperConfig.GetDuration("logging-since")).Wait()
+			err := wait.NewWaiter(unitToWatch, config.ViperConfig.GetDuration("wait-timeout"), config.ViperConfig.GetDuration("logging-since")).Wait()
 			if err != nil {
 				exitCode = 2
 				return
@@ -300,8 +300,8 @@ func NewCommand() (*cobra.Command, *int) {
 	runCommand.PersistentFlags().StringP("drain", "d", config.ViperConfig.GetString("drain"), fmt.Sprintf("drain options after %s: %s", runCommand.Name(), options.GetOptionNames(options.Drain{})))
 	config.ViperConfig.BindPFlag("drain", runCommand.PersistentFlags().Lookup("drain"))
 
-	runCommand.PersistentFlags().Duration("timeout", config.ViperConfig.GetDuration("timeout"), fmt.Sprintf("timeout for %s", runCommand.Name()))
-	config.ViperConfig.BindPFlag("timeout", runCommand.PersistentFlags().Lookup("timeout"))
+	runCommand.PersistentFlags().Duration("run-timeout", config.ViperConfig.GetDuration("run-timeout"), fmt.Sprintf("timeout for %s", runCommand.Name()))
+	config.ViperConfig.BindPFlag("run-timeout", runCommand.PersistentFlags().Lookup("run-timeout"))
 
 	runCommand.PersistentFlags().Duration("gc", config.ViperConfig.GetDuration("gc"), fmt.Sprintf("grace period for the kubelet GC trigger when draining %s, no-op if not draining", runCommand.Name()))
 	config.ViperConfig.BindPFlag("gc", runCommand.PersistentFlags().Lookup("gc"))
@@ -323,11 +323,14 @@ func NewCommand() (*cobra.Command, *int) {
 	resetCommand.PersistentFlags().BoolP("apply", "a", config.ViperConfig.GetBool("apply"), "Apply manifests-api after reset, useful when resetting kube-system namespace")
 	config.ViperConfig.BindPFlag("apply", resetCommand.PersistentFlags().Lookup("apply"))
 
+	resetCommand.PersistentFlags().Duration("client-timeout", config.ViperConfig.GetDuration("client-timeout"), fmt.Sprintf("timeout for %s", resetCommand.Name()))
+	config.ViperConfig.BindPFlag("client-timeout", resetCommand.PersistentFlags().Lookup("client-timeout"))
+
 	// Wait
 	rootCommand.AddCommand(waitCommand)
 
-	waitCommand.PersistentFlags().Duration("timeout", time.Minute*15, fmt.Sprintf("Timeout for %s", waitCommand.Name()))
-	config.ViperConfig.BindPFlag("timeout", waitCommand.PersistentFlags().Lookup("timeout"))
+	waitCommand.PersistentFlags().Duration("wait-timeout", time.Minute*15, fmt.Sprintf("Timeout for %s", waitCommand.Name()))
+	config.ViperConfig.BindPFlag("wait-timeout", waitCommand.PersistentFlags().Lookup("wait-timeout"))
 
 	waitCommand.PersistentFlags().Duration("logging-since", config.ViperConfig.GetDuration("logging-since"), "Display the logs of the unit since")
 	config.ViperConfig.BindPFlag("logging-since", waitCommand.PersistentFlags().Lookup("logging-since"))

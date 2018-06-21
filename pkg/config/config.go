@@ -44,7 +44,7 @@ func init() {
 
 	ViperConfig.SetDefault("clean", "etcd,kubelet,mounts,iptables")
 	ViperConfig.SetDefault("drain", "all")
-	ViperConfig.SetDefault("timeout", time.Hour*6)
+	ViperConfig.SetDefault("run-timeout", time.Hour*7)
 	ViperConfig.SetDefault("gc", time.Second*60)
 
 	// The supported job-type are "fg" and "systemd"
@@ -56,4 +56,6 @@ func init() {
 
 	ViperConfig.SetDefault("logging-since", time.Minute*5)
 	ViperConfig.SetDefault("unit-to-watch", "pupernetes.service")
+	ViperConfig.SetDefault("wait-timeout", time.Minute*15)
+	ViperConfig.SetDefault("client-timeout", time.Minute*1)
 }

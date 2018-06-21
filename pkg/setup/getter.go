@@ -122,3 +122,8 @@ func (e *Environment) GetPublicIP() string {
 func (e *Environment) GetSystemdUnits() []string {
 	return e.systemdUnitNames
 }
+
+// GetSystemdUnitPrefix returns the prefix used with systemd units
+func (e *Environment) GetSystemdUnitPrefix() string {
+	return e.systemdUnitPrefix
+}
