@@ -7,23 +7,22 @@ package run
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/golang/glog"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/DataDog/pupernetes/pkg/api"
-	"github.com/DataDog/pupernetes/pkg/config"
 	"github.com/DataDog/pupernetes/pkg/logging"
 	"github.com/DataDog/pupernetes/pkg/run/state"
 	"github.com/DataDog/pupernetes/pkg/setup"
 	"github.com/DataDog/pupernetes/pkg/util"
-	"io/ioutil"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sync"
 )
 
 const (
@@ -51,7 +50,7 @@ type Runtime struct {
 }
 
 // NewRunner instantiate a new Runtimer with the given Environment
-func NewRunner(env *setup.Environment) (*Runtime, error) {
+func NewRunner(env *setup.Environment, runTimeout, waitKubeletGC time.Duration) (*Runtime, error) {
 	var zero int64
 
 	s, err := state.NewState()
@@ -67,8 +66,8 @@ func NewRunner(env *setup.Environment) (*Runtime, error) {
 		httpClient: &http.Client{
 			Timeout: time.Millisecond * 500,
 		},
-		runTimeout:    config.ViperConfig.GetDuration("timeout"),
-		waitKubeletGC: config.ViperConfig.GetDuration("gc"),
+		runTimeout:    runTimeout,
+		waitKubeletGC: waitKubeletGC,
 		kubeDeleteOption: &v1.DeleteOptions{
 			GracePeriodSeconds: &zero,
 		},
@@ -138,8 +137,8 @@ func (r *Runtime) Run() error {
 			if failures >= appProbeThreshold {
 				glog.Warningf("Probing failed, stopping ...")
 				// display some helpers to investigate:
-				glog.Infof("Investigate the kubelet logs with: journalctl -u %skubelet.service -o cat -e --no-pager", config.ViperConfig.GetString("systemd-unit-prefix"))
-				glog.Infof("Investigate the kubelet status with: systemctl status %skubelet.service -l --no-pager", config.ViperConfig.GetString("systemd-unit-prefix"))
+				glog.Infof("Investigate the kubelet logs with: journalctl -u %skubelet.service -o cat -e --no-pager", r.env.GetSystemdUnitPrefix())
+				glog.Infof("Investigate the kubelet status with: systemctl status %skubelet.service -l --no-pager", r.env.GetSystemdUnitPrefix())
 				// Propagate a stop
 				return r.Stop(fmt.Errorf("failure threshold reached %d/%d", failures, appProbeThreshold))
 			}
