@@ -64,6 +64,8 @@ Update the [ignition example](environments/container-linux/ignition.yaml) on the
 * /opt/bin/setup-pupernetes
 * /opt/bin/pupernetes.sha512sum
 
+Update the [README](README.md)
+* [download section](README.md#download) :`${VERSION}`.
 
 ### Push tags
 
