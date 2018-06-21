@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	neededMemory uint64 = 3e9 // 3GB
+	requiredMemory uint64 = 4e9 // 4GB
 )
 
 func checkCommand(command string, args ...string) error {
@@ -37,10 +37,10 @@ func checkResources() error {
 	}
 	glog.V(3).Infof("System has %d bytes as total memory", mem.Total)
 
-	if mem.Total >= neededMemory {
+	if mem.Total >= requiredMemory {
 		return nil
 	}
-	err = fmt.Errorf("not enough memory: %d bytes are needed, currently %d bytes", neededMemory, mem.Total)
+	err = fmt.Errorf("not enough memory: %d bytes are needed, currently %d bytes", requiredMemory, mem.Total)
 	glog.Errorf("Requirement failure: %v", err)
 	return err
 }
