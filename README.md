@@ -2,20 +2,41 @@
 
 [![CircleCI](https://circleci.com/gh/DataDog/pupernetes.svg?style=svg)](https://circleci.com/gh/DataDog/pupernetes) [![Build Status](https://travis-ci.org/DataDog/pupernetes.svg?branch=master)](https://travis-ci.org/DataDog/pupernetes) [![Go Report Card](https://goreportcard.com/badge/github.com/DataDog/pupernetes)](https://goreportcard.com/report/github.com/DataDog/pupernetes)
 
+## Table of Contents
+- [Goals](#goals)
+- [Requirements](#requirements)
+  * [Runtime](#runtime)
+    * [Executables](#executables)
+    * [Systemd](#systemd)
+    * [Resources](#resources)
+  * [Development](#development)
+    * [Build](#build)
+- [Getting started](#getting-started)
+  * [Download](#download)
+  * [Run](#run)
+  * [Stop](#stop)
+  * [Systemd as job type](#systemd-as-job-type)
+  * [Command line docs](#command-line-docs)
+- [Metrics](#metrics)
+- [Current limitations](#current-limitations)
+
+## Goals
+
 Run a managed Kubernetes setup.
 
-This project purpose is to provide a simple Kubernetes setup to validate any software on top of it.
+This project's purpose is to provide a simple Kubernetes setup to validate any software on top of it.
 
-You can use it to validate a software dependence on Kubernetes itself or just to run some classic app workflows with [argo](https://github.com/argoproj/argo)
+You can use it to validate a software dependency on Kubernetes itself or just to run some classic app workflows with [argo](https://github.com/argoproj/argo).
 
-Our main use case is the end to end testing pipeline of the [datadog-agent](https://github.com/DataDog/datadog-agent)
+As pupernetes runs in [travis](./.travis.yml) and [circle-ci](./.circleci/config.yml), it becomes very easy to integrate this tool in any Kubernetes project.
+
+This project has been initially designed to perform the end to end testing of the [datadog-agent](https://github.com/DataDog/datadog-agent).
 
 [![asciicast](https://asciinema.org/a/5fvTb9iEcvwO3EhqOSmDMIT9O.png)](https://asciinema.org/a/5fvTb9iEcvwO3EhqOSmDMIT9O)
 
 ![img](docs/pupernetes.jpg)
 
 **Provides**:
-
 * etcd v3
 * kubectl
 * kubelet
@@ -25,117 +46,89 @@ Our main use case is the end to end testing pipeline of the [datadog-agent](http
 * kube-proxy
 * coredns
 
-The default setup is secured with:
-
+**The default setup is secured with:**
 * Valid x509 certificates provided by an embedded vault PKI
     * Able to use the Kubernetes CSR and the service account root-ca
 * HTTPS webhook to provide token lookups for the kubelet API
 * RBAC
 
-## Table of Contents
-- [Requirements](#requirements)
-  * [Runtime](#runtime)
-  * [Development](#development)
-    + [Create Ubuntu VM](#ubuntu-vm)
-    + [Install Docker](#install-docker)
-- [Build it](#build-it)
-- [Run it](#run-it)
-- [Use it](#use-it)
-  * [Command line](#command-line)
-  * [Quick run](#quick-run)
-  * [Quick systemd-run](#quick-systemd-run)
-  * [Systemd as job type](#systemd-as-job-type)
-- [Current limitations](#current-limitations)
-
 ## Requirements
 
 ### Runtime
 
-Executables in PATH:
+#### Executables
 
-* tar
-* unzip
-* systemctl
-* systemd-resolve (or a non-systemd managed `/etc/resolv.conf`)
-* mount
+* `tar`
+* `unzip`
+* `systemctl`
+* `systemd-resolve` (or a non-systemd managed `/etc/resolv.conf`)
+* `mount`
 
-Any implicit requirements for the **kubelet** like the container runtime and [more](https://github.com/kubernetes/kubernetes/issues/26093)
+Additionally any implicit requirements needed by the **kubelet**, like the container runtime and [more](https://github.com/kubernetes/kubernetes/issues/26093).
+Currently only reporting `docker`, please see the [current limitations](#current-limitations).
 
-A systemd environment.
+#### Systemd
 
-Physical resources:
+A recent systemd version is better to gain:
+* `systemd-resolve`
+* `journalctl --since`
+* more convenient dbus API
+
+#### Resources
+
 * 4GB of memory is recommended
 * 5GB of free disk space for the binaries and the container images
 
-### Development
+#### Development
 
-Setup a linux environment for running `pupernetes`. **This is only a suggested environment for running pupernetes. You could also create a VM using Vagrant (not yet documented here).**
+Pupernetes must be run on linux (or linux VM).
+
+Please see our [ubuntu 18.04](./environments/ubuntu/README.md) notes about it.
+
+To compile `pupernetes`, you need the following binaries:
+
+* `go` **1.10**
+* `make`
+
+#### Build
 
 ```bash
-curl -LOf https://github.com/DataDog/pupernetes/releases/download/v${VERSION}/pupernetes
-chmod +x ./pupernetes
+go get -u github.com/DataDog/pupernetes
+cd ${GOPATH}/src/github.com/DataDog/pupernetes
+make
 ```
 
-#### Ubuntu VM
+## Getting started
 
-`pupernetes` must be run on linux (or linux VM).
+### Download
 
-Example:
-Download the latest version of [Ubuntu Desktop](https://www.ubuntu.com/download/desktop) and create the Ubuntu VM with your preferred virtualization software.
+You need to download the last version:
+```bash
+VERSION=0.4.0
+curl -LOf https://github.com/DataDog/pupernetes/releases/download/v${VERSION}/pupernetes
+chmod +x ./pupernetes
+./pupernetes --help
+```
 
-#### Install Docker
-
-Follow the instructions [here](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce) to install docker.
-
->Note:
->
->If you are seeing the following error after running `sudo apt-get install docker-ce` to install `docker-ce`.
->
->```
->E: Invalid operation docker-ce
->```
->
->Try running the following command to setup the **stable** repository that instead specifies an older Ubuntu distribution like `xenial` instead of using `lsb_release -cs` (using `bionic` doesn't seem to always works).
->
->```
->$ sudo add-apt-repository \
->   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
->   xenial \
->  stable"
->```
->
->Now try running `$ sudo apt-get install docker-ce` again.
-
-To manage docker as a non-root user (so you don't have to keep using `sudo`) follow the instructions [here](https://docs.docker.com/install/linux/linux-postinstall/). **You must log out and log back in (or just restart your VM) so that your group membership is re-evaluated**
-
-## Build it
-
-* go
-* make
-
-## Run it
+### Run
 
 ```bash
 sudo ./pupernetes daemon run sandbox/
 ```
 
-## Use it
-
 >Note:
 >
->`kubectl` is automatically installed by `pupernetes`.
+>`kubectl` can be automatically installed by `pupernetes`.
 >
->You may need to run the following command to add `kubectl` to the `$PATH`:
+>You need to run the following command to add `kubectl` to the `$PATH`:
 >
 >```bash
 > sudo ./pupernetes run sandbox/ --kubectl-link /usr/local/bin/kubectl
 >```
 
 ```bash
-kubectl get svc,ds,deploy,job,po --all-namespaces
-```
+$ kubectl get svc,ds,deploy,job,po --all-namespaces
 
-```text
 NAMESPACE     NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)         AGE
 default       kubernetes   ClusterIP   192.168.254.1   <none>        443/TCP         3m
 kube-system   coredns      ClusterIP   192.168.254.2   <none>        53/UDP,53/TCP   3m
@@ -154,10 +147,19 @@ kube-system   kube-proxy-wggdn           1/1       Running   0          3m
 kube-system   kube-scheduler-92zrj       1/1       Running   0          3m
 ```
 
-## Hyperkube version:
+### Stop
 
-Example: `--hyperkube-version=1.9.3`
+Gracefully stop it with:
+* SIGINT
+* SIGTERM
+* `--timeout`
+* `curl -XPOST 127.0.0.1:8989/stop`
 
+### Hyperkube versions
+
+`pupernetes` can start a specific Kubernetes version with the flag `--hyperkube-version=1.9.3`.
+
+These are the current supported versions:
 - [x] 1.11
 - [x] 1.10
 - [x] 1.9
@@ -168,65 +170,25 @@ Example: `--hyperkube-version=1.9.3`
 - [ ] 1.4
 - [ ] 1.3
 
-### Command line
-
-The full documentation is available [here](docs).
-
-### Quick run
-
-```bash
-make
-sudo ./pupernetes daemon run sandbox/
-```
-
-Graceful stop it with:
-
-* SIGINT
-* SIGTERM
-* `--timeout`
-* `curl -XPOST 127.0.0.1:8989/stop`
-
-### Quick systemd-run
-
-```bash
-sudo systemd-run ./pupernetes daemon run ${PWD}/sandbox
-```
-
-Graceful stop it with:
-
-* `systemctl stop run-r${UNIT_ID}.service`
-* `--timeout`
-* `curl -XPOST 127.0.0.1:8989/stop`
-
-Find any systemd-run unit with:
-
-```bash
-sudo systemctl list-units run-r*.service
-```
-
-The `DESCRIPTION` field should match the initial `{COMMAND} [ARGS...]`
-
 ### Systemd as job type
 
 It's possible to run pupernetes as a systemd service directly with the command line.
-In this case, pupernetes asks to be started with the given arguments.
-See more info about it in the [run command](docs/pupernetes_run.md).
+In this case, pupernetes asks to systemd-dbus to be daemonised with the given arguments.
+See more info about it in the [run command](./docs/pupernetes_run.md).
 
-This command line is very convenient to run `pupernetes` in SaaS CI like:
-* [travis](.travis.yml)
-* [circle-ci](.circleci/config.yml)
+This command line is very convenient to run pupernetes in SaaS CI:
+* [travis](./.travis.yml)
+* [circle-ci](./.circleci/config.yml)
 
-Graceful stop it with:
+### Command line docs
 
-* `systemctl stop pupernetes.service`
-* `--timeout`
-* `curl -XPOST 127.0.0.1:8989/stop`
+The full documentation is available [here](./docs).
 
 ## Metrics
 
 Pupernetes exposes prometheus metrics to improve the observability.
 
-You can observe which metrics are available [here](./docs/metrics.csv).
+You can have a look at which metrics are available [here](./docs/metrics.csv).
 
 ## Current limitations
 
@@ -236,6 +198,8 @@ You can observe which metrics are available [here](./docs/metrics.csv).
 * Systemd
   * Currently working with systemd only
   * Could be containerized with extensive mounts
+    * binaries
+    * dbus
 * Networking
   * The CNI bridge cannot be used yet
   * Kubernetes cluster IP range is statically set
