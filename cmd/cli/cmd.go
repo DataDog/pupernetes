@@ -282,7 +282,7 @@ func NewCommand() (*cobra.Command, *int) {
 	daemonCommand.PersistentFlags().String("systemd-unit-prefix", config.ViperConfig.GetString("systemd-unit-prefix"), "prefix for systemd unit name")
 	config.ViperConfig.BindPFlag("systemd-unit-prefix", daemonCommand.PersistentFlags().Lookup("systemd-unit-prefix"))
 
-	daemonCommand.PersistentFlags().String("kubectl-link", config.ViperConfig.GetString("kubectl-link"), "Path to create a kubectl link")
+	daemonCommand.PersistentFlags().String("kubectl-link", config.ViperConfig.GetString("kubectl-link"), "path to create a kubectl link")
 	config.ViperConfig.BindPFlag("kubectl-link", daemonCommand.PersistentFlags().Lookup("kubectl-link"))
 
 	daemonCommand.PersistentFlags().StringP("clean", "c", config.ViperConfig.GetString("clean"), fmt.Sprintf("clean options before %s: %s", setupCommand.Name(), options.GetOptionNames(options.Clean{})))
@@ -300,13 +300,13 @@ func NewCommand() (*cobra.Command, *int) {
 	runCommand.PersistentFlags().StringP("drain", "d", config.ViperConfig.GetString("drain"), fmt.Sprintf("drain options after %s: %s", runCommand.Name(), options.GetOptionNames(options.Drain{})))
 	config.ViperConfig.BindPFlag("drain", runCommand.PersistentFlags().Lookup("drain"))
 
-	runCommand.PersistentFlags().Duration("run-timeout", config.ViperConfig.GetDuration("run-timeout"), fmt.Sprintf("timeout for %s", runCommand.Name()))
+	runCommand.PersistentFlags().Duration("run-timeout", config.ViperConfig.GetDuration("run-timeout"), fmt.Sprintf("maximum time to run %s for until self shutdown", programName))
 	config.ViperConfig.BindPFlag("run-timeout", runCommand.PersistentFlags().Lookup("run-timeout"))
 
 	runCommand.PersistentFlags().Duration("gc", config.ViperConfig.GetDuration("gc"), fmt.Sprintf("grace period for the kubelet GC trigger when draining %s, no-op if not draining", runCommand.Name()))
 	config.ViperConfig.BindPFlag("gc", runCommand.PersistentFlags().Lookup("gc"))
 
-	runCommand.PersistentFlags().String("bind-address", config.ViperConfig.GetString("bind-address"), fmt.Sprintf("Bind address for %s API ip:port", programName))
+	runCommand.PersistentFlags().String("bind-address", config.ViperConfig.GetString("bind-address"), fmt.Sprintf("bind address for %s API ip:port", programName))
 	config.ViperConfig.BindPFlag("bind-address", runCommand.PersistentFlags().Lookup("bind-address"))
 
 	runCommand.PersistentFlags().String("systemd-job-name", config.ViperConfig.GetString("systemd-job-name"), "unit name used when running as systemd service")
@@ -317,25 +317,25 @@ func NewCommand() (*cobra.Command, *int) {
 
 	// Reset
 	rootCommand.AddCommand(resetCommand)
-	resetCommand.PersistentFlags().String("api-address", config.ViperConfig.GetString("api-address"), fmt.Sprintf("Address for the %s API ip:port", programName))
+	resetCommand.PersistentFlags().String("api-address", config.ViperConfig.GetString("api-address"), fmt.Sprintf("address for the %s API ip:port", programName))
 	config.ViperConfig.BindPFlag("api-address", resetCommand.PersistentFlags().Lookup("api-address"))
 
-	resetCommand.PersistentFlags().BoolP("apply", "a", config.ViperConfig.GetBool("apply"), "Apply manifests-api after reset, useful when resetting kube-system namespace")
+	resetCommand.PersistentFlags().BoolP("apply", "a", config.ViperConfig.GetBool("apply"), "apply manifests-api after reset, useful when resetting kube-system namespace")
 	config.ViperConfig.BindPFlag("apply", resetCommand.PersistentFlags().Lookup("apply"))
 
-	resetCommand.PersistentFlags().Duration("client-timeout", config.ViperConfig.GetDuration("client-timeout"), fmt.Sprintf("timeout for %s", resetCommand.Name()))
+	resetCommand.PersistentFlags().Duration("client-timeout", config.ViperConfig.GetDuration("client-timeout"), fmt.Sprintf("maximum time waited for a %s command to be executed", programName))
 	config.ViperConfig.BindPFlag("client-timeout", resetCommand.PersistentFlags().Lookup("client-timeout"))
 
 	// Wait
 	rootCommand.AddCommand(waitCommand)
 
-	waitCommand.PersistentFlags().Duration("wait-timeout", time.Minute*15, fmt.Sprintf("Timeout for %s", waitCommand.Name()))
+	waitCommand.PersistentFlags().Duration("wait-timeout", time.Minute*15, fmt.Sprintf("maximum time to download the required binaries, images and set up %s", programName))
 	config.ViperConfig.BindPFlag("wait-timeout", waitCommand.PersistentFlags().Lookup("wait-timeout"))
 
-	waitCommand.PersistentFlags().Duration("logging-since", config.ViperConfig.GetDuration("logging-since"), "Display the logs of the unit since")
+	waitCommand.PersistentFlags().Duration("logging-since", config.ViperConfig.GetDuration("logging-since"), "display the logs of the unit since")
 	config.ViperConfig.BindPFlag("logging-since", waitCommand.PersistentFlags().Lookup("logging-since"))
 
-	waitCommand.PersistentFlags().StringP("unit-to-watch", "u", config.ViperConfig.GetString("unit-to-watch"), "Systemd unit name to watch")
+	waitCommand.PersistentFlags().StringP("unit-to-watch", "u", config.ViperConfig.GetString("unit-to-watch"), "systemd unit name to watch")
 	config.ViperConfig.BindPFlag("unit-to-watch", waitCommand.PersistentFlags().Lookup("unit-to-watch"))
 
 	return rootCommand, &exitCode

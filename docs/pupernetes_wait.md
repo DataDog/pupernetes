@@ -26,9 +26,9 @@ pupernetes wait -u p8s-kubelet
 
 ```
   -h, --help                     help for wait
-      --logging-since duration   Display the logs of the unit since (default 5m0s)
-  -u, --unit-to-watch string     Systemd unit name to watch (default "pupernetes.service")
-      --wait-timeout duration    Timeout for wait (default 15m0s)
+      --logging-since duration   display the logs of the unit since (default 5m0s)
+  -u, --unit-to-watch string     systemd unit name to watch (default "pupernetes.service")
+      --wait-timeout duration    maximum time to download the required binaries, images and set up pupernetes (default 15m0s)
 ```
 
 ### Options inherited from parent commands
