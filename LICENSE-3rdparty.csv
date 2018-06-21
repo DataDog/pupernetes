@@ -1,5 +1,6 @@
 Component,Origin,License
 core,"github.com/frapposelli/wwhrd",MIT
+core,"github.com/beorn7/perks/quantile",MIT
 core,"github.com/cloudfoundry/gosigar",Apache-2.0
 core,"github.com/cloudfoundry/gosigar/sys/windows",Apache-2.0
 core,"github.com/coreos/go-systemd/daemon",Apache-2.0
@@ -51,6 +52,7 @@ core,"github.com/imdario/mergo",NewBSD
 core,"github.com/inconshreveable/mousetrap",Apache-2.0
 core,"github.com/json-iterator/go",MIT
 core,"github.com/magiconair/properties",FreeBSD
+core,"github.com/matttproud/golang_protobuf_extensions/pbutil",Apache-2.0
 core,"github.com/mitchellh/go-homedir",MIT
 core,"github.com/mitchellh/mapstructure",MIT
 core,"github.com/modern-go/concurrent",Apache-2.0
@@ -58,6 +60,16 @@ core,"github.com/modern-go/reflect2",Apache-2.0
 core,"github.com/pelletier/go-toml",MIT
 core,"github.com/pkg/errors",FreeBSD
 core,"github.com/pmezard/go-difflib/difflib",FreeBSD
+core,"github.com/prometheus/client_golang/prometheus",Apache-2.0
+core,"github.com/prometheus/client_golang/prometheus/promhttp",Apache-2.0
+core,"github.com/prometheus/client_model/go",Apache-2.0
+core,"github.com/prometheus/common/expfmt",Apache-2.0
+core,"github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg",Apache-2.0
+core,"github.com/prometheus/common/model",Apache-2.0
+core,"github.com/prometheus/procfs",Apache-2.0
+core,"github.com/prometheus/procfs/internal/util",Apache-2.0
+core,"github.com/prometheus/procfs/nfs",Apache-2.0
+core,"github.com/prometheus/procfs/xfs",Apache-2.0
 core,"github.com/russross/blackfriday",FreeBSD
 core,"github.com/ryanuber/go-glob",MIT
 core,"github.com/sethgrid/pester",MIT

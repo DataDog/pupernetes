@@ -34,9 +34,7 @@ func (r *Runtime) getNamespaces() (*corev1.NamespaceList, error) {
 }
 
 func (r *Runtime) isAPIServerHookDone() bool {
-	r.state.RLock()
-	defer r.state.RUnlock()
-	return r.state.ready
+	return r.state.IsReady()
 }
 
 func (r *Runtime) gracefulDeleteAPIResources() error {

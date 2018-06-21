@@ -138,7 +138,12 @@ func NewCommand() (*cobra.Command, *int) {
 				exitCode = 1
 				return
 			}
-			err = run.NewRunner(env).Run()
+			r, err := run.NewRunner(env)
+			if err != nil {
+				exitCode = 2
+				return
+			}
+			err = r.Run()
 			if err != nil {
 				exitCode = 2
 				return

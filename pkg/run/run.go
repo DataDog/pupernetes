@@ -18,6 +18,7 @@ import (
 	"github.com/DataDog/pupernetes/pkg/api"
 	"github.com/DataDog/pupernetes/pkg/config"
 	"github.com/DataDog/pupernetes/pkg/logging"
+	"github.com/DataDog/pupernetes/pkg/run/state"
 	"github.com/DataDog/pupernetes/pkg/setup"
 	"github.com/DataDog/pupernetes/pkg/util"
 	"io/ioutil"
@@ -37,7 +38,7 @@ type Runtime struct {
 
 	SigChan          chan os.Signal
 	httpClient       *http.Client
-	state            *State
+	state            *state.State
 	runTimeout       time.Duration
 	waitKubeletGC    time.Duration
 	kubeDeleteOption *v1.DeleteOptions
@@ -50,16 +51,22 @@ type Runtime struct {
 }
 
 // NewRunner instantiate a new Runtimer with the given Environment
-func NewRunner(env *setup.Environment) *Runtime {
+func NewRunner(env *setup.Environment) (*Runtime, error) {
 	var zero int64
+
+	s, err := state.NewState()
+	if err != nil {
+		glog.Errorf("Cannot create the runner: %v", err)
+		return nil, err
+	}
 
 	run := &Runtime{
 		env:     env,
+		state:   s,
 		SigChan: make(chan os.Signal, 2),
 		httpClient: &http.Client{
 			Timeout: time.Millisecond * 500,
 		},
-		state:         &State{},
 		runTimeout:    config.ViperConfig.GetDuration("timeout"),
 		waitKubeletGC: config.ViperConfig.GetDuration("gc"),
 		kubeDeleteOption: &v1.DeleteOptions{
@@ -70,7 +77,7 @@ func NewRunner(env *setup.Environment) *Runtime {
 		ApplyChan:      make(chan struct{}),
 	}
 	run.api = api.NewAPI(run.SigChan, run.DeleteAPIManifests, run.state.IsReady, run.ApplyChan)
-	return run
+	return run, nil
 }
 
 // Run daemonise pupernetes
