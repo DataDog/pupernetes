@@ -14,7 +14,7 @@
 - [Getting started](#getting-started)
   * [Download](#download)
   * [Run](#run)
-  * [Stop it](#stop-it)
+  * [Stop](#stop)
   * [Systemd as job type](#systemd-as-job-type)
   * [Command line docs](#command-line-docs)
 - [Metrics](#metrics)
@@ -24,13 +24,13 @@
 
 Run a managed Kubernetes setup.
 
-This project purpose is to provide a simple Kubernetes setup to validate any software on top of it.
+This project's purpose is to provide a simple Kubernetes setup to validate any software on top of it.
 
-You can use it to validate a software dependence on Kubernetes itself or just to run some classic app workflows with [argo](https://github.com/argoproj/argo).
+You can use it to validate a software dependency on Kubernetes itself or just to run some classic app workflows with [argo](https://github.com/argoproj/argo).
 
 As pupernetes runs in [travis](./.travis.yml) and [circle-ci](./.circleci/config.yml), it becomes very easy to integrate this tool in any Kubernetes project.
 
-Our main use case is the end to end testing pipeline of the [datadog-agent](https://github.com/DataDog/datadog-agent).
+This project has been initially designed to perform the end to end testing of the [datadog-agent](https://github.com/DataDog/datadog-agent).
 
 [![asciicast](https://asciinema.org/a/5fvTb9iEcvwO3EhqOSmDMIT9O.png)](https://asciinema.org/a/5fvTb9iEcvwO3EhqOSmDMIT9O)
 
@@ -147,9 +147,9 @@ kube-system   kube-proxy-wggdn           1/1       Running   0          3m
 kube-system   kube-scheduler-92zrj       1/1       Running   0          3m
 ```
 
-### Stop it
+### Stop
 
-Graceful stop it with:
+Gracefully stop it with:
 * SIGINT
 * SIGTERM
 * `--timeout`
@@ -157,9 +157,9 @@ Graceful stop it with:
 
 ### Hyperkube versions
 
-`pupernetes` can start several Kubernetes versions with the flag `--hyperkube-version=1.9.3`.
+`pupernetes` can start a specific Kubernetes version with the flag `--hyperkube-version=1.9.3`.
 
-This is the current supported versions:
+These are the current supported versions:
 - [x] 1.11
 - [x] 1.10
 - [x] 1.9
@@ -173,7 +173,7 @@ This is the current supported versions:
 ### Systemd as job type
 
 It's possible to run pupernetes as a systemd service directly with the command line.
-In this case, pupernetes asks to systemd-dbus be daemonised with the given arguments.
+In this case, pupernetes asks to systemd-dbus to be daemonised with the given arguments.
 See more info about it in the [run command](./docs/pupernetes_run.md).
 
 This command line is very convenient to run pupernetes in SaaS CI:
@@ -188,7 +188,7 @@ The full documentation is available [here](./docs).
 
 Pupernetes exposes prometheus metrics to improve the observability.
 
-You can have a look to which metrics are available [here](./docs/metrics.csv).
+You can have a look at which metrics are available [here](./docs/metrics.csv).
 
 ## Current limitations
 
