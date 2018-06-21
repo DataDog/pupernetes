@@ -104,7 +104,7 @@ make
 
 You need to download the last version:
 ```bash
-VERSION=0.4.0
+VERSION=0.5.0
 curl -LOf https://github.com/DataDog/pupernetes/releases/download/v${VERSION}/pupernetes
 chmod +x ./pupernetes
 ./pupernetes --help
