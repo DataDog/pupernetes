@@ -139,7 +139,7 @@ func (e *Environment) linkSystemdUnit(unitOpt []*unit2.UnitOption, manifestUnitN
 		glog.Errorf("Fail to link systemd unit %s -> %s: %v", manifestUnitName, unitABSPath, err)
 		return err
 	}
-	glog.V(4).Infof("Successfully linked systemd unit %%s -> %s", manifestUnitName, unitABSPath)
+	glog.V(4).Infof("Successfully linked systemd unit %s -> %s", manifestUnitName, unitABSPath)
 	return nil
 }
 

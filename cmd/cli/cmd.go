@@ -285,6 +285,9 @@ func NewCommand() (*cobra.Command, *int) {
 	daemonCommand.PersistentFlags().String("kubectl-link", config.ViperConfig.GetString("kubectl-link"), "path to create a kubectl link")
 	config.ViperConfig.BindPFlag("kubectl-link", daemonCommand.PersistentFlags().Lookup("kubectl-link"))
 
+	daemonCommand.PersistentFlags().String("kubeconfig-path", config.ViperConfig.GetString("kubeconfig-path"), "path to the kubeconfig file")
+	config.ViperConfig.BindPFlag("kubeconfig-path", daemonCommand.PersistentFlags().Lookup("kubeconfig-path"))
+
 	daemonCommand.PersistentFlags().StringP("clean", "c", config.ViperConfig.GetString("clean"), fmt.Sprintf("clean options before %s: %s", setupCommand.Name(), options.GetOptionNames(options.Clean{})))
 	config.ViperConfig.BindPFlag("clean", daemonCommand.PersistentFlags().Lookup("clean"))
 
