@@ -13,6 +13,7 @@ templates:
       CFLAGS: ""
       CGO_ENABLED: "1"
       DEBIAN_FRONTEND: "noninteractive"
+      SUDO_USER: "circleci"
 
 jobs:
   make:
@@ -151,8 +152,8 @@ jobs:
           command: kubectl get no,svc,deploy,ds,job,po --all-namespaces -o wide
 
       - run:
-          name: validate
-          command: kubectl apply -f .ci/pupernetes-validation.yaml
+          name: sonobuoy
+          command: ./.ci/sonobuoy.sh
 
 workflows:
   version: 2
