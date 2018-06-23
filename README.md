@@ -206,3 +206,6 @@ You can have a look at which metrics are available [here](./docs/metrics.csv).
 * Secrets
   * IP SAN
     * Statically configured with the given Kubernetes cluster IP range
+* Support for Custom Metrics
+  * You can register an API Service for an External Metrics Provider.
+  This is only supported for 1.10.x and 1.11.x.
