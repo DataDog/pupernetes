@@ -8,9 +8,15 @@ curl -L https://github.com/heptio/sonobuoy/releases/download/v0.11.3/sonobuoy_0.
 tar -xzvf sonobuoy.tar.gz
 rm -v sonobuoy.tar.gz
 
-./sonobuoy run --mode Quick --skip-preflight
-
 set +e
+while true
+do
+    kubectl get po kube-controller-manager -n kube-system -o json | jq -re '. | select(.status.phase=="Running")' && break
+    sleep 5
+done
+
+./sonobuoy run --mode Quick --skip-preflight || exit $?
+
 until ./sonobuoy status
 do
     sleep 10
