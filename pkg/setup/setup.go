@@ -59,6 +59,7 @@ type Environment struct {
 
 	kubeletRootDir string
 
+	kubeConfigUserPath     string
 	kubeConfigAuthPath     string
 	kubeConfigInsecurePath string
 	etcdDataABSPath        string
@@ -152,6 +153,7 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		networkABSPath:           path.Join(rootABSPath, defaultNetworkDirName),
 		templateVersion:          getMajorMinorVersion(config.ViperConfig.GetString("hyperkube-version")),
 
+		kubeConfigUserPath:     config.ViperConfig.GetString("kubeconfig-path"),
 		kubeConfigAuthPath:     path.Join(rootABSPath, defaultTemplates.ManifestConfig, "kubeconfig-auth.yaml"),
 		kubeConfigInsecurePath: path.Join(rootABSPath, defaultTemplates.ManifestConfig, "kubeconfig-insecure.yaml"),
 		etcdDataABSPath:        path.Join(rootABSPath, defaultEtcdDataDirName),
@@ -224,6 +226,12 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 	if err != nil {
 		glog.Errorf("Unexpected error: %v", err)
 		return nil, err
+	}
+
+	// kubeconfig
+	if e.kubeConfigUserPath == "" {
+		kubeDirPath := path.Join(getHome(), ".kube")
+		e.kubeConfigUserPath = path.Join(kubeDirPath, "config")
 	}
 
 	// Template for manifests

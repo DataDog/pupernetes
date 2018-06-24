@@ -30,15 +30,13 @@ func getHome() string {
 }
 
 func (e *Environment) setupKubectl() error {
-	kubeDirPath := path.Join(getHome(), ".kube")
-	kubeConfigPath := path.Join(kubeDirPath, "config")
-	glog.V(4).Infof("Building kubectl configuration in %s ...", kubeConfigPath)
+	glog.V(4).Infof("Building kubectl configuration in %s ...", e.kubeConfigUserPath)
 
 	// cluster
 	b, err := exec.Command(e.GetHyperkubePath(),
 		"kubectl",
 		"config",
-		"--kubeconfig="+kubeConfigPath,
+		"--kubeconfig="+e.kubeConfigUserPath,
 		"set-cluster",
 		defaultKubectlClusterName,
 		"--server=https://127.0.0.1:6443",
@@ -55,7 +53,7 @@ func (e *Environment) setupKubectl() error {
 	b, err = exec.Command(e.GetHyperkubePath(),
 		"kubectl",
 		"config",
-		"--kubeconfig="+kubeConfigPath,
+		"--kubeconfig="+e.kubeConfigUserPath,
 		"set-credentials",
 		defaultKubectlUserName,
 		"--username="+defaultKubectlUserName,
@@ -73,7 +71,7 @@ func (e *Environment) setupKubectl() error {
 	b, err = exec.Command(e.GetHyperkubePath(),
 		"kubectl",
 		"config",
-		"--kubeconfig="+kubeConfigPath,
+		"--kubeconfig="+e.kubeConfigUserPath,
 		"set-context",
 		defaultKubectlContextName,
 		"--user="+defaultKubectlUserName,
@@ -91,7 +89,7 @@ func (e *Environment) setupKubectl() error {
 	b, err = exec.Command(e.GetHyperkubePath(),
 		"kubectl",
 		"config",
-		"--kubeconfig="+kubeConfigPath,
+		"--kubeconfig="+e.kubeConfigUserPath,
 		"use-context",
 		defaultKubectlContextName,
 	).CombinedOutput()
@@ -109,7 +107,7 @@ func (e *Environment) setupKubectl() error {
 	*/
 	sudoUser := os.Getenv("SUDO_USER")
 	if sudoUser != "" {
-		cmdLine := []string{"chown", "-R", fmt.Sprintf("%s:", sudoUser), kubeDirPath}
+		cmdLine := []string{"chown", "-R", fmt.Sprintf("%s:", sudoUser), path.Dir(e.kubeConfigUserPath)}
 		glog.V(5).Infof("%s", strings.Join(cmdLine, " "))
 		b, err := exec.Command(cmdLine[0], cmdLine[1:]...).CombinedOutput()
 		output = string(b)

@@ -58,4 +58,5 @@ func init() {
 	ViperConfig.SetDefault("unit-to-watch", "pupernetes.service")
 	ViperConfig.SetDefault("wait-timeout", time.Minute*15)
 	ViperConfig.SetDefault("client-timeout", time.Minute*1)
+	ViperConfig.SetDefault("kubeconfig-path", "")
 }

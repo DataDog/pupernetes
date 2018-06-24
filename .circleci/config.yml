@@ -13,6 +13,7 @@ templates:
       CFLAGS: ""
       CGO_ENABLED: "1"
       DEBIAN_FRONTEND: "noninteractive"
+      SUDO_USER: "circleci"
 
 jobs:
   make:
@@ -73,29 +74,31 @@ jobs:
       - run:
           name: make
           command: make
-
       - run:
           name: apt
           command: sudo apt-get update -q && sudo apt-get install -yq systemd
+      - run:
+          name: kubeconfig
+          command: mkdir -pv $HOME/.kube && touch $HOME/.kube/config
 
       - run:
           name: setup
-          command: sudo ./pupernetes daemon setup sandbox/ -v 5
+          command: sudo ./pupernetes daemon setup sandbox/ -v 5 --kubeconfig-path /home/circleci/.kube/config
 
       - run:
           name: already-setup
           # As it's already setup, pupernetes should be very fast
-          command: sudo timeout 15 ./pupernetes daemon setup sandbox/
+          command: sudo timeout 15 ./pupernetes daemon setup sandbox/ --kubeconfig-path /home/circleci/.kube/config
 
       - run:
           name: clean-setup
           # As we kept the binaries, pupernetes should be very fast
-          command: sudo timeout 15 ./pupernetes daemon setup sandbox/ -c etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets
+          command: sudo timeout 15 ./pupernetes daemon setup sandbox/ -c etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets --kubeconfig-path /home/circleci/.kube/config
 
       - run:
           name: version-setup
           # It should download and extract the hyperkube tarball and clean everything but the binaries
-          command: sudo ./pupernetes daemon setup sandbox/ --hyperkube-version 1.9.4 -c -binaries
+          command: sudo ./pupernetes daemon setup sandbox/ --hyperkube-version 1.9.4 -c -binaries --kubeconfig-path /home/circleci/.kube/config
 
       - run:
           name: clean
@@ -108,23 +111,25 @@ jobs:
       - run:
           name: make
           command: make
-
       - run:
           name: apt
           command: sudo apt-get update -q && sudo apt-get install -yq systemd
+      - run:
+          name: kubeconfig
+          command: mkdir -pv $HOME/.kube && touch $HOME/.kube/config
 
       - run:
           name: setup
-          command: sudo ./pupernetes daemon setup sandbox/ -v 5
+          command: sudo ./pupernetes daemon setup sandbox/ -v 5 --kubeconfig-path /home/circleci/.kube/config
 
       - run:
           name: copy-validation
           # Copy a batch validation job where the manifests are applied once pupernetes is ready =)
-          command: sudo cp -v .ci//pupernetes-validation.yaml sandbox/manifest-api/pupernetes-validation.yaml
+          command: sudo cp -v .ci/pupernetes-validation.yaml sandbox/manifest-api/pupernetes-validation.yaml
 
       - run:
           name: run
-          command: sudo ./pupernetes daemon run sandbox/ --bind-address 0.0.0.0:8989 # TODO use https + authN/Z
+          command: sudo ./pupernetes daemon run sandbox/ --bind-address 0.0.0.0:8989 --kubeconfig-path /home/circleci/.kube/config
 
       - run:
           name: clean
@@ -137,22 +142,25 @@ jobs:
       - run:
           name: make
           command: make
-
       - run:
           name: apt
           command: sudo apt-get update -q && sudo apt-get install -yq systemd
+      - run:
+          name: kubeconfig
+          command: mkdir -pv $HOME/.kube && touch $HOME/.kube/config
 
       - run:
           name: run
-          command: sudo ./pupernetes daemon run sandbox/ --job-type systemd -v 5 --kubectl-link /usr/local/bin/kubectl --bind-address 0.0.0.0:8989
+          command: sudo ./pupernetes daemon run sandbox/ --job-type systemd -v 5 --kubectl-link /usr/local/bin/kubectl --bind-address 0.0.0.0:8989 --kubeconfig-path /home/circleci/.kube/config
 
       - run:
           name: kubectl
-          command: kubectl get no,svc,deploy,ds,job,po --all-namespaces -o wide
+          # kubectl some stuff
+          command: kubectl config view && kubectl version && kubectl get no,svc,deploy,ds,job,po --all-namespaces -o wide
 
       - run:
-          name: validate
-          command: kubectl apply -f .ci/pupernetes-validation.yaml
+          name: sonobuoy
+          command: ./.ci/sonobuoy.sh
 
 workflows:
   version: 2
