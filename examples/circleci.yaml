@@ -1,0 +1,38 @@
+version: 2
+
+templates:
+  machine_job_template: &machine_job_template
+    machine: true
+    working_directory: /home/circleci
+    environment:
+      DEBIAN_FRONTEND: "noninteractive"
+
+jobs:
+  pupernetes:
+    <<: *machine_job_template
+    steps:
+      - checkout
+      - run:
+          name: kubeconfig
+          command: mkdir -pv $HOME/.kube && touch $HOME/.kube/config
+      - run:
+          name: download
+          command: sudo curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.5.0/pupernetes -o /usr/local/bin/pupernetes && sudo chmod +x /usr/local/bin/pupernetes
+      - run:
+          name: apt
+          command: sudo apt-get update -qq && sudo apt-get install -yqq systemd
+      - run:
+          name: run
+          command: sudo pupernetes daemon run sandbox/ --job-type systemd --kubectl-link /usr/local/bin/kubectl
+      - run:
+          name: kubectl
+          command: kubectl get all
+      - run:
+          name: something
+          command: echo "let's go ..."
+
+workflows:
+  version: 2
+  daemon:
+    jobs:
+      - pupernetes
