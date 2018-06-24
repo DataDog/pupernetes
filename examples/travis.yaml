@@ -23,6 +23,6 @@ install:
   - sudo chmod +x /usr/local/bin/pupernetes
 
 script:
-  - sudo pupernetes daemon run sandbox/ --job-type systemd --hyperkube-version $HYPERKUBE_VERSION
+  - sudo /usr/local/bin/pupernetes daemon run sandbox/ --job-type systemd --hyperkube-version $HYPERKUBE_VERSION
   - kubectl get all
   - echo "let's go ..."
