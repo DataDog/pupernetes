@@ -10,9 +10,12 @@ dist: trusty
 
 env:
   matrix:
-    - HYPERKUBE_VERSION=1.10.1
+    - HYPERKUBE_VERSION=1.10.5
+    - HYPERKUBE_VERSION=1.9.8
+    - HYPERKUBE_VERSION=1.8.14
 
 before_install:
+  - mkdir -pv $HOME/.kube && touch $HOME/.kube/config
   - sudo apt-get update -qq
 
 install:
@@ -23,6 +26,6 @@ install:
   - sudo chmod +x /usr/local/bin/pupernetes
 
 script:
-  - sudo /usr/local/bin/pupernetes daemon run sandbox/ --job-type systemd --hyperkube-version $HYPERKUBE_VERSION
+  - sudo /usr/local/bin/pupernetes daemon run sandbox/ --job-type systemd --hyperkube-version $HYPERKUBE_VERSION --kubeconfig-path $HOME/.kube/config
   - kubectl get all
   - echo "let's go ..."

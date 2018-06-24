@@ -19,6 +19,7 @@ env:
 #    - HYPERKUBE_VERSION=1.5.6 TODO there are some kubelet issues
 
 before_install:
+  - mkdir -pv $HOME/.kube && touch $HOME/.kube/config
   - sudo apt-get update
 
 install:
@@ -31,7 +32,7 @@ before_script:
   - make
 
 script:
-  - sudo ./pupernetes daemon run sandbox/ -v 4 --job-type systemd --bind-address 0.0.0.0:8989 --hyperkube-version $HYPERKUBE_VERSION
+  - sudo ./pupernetes daemon run sandbox/ -v 4 --job-type systemd --bind-address 0.0.0.0:8989 --hyperkube-version $HYPERKUBE_VERSION --kubeconfig-path $HOME/.kube/config
   - ./.ci/pupernetes-validation.sh
 
 after_failure:

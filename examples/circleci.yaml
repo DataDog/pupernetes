@@ -23,7 +23,7 @@ jobs:
           command: sudo apt-get update -qq && sudo apt-get install -yqq systemd
       - run:
           name: run
-          command: sudo /usr/local/bin/pupernetes daemon run sandbox/ --job-type systemd --kubectl-link /usr/local/bin/kubectl
+          command: sudo /usr/local/bin/pupernetes daemon run sandbox/ --job-type systemd --kubectl-link /usr/local/bin/kubectl --kubeconfig-path $HOME/.kube/config
       - run:
           name: kubectl
           command: kubectl get all
