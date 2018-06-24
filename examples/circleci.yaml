@@ -3,7 +3,7 @@ version: 2
 templates:
   machine_job_template: &machine_job_template
     machine: true
-    working_directory: /home/circleci
+    working_directory: /home/circleci/your-project-directory
     environment:
       DEBIAN_FRONTEND: "noninteractive"
 
