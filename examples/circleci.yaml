@@ -17,7 +17,7 @@ jobs:
           command: mkdir -pv $HOME/.kube && touch $HOME/.kube/config
       - run:
           name: download
-          command: sudo curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.5.0/pupernetes -o /usr/local/bin/pupernetes && sudo chmod +x /usr/local/bin/pupernetes
+          command: sudo curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.6.0/pupernetes -o /usr/local/bin/pupernetes && sudo chmod +x /usr/local/bin/pupernetes
       - run:
           name: apt
           command: sudo apt-get update -qq && sudo apt-get install -yqq systemd

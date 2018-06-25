@@ -22,7 +22,7 @@ install:
   - sudo apt-get install -yqq systemd
   - sudo curl -Lf https://storage.googleapis.com/kubernetes-release/release/v$HYPERKUBE_VERSION/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
   - sudo chmod +x /usr/local/bin/kubectl
-  - sudo curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.5.0/pupernetes -o /usr/local/bin/pupernetes
+  - sudo curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.6.0/pupernetes -o /usr/local/bin/pupernetes
   - sudo chmod +x /usr/local/bin/pupernetes
 
 script:
