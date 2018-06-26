@@ -19,7 +19,7 @@ func (e *Environment) extractHyperkube() error {
 	output := string(b)
 	if err != nil {
 		glog.Errorf("Cannot untar %s, %s: %v", e.binaryHyperkube.archivePath, output, err)
-		e.binaryHyperkube.removeArchive()
+		_ = e.binaryHyperkube.removeArchive()
 		return err
 	}
 	_, err = os.Stat(e.binaryHyperkube.binaryABSPath)

@@ -20,7 +20,7 @@ func (e *Environment) extractEtcd() error {
 	output := string(b)
 	if err != nil {
 		glog.Errorf("Cannot untar %s, %s: %v", e.binaryEtcd.archivePath, output, err)
-		e.binaryEtcd.removeArchive()
+		_ = e.binaryEtcd.removeArchive()
 		return err
 	}
 	_, err = os.Stat(e.binaryEtcd.binaryABSPath)
