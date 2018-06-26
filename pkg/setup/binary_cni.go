@@ -20,6 +20,7 @@ func (e *Environment) extractCNI() error {
 	output := string(b)
 	if err != nil {
 		glog.Errorf("Cannot untar %s, %s: %v", e.binaryCNI.archivePath, output, err)
+		e.binaryCNI.removeArchive()
 		return err
 	}
 	_, err = os.Stat(e.binaryCNI.binaryABSPath)
