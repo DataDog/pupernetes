@@ -19,6 +19,7 @@ func (e *Environment) extractVault() error {
 	output := string(b)
 	if err != nil {
 		glog.Errorf("Cannot unzip %s, %s: %v", e.binaryVault.archivePath, output, err)
+		_ = e.binaryVault.removeArchive()
 		return err
 	}
 	_, err = os.Stat(e.binaryVault.binaryABSPath)

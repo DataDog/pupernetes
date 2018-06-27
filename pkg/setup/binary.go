@@ -97,3 +97,13 @@ func (d *depBinary) download() error {
 	}
 	return nil
 }
+
+func (d *depBinary) removeArchive() error {
+	err := os.Remove(d.archivePath)
+	if err != nil {
+		glog.Infof("Cannot remove the archive %s: %v", d.archivePath, err)
+		return err
+	}
+	glog.V(2).Infof("Removed %s", d.archivePath)
+	return nil
+}
