@@ -20,7 +20,6 @@ ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
 	--hostname-override={{ .Hostname }} \
 	--root-dir=/var/lib/p8s-kubelet \
 	--healthz-port=10248 \
-	--cert-dir=/var/lib/p8s-kubelet/pki \
 	--kubeconfig={{.RootABSPath}}/manifest-config/kubeconfig-insecure.yaml \
 	--resolv-conf={{.RootABSPath}}/net.d/resolv.conf \
 	--cluster-dns={{ .DNSClusterIP }} \
