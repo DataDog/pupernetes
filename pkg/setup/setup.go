@@ -169,8 +169,8 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 
 	e.systemdUnitNames = []string{
 		e.etcdUnitName,
-		e.kubeletUnitName,
 		e.kubeAPIServerUnitName,
+		e.kubeletUnitName,
 	}
 	// Kubernetes
 	e.binaryHyperkube = &exeBinary{
