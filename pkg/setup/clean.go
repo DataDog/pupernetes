@@ -127,12 +127,13 @@ func (e *Environment) Clean() error {
 		}
 		defer conn.Reload()
 		defer conn.Close()
-		for _, u := range e.systemdUnitNames {
+
+		for i := len(e.GetSystemdUnits()) - 1; i != -1; i-- {
+			u := e.GetSystemdUnits()[i]
 			toRemove = append(toRemove, UnitPath+u)
 			err = util.StopUnit(conn, u)
 			if err != nil {
-				glog.Errorf("Cannot stop systemd unit %s: %v", u, err)
-				// don't return
+				glog.Infof("Cannot stop systemd unit %s: %v", u, err)
 			}
 		}
 	}
