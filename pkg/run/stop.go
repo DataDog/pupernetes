@@ -240,7 +240,7 @@ func (r *Runtime) Stop(withError error) error {
 		}
 	}
 
-	for i := len(r.env.GetSystemdUnits()) - 1; i != -1; i-- {
+	for i := len(r.env.GetSystemdUnits()) - 1; i >= 0; i-- {
 		err = util.StopUnit(r.env.GetDBUSClient(), r.env.GetSystemdUnits()[i])
 		if err != nil {
 			errs = append(errs, err.Error())

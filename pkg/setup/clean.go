@@ -128,7 +128,7 @@ func (e *Environment) Clean() error {
 		defer conn.Reload()
 		defer conn.Close()
 
-		for i := len(e.GetSystemdUnits()) - 1; i != -1; i-- {
+		for i := len(e.GetSystemdUnits()) - 1; i >= 0; i-- {
 			u := e.GetSystemdUnits()[i]
 			toRemove = append(toRemove, UnitPath+u)
 			err = util.StopUnit(conn, u)
