@@ -121,7 +121,7 @@ chmod +x ./pupernetes
 ### Run
 
 ```bash
-sudo ./pupernetes daemon run sandbox/
+sudo ./pupernetes daemon run /opt/sandbox/
 ```
 
 >Note:
@@ -131,7 +131,7 @@ sudo ./pupernetes daemon run sandbox/
 >You need to run the following command to add `kubectl` to the `$PATH`:
 >
 >```bash
-> sudo ./pupernetes daemon run sandbox/ --kubectl-link /usr/local/bin/kubectl
+> sudo ./pupernetes daemon run /opt/sandbox/ --kubectl-link /usr/local/bin/kubectl
 >```
 
 ```bash
