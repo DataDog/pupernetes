@@ -9,6 +9,7 @@
     * [Executables](#executables)
     * [Systemd](#systemd)
     * [Resources](#resources)
+    * [DNS](#dns)
   * [Development](#development)
     * [Build](#build)
 - [Getting started](#getting-started)
@@ -79,7 +80,14 @@ A recent systemd version is better to gain:
 * 4GB of memory is recommended
 * 5GB of free disk space for the binaries and the container images
 
-#### Development
+#### DNS
+
+Ensure your hostname is discoverable:
+```bash
+dig $(hostname) -short
+```
+
+### Development
 
 Pupernetes must be run on linux (or linux VM).
 
@@ -123,7 +131,7 @@ sudo ./pupernetes daemon run sandbox/
 >You need to run the following command to add `kubectl` to the `$PATH`:
 >
 >```bash
-> sudo ./pupernetes run sandbox/ --kubectl-link /usr/local/bin/kubectl
+> sudo ./pupernetes daemon run sandbox/ --kubectl-link /usr/local/bin/kubectl
 >```
 
 ```bash
