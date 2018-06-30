@@ -26,8 +26,19 @@ const (
 func createExecStart(givenRootPath string, argv []string, wd string) (string, error) {
 	copyArgv := make([]string, len(argv))
 	copy(copyArgv, argv)
-	if !path.IsAbs(copyArgv[0]) {
-		copyArgv[0] = path.Join(wd, copyArgv[0])
+	if !path.IsAbs(argv[0]) {
+		binABSPath, err := os.Executable()
+		if err != nil {
+			glog.Errorf("Cannot get the current executable: %v", err)
+			return "", err
+		}
+		copyArgv[0] = binABSPath
+		_, err = os.Stat(copyArgv[0])
+		if err != nil {
+			glog.Errorf("Executable is not here: %v", err)
+			return "", err
+		}
+		glog.V(3).Infof("Current binary ABSPath is %s", copyArgv[0])
 	}
 
 	for i := 0; i < len(copyArgv); i++ {
@@ -110,6 +121,11 @@ func RunSystemdJob(givenRootPath string) error {
 			Section: "Unit",
 			Name:    "After",
 			Value:   "network.target",
+		},
+		{
+			Section: "Service",
+			Name:    "Environment",
+			Value:   fmt.Sprintf("SUDO_USER=%s", os.Getenv("SUDO_USER")),
 		},
 		{
 			Section: "Service",
@@ -200,7 +216,13 @@ func RunSystemdJob(givenRootPath string) error {
 		case s := <-statusChan:
 			glog.V(2).Infof("Status of %s job: %q", unitName, s)
 			if s != "done" {
-				continue
+				err = jt.StopTail()
+				if err != nil {
+					glog.Errorf("Unexpected error while stopping the tailer: %v", err)
+				}
+				err = fmt.Errorf("fail to start unit %s: %s", unitName, s)
+				glog.Errorf("Unexpected error while starting systemd unit: %v", err)
+				return err
 			}
 			return jt.StopTail()
 
