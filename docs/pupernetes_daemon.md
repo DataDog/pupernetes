@@ -11,6 +11,8 @@ Use this command to clean setup and run a Kubernetes local environment
 ```
   -c, --clean string                 clean options before setup: binaries,etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets,systemd,all,none (default "etcd,kubelet,mounts,iptables")
       --cni-version string           container network interface (cni) version (default "0.7.0")
+      --dns-check                    execute the dns query of --dns-query to notify readiness
+      --dns-query string             dns query for readiness (default "coredns.kube-system.svc.cluster.local.")
       --etcd-version string          etcd version (default "3.1.11")
   -h, --help                         help for daemon
       --hyperkube-version string     hyperkube version (default "1.10.3")

@@ -11,6 +11,8 @@ type State struct {
 	sync.RWMutex
 
 	apiServerProbeLastError string
+	dnsLastError            string
+	kubectlApplied          bool
 	ready                   bool
 
 	kubeletProbeFailures  int
@@ -52,28 +54,22 @@ func NewState() (*State, error) {
 			Help: "Total number of kubelet probe failures",
 		}),
 	}
-	err := prometheus.Register(s.promVersion)
-	if err != nil {
-		return nil, err
-	}
-	err = prometheus.Register(s.promStateReady)
-	if err != nil {
-		return nil, err
-	}
-	err = prometheus.Register(s.promKubeletAPIPodRunning)
-	if err != nil {
-		return nil, err
-	}
-	err = prometheus.Register(s.promKubeletLogsPodRunning)
-	if err != nil {
-		return nil, err
-	}
-	err = prometheus.Register(s.promKubeletProbeFailures)
+	err := registerCollectors(s.promVersion, s.promStateReady, s.promKubeletAPIPodRunning, s.promKubeletLogsPodRunning, s.promKubeletProbeFailures)
 	if err != nil {
 		return nil, err
 	}
 	s.promVersion.Inc()
 	return s, nil
+}
+
+func registerCollectors(collectors ...prometheus.Collector) error {
+	for _, c := range collectors {
+		err := prometheus.Register(c)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // IsReady returns if the kube-apiserver is available and the manifests are applied
@@ -94,6 +90,20 @@ func (s *State) SetReady() {
 	s.promStateReady.Set(1)
 }
 
+// SetKubectlApplied mark the state when kubectl apply successfully returned
+func (s *State) SetKubectlApplied() {
+	s.Lock()
+	s.kubectlApplied = true
+	s.Unlock()
+}
+
+// IsKubectlApplied returns true when kubectl is already applied
+func (s *State) IsKubectlApplied() bool {
+	s.RLock()
+	s.RUnlock()
+	return s.kubectlApplied
+}
+
 // SetAPIServerProbeLastError keep track of the latest error message and display only
 // if there is a a diff from the last record
 func (s *State) SetAPIServerProbeLastError(msg string) {
@@ -101,6 +111,17 @@ func (s *State) SetAPIServerProbeLastError(msg string) {
 	if s.apiServerProbeLastError != msg {
 		glog.Infof("Kubenertes apiserver not ready yet: %s", msg)
 		s.apiServerProbeLastError = msg
+	}
+	s.Unlock()
+}
+
+// SetDNSLastError keep track of the latest error message and display only
+// if there is a a diff from the last record
+func (s *State) SetDNSLastError(msg string) {
+	s.Lock()
+	if s.dnsLastError != msg {
+		glog.Infof("Kubenertes dns not ready yet: %s", msg)
+		s.dnsLastError = msg
 	}
 	s.Unlock()
 }

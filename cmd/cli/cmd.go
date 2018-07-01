@@ -138,7 +138,11 @@ func NewCommand() (*cobra.Command, *int) {
 				exitCode = 1
 				return
 			}
-			r, err := run.NewRunner(env, config.ViperConfig.GetDuration("run-timeout"), config.ViperConfig.GetDuration("gc"))
+			dnsQuery := ""
+			if config.ViperConfig.GetBool("dns-check") {
+				dnsQuery = config.ViperConfig.GetString("dns-query")
+			}
+			r, err := run.NewRunner(env, config.ViperConfig.GetDuration("run-timeout"), config.ViperConfig.GetDuration("gc"), dnsQuery)
 			if err != nil {
 				exitCode = 2
 				return
@@ -287,6 +291,12 @@ func NewCommand() (*cobra.Command, *int) {
 
 	daemonCommand.PersistentFlags().String("kubeconfig-path", config.ViperConfig.GetString("kubeconfig-path"), "path to the kubeconfig file")
 	config.ViperConfig.BindPFlag("kubeconfig-path", daemonCommand.PersistentFlags().Lookup("kubeconfig-path"))
+
+	daemonCommand.PersistentFlags().String("dns-query", config.ViperConfig.GetString("dns-query"), "dns query for readiness")
+	config.ViperConfig.BindPFlag("dns-query", daemonCommand.PersistentFlags().Lookup("dns-query"))
+
+	daemonCommand.PersistentFlags().Bool("dns-check", config.ViperConfig.GetBool("dns-check"), fmt.Sprintf("execute the dns query of --%s to notify readiness", "dns-query"))
+	config.ViperConfig.BindPFlag("dns-check", daemonCommand.PersistentFlags().Lookup("dns-check"))
 
 	daemonCommand.PersistentFlags().StringP("clean", "c", config.ViperConfig.GetString("clean"), fmt.Sprintf("clean options before %s: %s", setupCommand.Name(), options.GetOptionNames(options.Clean{})))
 	config.ViperConfig.BindPFlag("clean", daemonCommand.PersistentFlags().Lookup("clean"))

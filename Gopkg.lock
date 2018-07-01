@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/beorn7/perks"
+  packages = ["quantile"]
+  revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
+
+[[projects]]
   name = "github.com/cloudfoundry/gosigar"
   packages = [
     ".",
@@ -9,12 +15,6 @@
   ]
   revision = "dcb1afc219e4c99f21c37fb1ec22ed9ffe443317"
   version = "v1.1.0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/beorn7/perks"
-  packages = ["quantile"]
-  revision = "3a771d992973f24aa725d07868b467d1ddfceafb"
 
 [[projects]]
   name = "github.com/coreos/go-systemd"
@@ -226,6 +226,12 @@
   version = "v1.0.1"
 
 [[projects]]
+  name = "github.com/miekg/dns"
+  packages = ["."]
+  revision = "5a2b9fab83ff0f8bfc99684bd5f43a37abe560f1"
+  version = "v1.0.8"
+
+[[projects]]
   branch = "master"
   name = "github.com/mitchellh/go-homedir"
   packages = ["."]
@@ -375,17 +381,26 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["ssh/terminal"]
+  packages = [
+    "ed25519",
+    "ed25519/internal/edwards25519",
+    "ssh/terminal"
+  ]
   revision = "d6449816ce06963d9d136eee5a56fca5b0616e7e"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = [
+    "bpf",
     "context",
     "http2",
     "http2/hpack",
     "idna",
+    "internal/iana",
+    "internal/socket",
+    "ipv4",
+    "ipv6",
     "lex/httplex"
   ]
   revision = "61147c48b25b599e5b561d2e9c4f3e1ef489ca41"
@@ -574,10 +589,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-<<<<<<< HEAD
-  inputs-digest = "fa23a2343bd6d0289c9f4f39fcf1b6779214af8129dc27c6b4af82e5610cb6c8"
-=======
-  inputs-digest = "2a0bb02fc856f9cce9c3206d7403e8b2cac9aac9008d8c2b3331c67973539445"
->>>>>>> run: add a prometheus exporter
+  inputs-digest = "c4ac7bf074351223b057e320e750d33ce30a9a89aee244be32083d7d5751832e"
   solver-name = "gps-cdcl"
   solver-version = 1
