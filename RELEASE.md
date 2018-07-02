@@ -90,7 +90,7 @@ git pull
 
 Verify:
 ```bash
-cp -v kube-csr.sha512sum pr-kube-csr.sha512sum
+cp -v pupernetes.sha512sum pr-pupernetes.sha512sum
 make clean
 CGO_ENABLED=0 make sha512sum
 diff pupernetes.sha512sum pr-pupernetes.sha512sum
