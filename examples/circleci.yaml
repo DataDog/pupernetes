@@ -13,9 +13,6 @@ jobs:
     steps:
       - checkout
       - run:
-          name: kubeconfig
-          command: mkdir -pv $HOME/.kube && touch $HOME/.kube/config
-      - run:
           name: download
           command: sudo curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.6.0/pupernetes -o /usr/local/bin/pupernetes && sudo chmod +x /usr/local/bin/pupernetes
       - run:
@@ -23,7 +20,7 @@ jobs:
           command: sudo apt-get update -qq && sudo apt-get install -yqq systemd
       - run:
           name: run
-          command: sudo /usr/local/bin/pupernetes daemon run sandbox/ --job-type systemd --kubectl-link /usr/local/bin/kubectl --kubeconfig-path $HOME/.kube/config
+          command: sudo /usr/local/bin/pupernetes daemon run sandbox/ --job-type systemd --kubectl-link /usr/local/bin/kubectl --kubeconfig-path $HOME/.kube/config --dns-check
       - run:
           name: kubectl
           command: kubectl get all

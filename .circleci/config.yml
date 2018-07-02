@@ -78,10 +78,6 @@ jobs:
           name: apt
           command: sudo apt-get update -q && sudo apt-get install -yq systemd
       - run:
-          name: kubeconfig
-          command: mkdir -pv $HOME/.kube && touch $HOME/.kube/config
-
-      - run:
           name: setup
           command: sudo ./pupernetes daemon setup sandbox/ -v 5 --kubeconfig-path $HOME/.kube/config
 
@@ -119,9 +115,6 @@ jobs:
       - run:
           name: apt
           command: sudo apt-get update -q && sudo apt-get install -yq systemd
-      - run:
-          name: kubeconfig
-          command: mkdir -pv $HOME/.kube && touch $HOME/.kube/config
 
       - run:
           name: setup
@@ -150,14 +143,10 @@ jobs:
       - run:
           name: apt
           command: sudo apt-get update -q && sudo apt-get install -yq systemd
-      - run:
-          name: kubeconfig
-          command: mkdir -pv $HOME/.kube && touch $HOME/.kube/config
 
       - run:
           name: run
-          command: sudo ./pupernetes daemon run sandbox/ --job-type systemd -v 5 --kubectl-link /usr/local/bin/kubectl --bind-address 0.0.0.0:8989 --kubeconfig-path /home/circleci/.kube/config --dns-check
-          command: sudo ./pupernetes daemon run sandbox/ --job-type systemd -v 5 --kubectl-link /usr/local/bin/kubectl --bind-address 0.0.0.0:8989 --kubeconfig-path $HOME/.kube/config
+          command: sudo ./pupernetes daemon run sandbox/ --job-type systemd -v 5 --kubectl-link /usr/local/bin/kubectl --bind-address 0.0.0.0:8989 --kubeconfig-path $HOME/.kube/config --dns-check
 
       - run:
           name: kubectl
@@ -178,9 +167,6 @@ jobs:
       - run:
           name: apt
           command: sudo apt-get update -q && sudo apt-get install -yq systemd
-      - run:
-          name: kubeconfig
-          command: mkdir -pv $HOME/.kube && touch $HOME/.kube/config
 
       - run:
           name: run
