@@ -1,8 +1,27 @@
-- [v0.5.0](#v0.5.0)
-- [v0.4.0](#v0.4.0)
-- [v0.3.0](#v0.3.0)
-- [v0.2.1](#v0.2.1)
-- [v0.2.0](#v0.2.0)
+- [v0.6.0](#v060)
+- [v0.5.0](#v050)
+- [v0.4.0](#v040)
+- [v0.3.0](#v030)
+- [v0.2.1](#v021)
+- [v0.2.0](#v020)
+
+## v0.6.0
+
+### Enhancement
+* Add a way to check if the dns is ready (#81)
+* ci: add hyperkube 1.11 (#77)
+* Stop the systemd units in a reverse order (#76)
+* manifests: remove the duplicated flag (#75)
+* Remove the archive on extract failure (#74)
+* Introduce sonobuoy in CI (#69)
+* Enable HPA (#68)
+
+### Bugfixes
+* job: fix the abspath of pupernetes, propagate SUDO_USER to the unit environment (#79)
+
+### Other
+* Introduce release notes (#80)
+* Fixed README and added new subsection for DNS requirement (#78)
 
 ## v0.5.0
 
