@@ -139,7 +139,7 @@ jobs:
 
       - run:
           name: copy-validation
-          # Copy a batch validation job where the manifests are applied once pupernetes is ready =)
+          # Copy a batch validation job where the manifests are applied once pupernetes apiserver is available =)
           command: sudo cp -v .ci/pupernetes-validation.yaml sandbox/manifest-api/pupernetes-validation.yaml
 
       - run:
