@@ -98,8 +98,25 @@ jobs:
 
       - run:
           name: version-setup
-          # It should download and extract the hyperkube tarball and clean everything but the binaries
+          # Clean everything but the binaries and download and extract the outdated hyperkube tarball
           command: sudo ./pupernetes daemon setup sandbox/ --hyperkube-version 1.9.4 -c -binaries --kubeconfig-path $HOME/.kube/config
+
+      - run:
+          name: clean-but-binaries
+          # Clean everything but the binaries
+          command: sudo ./pupernetes daemon clean sandbox/ -c -binaries --kubeconfig-path $HOME/.kube/config
+
+      - run:
+          name: rm-kubectl
+          command: rm -v $HOME/.kube/config
+
+      - run:
+          name: kubectl-setup
+          command: sudo ./pupernetes daemon setup sandbox/ --hyperkube-version 1.9.4
+
+      - run:
+          name: kubectl-ok
+          command: ls -l $HOME/.kube/config && cat $HOME/.kube/config
 
       - run:
           name: clean
