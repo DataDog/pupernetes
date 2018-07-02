@@ -9,19 +9,19 @@
 
 ### Enhancement
 * Add a way to check if the dns is ready (#81)
-* ci: add hyperkube 1.11 (#77)
 * Stop the systemd units in a reverse order (#76)
-* manifests: remove the duplicated flag (#75)
 * Remove the archive on extract failure (#74)
-* Introduce sonobuoy in CI (#69)
 * Enable HPA (#68)
 
 ### Bugfixes
 * job: fix the abspath of pupernetes, propagate SUDO_USER to the unit environment (#79)
+* manifests: remove the duplicated flag (#75)
 
 ### Other
 * Introduce release notes (#80)
 * Fixed README and added new subsection for DNS requirement (#78)
+* ci: add hyperkube 1.11 (#77)
+* Introduce sonobuoy in CI (#69)
 
 ## v0.5.0
 
