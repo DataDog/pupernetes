@@ -15,13 +15,13 @@ pupernetes daemon clean [directory] [flags]
 ```
 
 # Clean the environment default:
-pupernetes daemon clean state/
+pupernetes daemon clean /opt/state/
 
 # Clean everything:
-pupernetes daemon clean state/ -c all
+pupernetes daemon clean /opt/state/ -c all
 
 # Clean the etcd data-dir, the network configuration and the secrets:
-pupernetes daemon clean state/ -c etcd,network,secrets
+pupernetes daemon clean /opt/state/ -c etcd,network,secrets
 
 ```
 

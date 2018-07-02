@@ -24,10 +24,8 @@ type State struct {
 	promStateReady            prometheus.Gauge
 	promKubeletAPIPodRunning  prometheus.Gauge
 	promKubeletLogsPodRunning prometheus.Gauge
-
-	promKubeletProbeFailures prometheus.Counter
-
-	promReadyDNSFailures prometheus.Counter
+	promKubeletProbeFailures  prometheus.Counter
+	promReadyDNSFailures      prometheus.Counter
 }
 
 // NewState instantiate a state with the associated prometheus metrics
@@ -106,7 +104,7 @@ func (s *State) SetKubectlApplied() {
 // IsKubectlApplied returns true when kubectl is already applied
 func (s *State) IsKubectlApplied() bool {
 	s.RLock()
-	s.RUnlock()
+	defer s.RUnlock()
 	return s.kubectlApplied
 }
 

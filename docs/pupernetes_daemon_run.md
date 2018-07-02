@@ -15,24 +15,27 @@ pupernetes daemon run [directory] [flags]
 ```
 
 # Setup and run the environment with the default options: 
-pupernetes daemon run state/
+pupernetes daemon run /opt/state/
 
 # Clean all the environment, setup and run the environment:
-pupernetes daemon run state/ -c all
+pupernetes daemon run /opt/state/ -c all
 
 # Clean everything but the binaries, setup and run the environment:
-pupernetes daemon run state/ -c etcd,kubectl,kubelet,manifests,network,secrets,systemd,mounts
+pupernetes daemon run /opt/state/ -c etcd,kubectl,kubelet,manifests,network,secrets,systemd,mounts
 
 # Setup and run the environment with a 5 minutes timeout: 
-pupernetes daemon run state/ --timeout 5m
+pupernetes daemon run /opt/state/ --run-timeout 5m
 
 # Setup and run the environment, then guarantee a kubelet garbage collection during the drain phase: 
-pupernetes daemon run state/ --gc 1m
+pupernetes daemon run /opt/state/ --gc 1m
 
 # Setup and run the environment as a systemd service:
 # Get logs with "journalctl -o cat -efu pupernetes" 
 # Get status with "systemctl status pupernetes --no-pager" 
-pupernetes daemon run state/ --job-type systemd
+pupernetes daemon run /opt/state/ --job-type systemd
+
+# Setup and run the environment with a readiness on dns:
+pupernetes daemon run /opt/state/ --dns-check --dns-queries quay.io.,coredns.kube-system.svc.cluster.local.
 
 ```
 
@@ -41,7 +44,7 @@ pupernetes daemon run state/ --job-type systemd
 ```
       --bind-address string       bind address for pupernetes API ip:port (default "127.0.0.1:8989")
       --dns-check                 needed dns queries to notify readiness
-      --dns-queries stringSlice   dns queries for readiness (default [coredns.kube-system.svc.cluster.local.])
+      --dns-queries stringSlice   dns queries for readiness, coma-separated values (default [coredns.kube-system.svc.cluster.local.])
   -d, --drain string              drain options after run: iptables,kubeletgc,pods,all,none (default "all")
       --gc duration               grace period for the kubelet GC trigger when draining run, no-op if not draining (default 1m0s)
   -h, --help                      help for run
