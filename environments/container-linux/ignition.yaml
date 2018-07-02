@@ -49,7 +49,7 @@ systemd:
 
       [Service]
       Environment=SUDO_USER=core
-      ExecStart=/opt/bin/pupernetes daemon run /opt/sandbox --kubectl-link /opt/bin/kubectl -v 5 --timeout 6h
+      ExecStart=/opt/bin/pupernetes daemon run /opt/sandbox --kubectl-link /opt/bin/kubectl -v 5 --run-timeout 6h
       Restart=on-failure
       RestartSec=5
       Type=notify
