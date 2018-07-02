@@ -29,19 +29,19 @@ git fetch origin master
 git checkout -B master origin/master
 ```
 
+> note: v0.3.0 is a example and need to be adapted
 ```bash
 git checkout -b v0.3.0
 ```
-> note: v0.3.0 is a example and need to be adapted
 
 Compile statically the binary and generate the sha512sum.
+> note: you need go 1.10
 ```bash
 CGO_ENABLED=0 make sha512sum
 
 # or using docker
 docker run --rm -v "$GOPATH":/go -w /go/src/github.com/DataDog/pupernetes golang:1.10 make sha512sum
 ```
-> note: you need go 1.10
 
 Check the shared object dependencies:
 ```bash
@@ -98,23 +98,9 @@ sha512sum -c pupernetes.sha512sum
 ./pupernetes: OK
 ```
 
-Tag the release with the new version (e.g. v0.3.0):
-```bash
-git tag v0.3.0
-git push --tags
-```
+## Github UI
 
-After validation, merge your PR and checkout the latest master branch:
-```bash
-git checkout master
-git pull
-```
-
-Tag the release with the new version (e.g. v0.3.0):
-```bash
-git tag v0.3.0
-git push --tags
-```
+Draft a new release over the github UI with the associated tag e.g. v0.3.0.
 
 Then upload `pupernetes` + `pupernetes.sha512sum` in the release page and select your tag.
 
