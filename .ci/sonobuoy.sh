@@ -9,11 +9,6 @@ tar -xzvf sonobuoy.tar.gz
 rm -v sonobuoy.tar.gz
 
 set +e
-while true
-do
-    kubectl get po kube-controller-manager -n kube-system -o json | jq -re '. | select(.status.phase=="Running")' && break
-    sleep 5
-done
 
 ./sonobuoy run --mode Quick --skip-preflight || exit $?
 

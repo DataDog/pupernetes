@@ -78,24 +78,27 @@ func NewCommand() (*cobra.Command, *int) {
 		Args:       cobra.ExactArgs(1), // basePathDirectory
 		Example: fmt.Sprintf(`
 # Setup and run the environment with the default options: 
-%s run state/
+%s run /opt/state/
 
 # Clean all the environment, setup and run the environment:
-%s run state/ -c all
+%s run /opt/state/ -c all
 
 # Clean everything but the binaries, setup and run the environment:
-%s run state/ -c etcd,kubectl,kubelet,manifests,network,secrets,systemd,mounts
+%s run /opt/state/ -c etcd,kubectl,kubelet,manifests,network,secrets,systemd,mounts
 
 # Setup and run the environment with a 5 minutes timeout: 
-%s run state/ --timeout 5m
+%s run /opt/state/ --run-timeout 5m
 
 # Setup and run the environment, then guarantee a kubelet garbage collection during the drain phase: 
-%s run state/ --gc 1m
+%s run /opt/state/ --gc 1m
 
 # Setup and run the environment as a systemd service:
 # Get logs with "journalctl -o cat -efu %s" 
 # Get status with "systemctl status %s --no-pager" 
-%s run state/ --%s %s
+%s run /opt/state/ --%s %s
+
+# Setup and run the environment with a readiness on dns:
+%s run /opt/state/ --dns-check --dns-queries quay.io.,coredns.kube-system.svc.cluster.local.
 `,
 			daemonName,
 			daemonName,
@@ -107,6 +110,7 @@ func NewCommand() (*cobra.Command, *int) {
 			daemonName,
 			config.JobTypeKey,
 			config.JobSystemd,
+			daemonName,
 		),
 		Run: func(cmd *cobra.Command, args []string) {
 			// Manage self start in systemd
@@ -138,7 +142,11 @@ func NewCommand() (*cobra.Command, *int) {
 				exitCode = 1
 				return
 			}
-			r, err := run.NewRunner(env, config.ViperConfig.GetDuration("run-timeout"), config.ViperConfig.GetDuration("gc"))
+			var dnsQuery []string
+			if config.ViperConfig.GetBool("dns-check") {
+				dnsQuery = config.ViperConfig.GetStringSlice("dns-queries")
+			}
+			r, err := run.NewRunner(env, config.ViperConfig.GetDuration("run-timeout"), config.ViperConfig.GetDuration("gc"), dnsQuery)
 			if err != nil {
 				exitCode = 2
 				return
@@ -158,13 +166,13 @@ func NewCommand() (*cobra.Command, *int) {
 		Args:       cobra.ExactArgs(1), // basePathDirectory
 		Example: fmt.Sprintf(`
 # Clean the environment default:
-%s clean state/
+%s clean /opt/state/
 
 # Clean everything:
-%s clean state/ -c all
+%s clean /opt/state/ -c all
 
 # Clean the etcd data-dir, the network configuration and the secrets:
-%s clean state/ -c etcd,network,secrets
+%s clean /opt/state/ -c etcd,network,secrets
 `,
 			daemonName,
 			daemonName,
@@ -317,6 +325,12 @@ func NewCommand() (*cobra.Command, *int) {
 
 	runCommand.PersistentFlags().String(config.JobTypeKey, config.ViperConfig.GetString(config.JobTypeKey), fmt.Sprintf("type of job: %s or %s", config.JobForeground, config.JobSystemd))
 	config.ViperConfig.BindPFlag(config.JobTypeKey, runCommand.PersistentFlags().Lookup(config.JobTypeKey))
+
+	runCommand.PersistentFlags().StringSlice("dns-queries", config.ViperConfig.GetStringSlice("dns-queries"), "dns queries for readiness, coma-separated values")
+	config.ViperConfig.BindPFlag("dns-queries", runCommand.PersistentFlags().Lookup("dns-queries"))
+
+	runCommand.PersistentFlags().Bool("dns-check", config.ViperConfig.GetBool("dns-check"), "needed dns queries to notify readiness")
+	config.ViperConfig.BindPFlag("dns-check", runCommand.PersistentFlags().Lookup("dns-check"))
 
 	// Reset
 	rootCommand.AddCommand(resetCommand)

@@ -90,8 +90,8 @@ func (e *Environment) IsCleaningIptables() bool {
 	return e.drainOptions.Iptables
 }
 
-// GetManifestsABSPathToApply returns the abstract path where Kubernetes manifests to apply are
-func (e *Environment) GetManifestsABSPathToApply() string {
+// GetManifestsPathToApply returns the abstract path where Kubernetes manifests to apply are
+func (e *Environment) GetManifestsPathToApply() string {
 	return e.manifestAPIABSPath
 }
 
@@ -110,15 +110,18 @@ func (e *Environment) GetResolvConfPath() string {
 	return path.Join(e.networkABSPath, "resolv.conf")
 }
 
-// GetPublicIP should panic if nil
+// GetPublicIP returns the public ip address
 func (e *Environment) GetPublicIP() string {
+	if e.outboundIP == nil {
+		return ""
+	}
 	return e.outboundIP.String()
 }
 
 // GetSystemdUnits returns the systemd units to manage:
-// - kubelet
 // - etcd
 // - kube-apiserver
+// - kubelet
 func (e *Environment) GetSystemdUnits() []string {
 	return e.systemdUnitNames
 }
@@ -126,4 +129,12 @@ func (e *Environment) GetSystemdUnits() []string {
 // GetSystemdUnitPrefix returns the prefix used with systemd units
 func (e *Environment) GetSystemdUnitPrefix() string {
 	return e.systemdUnitPrefix
+}
+
+// GetDNSClusterIP returns the dns cluster ip
+func (e *Environment) GetDNSClusterIP() string {
+	if e.dnsClusterIP == nil {
+		return ""
+	}
+	return e.dnsClusterIP.String()
 }

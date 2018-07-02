@@ -53,6 +53,7 @@ core,"github.com/inconshreveable/mousetrap",Apache-2.0
 core,"github.com/json-iterator/go",MIT
 core,"github.com/magiconair/properties",FreeBSD
 core,"github.com/matttproud/golang_protobuf_extensions/pbutil",Apache-2.0
+core,"github.com/miekg/dns",NewBSD
 core,"github.com/mitchellh/go-homedir",MIT
 core,"github.com/mitchellh/mapstructure",MIT
 core,"github.com/modern-go/concurrent",Apache-2.0
@@ -83,11 +84,18 @@ core,"github.com/spf13/pflag",NewBSD
 core,"github.com/spf13/viper",MIT
 core,"github.com/stretchr/testify/assert",MIT
 core,"github.com/stretchr/testify/require",MIT
+core,"golang.org/x/crypto/ed25519",NewBSD
+core,"golang.org/x/crypto/ed25519/internal/edwards25519",NewBSD
 core,"golang.org/x/crypto/ssh/terminal",NewBSD
+core,"golang.org/x/net/bpf",NewBSD
 core,"golang.org/x/net/context",NewBSD
 core,"golang.org/x/net/http2",NewBSD
 core,"golang.org/x/net/http2/hpack",NewBSD
 core,"golang.org/x/net/idna",NewBSD
+core,"golang.org/x/net/internal/iana",NewBSD
+core,"golang.org/x/net/internal/socket",NewBSD
+core,"golang.org/x/net/ipv4",NewBSD
+core,"golang.org/x/net/ipv6",NewBSD
 core,"golang.org/x/net/lex/httplex",NewBSD
 core,"golang.org/x/sys/unix",NewBSD
 core,"golang.org/x/sys/windows",NewBSD
