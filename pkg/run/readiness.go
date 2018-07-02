@@ -15,10 +15,6 @@ import (
 )
 
 func (r *Runtime) applyManifests() error {
-	if r.state.IsKubectlApplied() {
-		glog.V(5).Infof("Kubectl is already applied")
-		return nil
-	}
 	glog.Infof("Calling kubectl apply -f %s ...", r.env.GetManifestsPathToApply())
 	b, err := exec.Command(r.env.GetHyperkubePath(), "kubectl", "--kubeconfig", r.env.GetKubeconfigInsecurePath(), "apply", "-f", r.env.GetManifestsPathToApply()).CombinedOutput()
 	output := string(b)
@@ -27,7 +23,6 @@ func (r *Runtime) applyManifests() error {
 		return err
 	}
 	glog.V(2).Infof("Successfully applied manifests:\n%s", output)
-	r.state.SetKubectlApplied()
 	return nil
 }
 
