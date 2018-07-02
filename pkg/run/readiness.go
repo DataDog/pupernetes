@@ -54,8 +54,8 @@ func (r *Runtime) checkInClusterDNS() error {
 			if i == -1 {
 				// log all messages if the basic parsing failed,
 				// this is not ideal but enough for this use case
+				i = 0
 				glog.Warningf("DNS error: %v, this is blocking the readiness", err)
-				return err
 			}
 			r.state.SetDNSLastError(fmt.Sprintf("query %s %s", query, err.Error()[i:]))
 			return err

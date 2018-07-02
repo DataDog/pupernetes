@@ -30,6 +30,7 @@ name,type,help
 "process_resident_memory_bytes","GAUGE","Resident memory size in bytes."
 "process_start_time_seconds","GAUGE","Start time of the process since unix epoch in seconds."
 "process_virtual_memory_bytes","GAUGE","Virtual memory size in bytes."
+"pupernetes_dns_failures","COUNTER","Total number of dns query failures"
 "pupernetes_kubelet_api_pods_running","GAUGE","Number of kubelet API pods running"
 "pupernetes_kubelet_logs_pods_running","GAUGE","Number of kubelet logs pods running"
 "pupernetes_kubelet_probe_failures","COUNTER","Total number of kubelet probe failures"

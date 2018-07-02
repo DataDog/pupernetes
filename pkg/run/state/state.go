@@ -26,6 +26,8 @@ type State struct {
 	promKubeletLogsPodRunning prometheus.Gauge
 
 	promKubeletProbeFailures prometheus.Counter
+
+	promReadyDNSFailures prometheus.Counter
 }
 
 // NewState instantiate a state with the associated prometheus metrics
@@ -53,8 +55,12 @@ func NewState() (*State, error) {
 			Name: "pupernetes_kubelet_probe_failures",
 			Help: "Total number of kubelet probe failures",
 		}),
+		promReadyDNSFailures: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "pupernetes_dns_failures",
+			Help: "Total number of dns query failures",
+		}),
 	}
-	err := registerCollectors(s.promVersion, s.promStateReady, s.promKubeletAPIPodRunning, s.promKubeletLogsPodRunning, s.promKubeletProbeFailures)
+	err := registerCollectors(s.promVersion, s.promStateReady, s.promKubeletAPIPodRunning, s.promKubeletLogsPodRunning, s.promKubeletProbeFailures, s.promReadyDNSFailures)
 	if err != nil {
 		return nil, err
 	}
@@ -124,6 +130,7 @@ func (s *State) SetDNSLastError(msg string) {
 		s.dnsLastError = msg
 	}
 	s.Unlock()
+	s.promReadyDNSFailures.Inc()
 }
 
 // IncKubeletProbeFailures increment the number of kubelet failures
