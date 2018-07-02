@@ -138,9 +138,9 @@ func NewCommand() (*cobra.Command, *int) {
 				exitCode = 1
 				return
 			}
-			dnsQuery := ""
+			var dnsQuery []string
 			if config.ViperConfig.GetBool("dns-check") {
-				dnsQuery = config.ViperConfig.GetString("dns-query")
+				dnsQuery = config.ViperConfig.GetStringSlice("dns-queries")
 			}
 			r, err := run.NewRunner(env, config.ViperConfig.GetDuration("run-timeout"), config.ViperConfig.GetDuration("gc"), dnsQuery)
 			if err != nil {
@@ -292,12 +292,6 @@ func NewCommand() (*cobra.Command, *int) {
 	daemonCommand.PersistentFlags().String("kubeconfig-path", config.ViperConfig.GetString("kubeconfig-path"), "path to the kubeconfig file")
 	config.ViperConfig.BindPFlag("kubeconfig-path", daemonCommand.PersistentFlags().Lookup("kubeconfig-path"))
 
-	daemonCommand.PersistentFlags().String("dns-query", config.ViperConfig.GetString("dns-query"), "dns query for readiness")
-	config.ViperConfig.BindPFlag("dns-query", daemonCommand.PersistentFlags().Lookup("dns-query"))
-
-	daemonCommand.PersistentFlags().Bool("dns-check", config.ViperConfig.GetBool("dns-check"), fmt.Sprintf("execute the dns query of --%s to notify readiness", "dns-query"))
-	config.ViperConfig.BindPFlag("dns-check", daemonCommand.PersistentFlags().Lookup("dns-check"))
-
 	daemonCommand.PersistentFlags().StringP("clean", "c", config.ViperConfig.GetString("clean"), fmt.Sprintf("clean options before %s: %s", setupCommand.Name(), options.GetOptionNames(options.Clean{})))
 	config.ViperConfig.BindPFlag("clean", daemonCommand.PersistentFlags().Lookup("clean"))
 
@@ -327,6 +321,12 @@ func NewCommand() (*cobra.Command, *int) {
 
 	runCommand.PersistentFlags().String(config.JobTypeKey, config.ViperConfig.GetString(config.JobTypeKey), fmt.Sprintf("type of job: %s or %s", config.JobForeground, config.JobSystemd))
 	config.ViperConfig.BindPFlag(config.JobTypeKey, runCommand.PersistentFlags().Lookup(config.JobTypeKey))
+
+	runCommand.PersistentFlags().StringSlice("dns-queries", config.ViperConfig.GetStringSlice("dns-queries"), "dns queries for readiness")
+	config.ViperConfig.BindPFlag("dns-queries", runCommand.PersistentFlags().Lookup("dns-queries"))
+
+	runCommand.PersistentFlags().Bool("dns-check", config.ViperConfig.GetBool("dns-check"), "needed dns queries to notify readiness")
+	config.ViperConfig.BindPFlag("dns-check", runCommand.PersistentFlags().Lookup("dns-check"))
 
 	// Reset
 	rootCommand.AddCommand(resetCommand)

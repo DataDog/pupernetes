@@ -35,13 +35,13 @@ type Runtime struct {
 
 	api *http.Server
 
-	SigChan              chan os.Signal
-	httpClient           *http.Client
-	state                *state.State
-	runTimeout           time.Duration
-	DNSQueryForReadiness string
-	waitKubeletGC        time.Duration
-	kubeDeleteOption     *v1.DeleteOptions
+	SigChan                chan os.Signal
+	httpClient             *http.Client
+	state                  *state.State
+	runTimeout             time.Duration
+	dnsQueriesForReadiness []string
+	waitKubeletGC          time.Duration
+	kubeDeleteOption       *v1.DeleteOptions
 
 	runTimestamp       time.Time
 	journalTailerMutex sync.RWMutex
@@ -51,7 +51,7 @@ type Runtime struct {
 }
 
 // NewRunner instantiate a new Runtimer with the given Environment
-func NewRunner(env *setup.Environment, runTimeout, waitKubeletGC time.Duration, DNSQueryForReadiness string) (*Runtime, error) {
+func NewRunner(env *setup.Environment, runTimeout, waitKubeletGC time.Duration, dnsQueryForReadiness []string) (*Runtime, error) {
 	var zero int64
 
 	s, err := state.NewState()
@@ -67,9 +67,9 @@ func NewRunner(env *setup.Environment, runTimeout, waitKubeletGC time.Duration, 
 		httpClient: &http.Client{
 			Timeout: time.Millisecond * 500,
 		},
-		runTimeout:           runTimeout,
-		DNSQueryForReadiness: DNSQueryForReadiness,
-		waitKubeletGC:        waitKubeletGC,
+		runTimeout:             runTimeout,
+		dnsQueriesForReadiness: dnsQueryForReadiness,
+		waitKubeletGC:          waitKubeletGC,
 		kubeDeleteOption: &v1.DeleteOptions{
 			GracePeriodSeconds: &zero,
 		},

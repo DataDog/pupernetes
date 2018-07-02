@@ -6,6 +6,7 @@
 package run
 
 import (
+	"fmt"
 	"github.com/golang/glog"
 	"github.com/miekg/dns"
 	"os/exec"
@@ -31,36 +32,43 @@ func (r *Runtime) applyManifests() error {
 }
 
 func (r *Runtime) checkInClusterDNS() error {
-	if r.DNSQueryForReadiness == "" {
+	if r.dnsQueriesForReadiness == nil {
 		glog.V(2).Infof("No dns query supplied for readiness condition, skipping")
 		return nil
 	}
 	c := dns.Client{Timeout: time.Millisecond * 500}
-	dnsMessage := dns.Msg{}
-	dnsMessage.SetQuestion(r.DNSQueryForReadiness, dns.TypeA)
-	msg, _, err := c.Exchange(&dnsMessage, r.env.GetDNSClusterIP()+":53")
-	if err != nil {
-		glog.V(4).Infof("Cannot run DNS query: %v", err)
-		// err message can be like:
-		// - read udp 192.168.1.12:60449->192.168.254.2:53: i/o timeout
-		// - write udp 192.168.1.12:42766->192.168.254.2:53: write: operation not permitted
-		i := strings.Index(err.Error(), "->")
-		if i == -1 {
-			// send the all message if the basic parsing failed,
-			// this is not ideal but enough for this use case
-			i = 0
+	for _, query := range r.dnsQueriesForReadiness {
+		if !strings.HasSuffix(query, ".") {
+			// dns: domain must be fully qualified
+			query = query + "."
 		}
-		r.state.SetDNSLastError(err.Error()[i:])
-		return err
+		dnsMessage := &dns.Msg{}
+		dnsMessage.SetQuestion(query, dns.TypeA)
+		resp, _, err := c.Exchange(dnsMessage, r.env.GetDNSClusterIP()+":53")
+		if err != nil {
+			glog.V(4).Infof("Cannot run DNS query: %v", err)
+			// err message can be like:
+			// - read udp 192.168.1.12:60449->192.168.254.2:53: i/o timeout
+			// - write udp 192.168.1.12:42766->192.168.254.2:53: write: operation not permitted
+			i := strings.Index(err.Error(), "->")
+			if i == -1 {
+				// log all messages if the basic parsing failed,
+				// this is not ideal but enough for this use case
+				glog.Warningf("DNS error: %v, this is blocking the readiness", err)
+				return err
+			}
+			r.state.SetDNSLastError(fmt.Sprintf("query %s %s", query, err.Error()[i:]))
+			return err
+		}
+		if len(resp.Answer) == 0 {
+			r.state.SetDNSLastError("No DNS results for " + query)
+			return err
+		}
+		var dnsResults []string
+		for _, ans := range resp.Answer {
+			dnsResults = append(dnsResults, strings.Replace(ans.String(), "\t", " ", -1))
+		}
+		glog.V(2).Infof("DNS query: %s", strings.Join(dnsResults, " "))
 	}
-	if len(msg.Answer) == 0 {
-		r.state.SetDNSLastError("No DNS results for " + r.DNSQueryForReadiness)
-		return err
-	}
-	var dnsResults []string
-	for _, ans := range msg.Answer {
-		dnsResults = append(dnsResults, strings.Replace(ans.String(), "\t", " ", -1))
-	}
-	glog.V(2).Infof("DNS query %s", strings.Join(dnsResults, " "))
 	return nil
 }

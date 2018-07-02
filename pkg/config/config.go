@@ -59,6 +59,6 @@ func init() {
 	ViperConfig.SetDefault("wait-timeout", time.Minute*15)
 	ViperConfig.SetDefault("client-timeout", time.Minute*1)
 	ViperConfig.SetDefault("kubeconfig-path", "")
-	ViperConfig.SetDefault("dns-query", "coredns.kube-system.svc.cluster.local.")
+	ViperConfig.SetDefault("dns-queries", []string{"coredns.kube-system.svc.cluster.local."})
 	ViperConfig.SetDefault("dns-check", false)
 }
