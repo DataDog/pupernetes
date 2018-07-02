@@ -49,7 +49,7 @@ systemd:
 
       [Service]
       Environment=SUDO_USER=core
-      ExecStart=/opt/bin/pupernetes daemon run /opt/sandbox --kubectl-link /opt/bin/kubectl -v 5 --timeout 6h
+      ExecStart=/opt/bin/pupernetes daemon run /opt/sandbox --kubectl-link /opt/bin/kubectl -v 5 --run-timeout 6h
       Restart=on-failure
       RestartSec=5
       Type=notify
@@ -91,7 +91,7 @@ storage:
     contents:
       inline: |
         #!/bin/bash -ex
-        curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.5.0/pupernetes -o /opt/bin/pupernetes
+        curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.6.0/pupernetes -o /opt/bin/pupernetes
         sha512sum -c /opt/bin/pupernetes.sha512sum
         chmod +x /opt/bin/pupernetes
 
@@ -100,10 +100,4 @@ storage:
     filesystem: root
     contents:
       inline: |
-        3aa9d450349183b312a53e7280a095eb6e1508d429bf32c991e95d58690a576d1bc9cadafe5cec8674d17a91c247f1de96fd80f74c0608d6043f3fab5cb71677 /opt/bin/pupernetes
-
-  - path: /home/core/.kube/config
-    mode: 0644
-    filesystem: root
-    user:
-     name: "core"
+        47257210de7941a2242a1e7f17d5c5a45442cda3bc4be876023a7bd1932025705679a4eec6244d264d364b4b7496ab4544023d1cb5e381588c24286dbe5fb8e2  ./pupernetes
