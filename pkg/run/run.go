@@ -189,12 +189,15 @@ func (r *Runtime) Run() error {
 				continue
 			}
 			// kubectl apply -f manifests-api
-			err = r.applyManifests()
-			if err != nil {
-				// TODO do we trigger an exit at some point
-				// TODO because it's almost a deadlock if the user didn't set a short --timeoutTimer
-				glog.Errorf("Cannot apply manifests in %s", r.env.GetManifestsPathToApply())
-				continue
+			if !r.state.IsKubectlApplied() {
+				err = r.applyManifests()
+				if err != nil {
+					// TODO do we trigger an exit at some point
+					// TODO because it's almost a deadlock if the user didn't set a short --timeoutTimer
+					glog.Errorf("Cannot apply manifests in %s", r.env.GetManifestsPathToApply())
+					continue
+				}
+				r.state.SetKubectlApplied()
 			}
 			err = r.checkInClusterDNS()
 			if err != nil {

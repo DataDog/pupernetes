@@ -162,6 +162,14 @@ jobs:
           name: sonobuoy
           command: ./.ci/sonobuoy.sh
 
+      - run:
+          name: reset
+          command: ./pupernetes reset default kube-system --apply
+
+      - run:
+          name: validation
+          command: ./.ci/pupernetes-validation.sh
+
 workflows:
   version: 2
   tests:
