@@ -187,7 +187,7 @@ jobs:
 
       - run:
           name: run
-          command: sudo ./pupernetes daemon run sandbox/ --job-type systemd -v 5 --kubectl-link /usr/local/bin/kubectl --kubeconfig-path $HOME/.kube/config --dns-check
+          command: sudo ./pupernetes daemon run sandbox/ --job-type systemd -v 5 --kubectl-link /usr/local/bin/kubectl --bind-address 0.0.0.0:8989 --kubeconfig-path $HOME/.kube/config --dns-check
 
       - run:
           name: kubectl
