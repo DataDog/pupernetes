@@ -35,7 +35,10 @@ script:
   - sudo ./pupernetes daemon run sandbox/ -v 4 --job-type systemd --bind-address 0.0.0.0:8989 --hyperkube-version $HYPERKUBE_VERSION --kubeconfig-path $HOME/.kube/config
   - ./.ci/pupernetes-validation.sh
 
+# debug commands
 after_failure:
+  - uptime # check the load
+  - free -h # pods may be evicted
   - sudo journalctl -e --no-pager -o cat -u p8s-etcd.service
   - sudo journalctl -e --no-pager -o cat -u p8s-kubelet.service
   - sudo journalctl -e --no-pager -o cat -u p8s-kube-apiserver.service
