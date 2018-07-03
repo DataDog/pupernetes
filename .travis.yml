@@ -19,7 +19,6 @@ env:
 #    - HYPERKUBE_VERSION=1.5.6 TODO there are some kubelet issues
 
 before_install:
-  - mkdir -pv $HOME/.kube && touch $HOME/.kube/config
   - sudo apt-get update
 
 install:
