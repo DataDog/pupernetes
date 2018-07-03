@@ -185,8 +185,8 @@ In this case, pupernetes asks to systemd-dbus to be daemonised with the given ar
 See more info about it in the [run command](./docs/pupernetes_run.md).
 
 This command line is very convenient to run pupernetes in SaaS CI:
-* [travis](./.travis.yml)
-* [circle-ci](./.circleci/config.yml)
+* [travis](./examples/travis.yaml)
+* [circle-ci](./examples/circleci.yaml)
 
 ### Command line docs
 

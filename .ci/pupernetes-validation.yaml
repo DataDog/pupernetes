@@ -28,8 +28,8 @@ data:
     curl -fv ${NODE_IP}:8989/ready
 
     # Stop pupernetes
+    echo -n "pupernetes is awesome" > /dev/termination-log
     curl -XPOST ${NODE_IP}:8989/stop
-    echo "pupernetes is awesome" > /dev/termination-log
 ---
 apiVersion: batch/v1
 kind: Job
