@@ -144,7 +144,7 @@ jobs:
 
       - run:
           name: run
-          command: sudo ./pupernetes daemon run sandbox/ --bind-address 0.0.0.0:8989 --kubeconfig-path $HOME/.kube/config
+          command: sudo timeout 600 ./pupernetes daemon run sandbox/ --bind-address 0.0.0.0:8989 --kubeconfig-path $HOME/.kube/config
 
       - run:
           name: clean
