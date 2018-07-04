@@ -21,7 +21,7 @@ func main() {
 	command, exitCode := cli.NewCommand()
 	err := command.Execute()
 	if err != nil {
-		os.Exit(1)
+		glog.Exitf("Error while running the command: %v", err)
 	}
 	if *exitCode != 0 {
 		glog.Errorf("Exiting on error: %d", *exitCode)

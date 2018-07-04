@@ -49,7 +49,9 @@ func checkResources() error {
 // TODO configure this
 func CheckRequirements() error {
 	if os.Geteuid() != 0 {
-		return fmt.Errorf("must run as root")
+		err := fmt.Errorf("must run as root")
+		glog.Errorf("Requirement failure: %v", err)
+		return err
 	}
 	err := checkResources()
 	if err != nil {
