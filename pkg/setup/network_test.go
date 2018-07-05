@@ -71,11 +71,11 @@ MulticastDNS setting: no
 }
 
 func TestEnvironment_GetKubernetesClusterIP(t *testing.T) {
-	kubeIP, err := getKubernetesClusterIP()
+	kubeIP, err := pickInCIDR("192.168.254.0/24", 1)
 	require.NoError(t, err)
 	assert.Equal(t, "192.168.254.1", kubeIP.String())
 
-	dnsIP, err := getDNSClusterIP()
+	dnsIP, err := pickInCIDR("192.168.254.0/24", 2)
 	require.NoError(t, err)
 	assert.Equal(t, "192.168.254.2", dnsIP.String())
 }

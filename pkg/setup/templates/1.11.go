@@ -38,6 +38,28 @@ ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
 	--node-ip={{ .NodeIP }} \
 	--node-labels=p8s=mononode \
 	--application-metrics-count-limit=50 \
+	--cni-bin-dir={{.RootABSPath}}/bin \
+	--container-runtime={{.ContainerRuntime}} \
+	--runtime-request-timeout=15m \
+	--container-runtime-endpoint=unix://{{.ContainerRuntimeEndpoint}} \
+	--network-plugin=cni \
+	--cni-conf-dir={{.RootABSPath}}/net.d \
+	--cni-bin-dir={{.RootABSPath}}/bin \
+
+Restart=no
+`),
+		},
+		{
+			Name:        "containerd.service",
+			Destination: ManifestSystemdUnit,
+			Content: []byte(`[Unit]
+Description=containerd
+After=network.target
+
+[Service]
+Environment=PATH=/bin:/sbin:/usr/bin:/usr/sbin/:/usr/local/bin:/usr/local/sbin:{{.RootABSPath}}/bin
+ExecStart={{.RootABSPath}}/bin/containerd \
+	--config {{.RootABSPath}}/manifest-config/containerd-config.toml
 
 Restart=no
 `),
@@ -139,6 +161,79 @@ users:
     username: p8s
     client-certificate: "{{.RootABSPath}}/secrets/kubernetes.certificate"
     client-key: "{{.RootABSPath}}/secrets/kubernetes.private_key"
+`),
+		},
+		{
+			Name:        "containerd-config.toml",
+			Destination: ManifestConfig,
+			Content: []byte(`
+root = "/var/lib/containerd"
+state = "/run/containerd"
+oom_score = 0
+
+[grpc]
+  address = "{{.ContainerRuntimeEndpoint}}"
+  uid = 0
+  gid = 0
+  max_recv_message_size = 16777216
+  max_send_message_size = 16777216
+
+[debug]
+  address = ""
+  uid = 0
+  gid = 0
+  level = ""
+
+[metrics]
+  address = "127.0.0.1:1338"
+  grpc_histogram = false
+
+[cgroup]
+  path = ""
+
+[plugins]
+  [plugins.cgroups]
+    no_prometheus = false
+  [plugins.cri]
+    stream_server_address = ""
+    stream_server_port = "10010"
+    enable_selinux = false
+    sandbox_image = "k8s.gcr.io/pause:3.1"
+    stats_collect_period = 10
+    systemd_cgroup = false
+    enable_tls_streaming = false
+    [plugins.cri.containerd]
+      snapshotter = "overlayfs"
+      [plugins.cri.containerd.default_runtime]
+        runtime_type = "io.containerd.runtime.v1.linux"
+        runtime_engine = ""
+        runtime_root = ""
+      [plugins.cri.containerd.untrusted_workload_runtime]
+        runtime_type = ""
+        runtime_engine = ""
+        runtime_root = ""
+    [plugins.cri.cni]
+      bin_dir = "{{.RootABSPath}}/bin"
+      conf_dir = "{{.RootABSPath}}/net.d"
+      conf_template = ""
+    [plugins.cri.registry]
+      [plugins.cri.registry.mirrors]
+        [plugins.cri.registry.mirrors."docker.io"]
+          endpoint = ["https://registry-1.docker.io"]
+  [plugins.diff-service]
+    default = ["walking"]
+  [plugins.linux]
+    shim = "containerd-shim"
+    runtime = "runc"
+    runtime_root = ""
+    no_shim = false
+    shim_debug = false
+  [plugins.scheduler]
+    pause_threshold = 0.02
+    deletion_threshold = 0
+    mutation_threshold = 100
+    schedule_delay = "0s"
+    startup_delay = "100ms"
 `),
 		},
 		{

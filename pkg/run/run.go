@@ -23,6 +23,7 @@ import (
 	"github.com/DataDog/pupernetes/pkg/run/state"
 	"github.com/DataDog/pupernetes/pkg/setup"
 	"github.com/DataDog/pupernetes/pkg/util"
+	"strings"
 )
 
 const (
@@ -107,6 +108,11 @@ func (r *Runtime) Run() error {
 	go r.api.ListenAndServe()
 
 	for _, u := range r.env.GetSystemdUnits() {
+		if strings.Contains(u, "kubelet.service") {
+			// TODO check container runtime endpoint
+			// TODO check apiserver + controller-manager if running tls bootstrap
+			time.Sleep(3 * time.Second)
+		}
 		err := util.StartUnit(r.env.GetDBUSClient(), u)
 		if err != nil {
 			return r.Stop(err)

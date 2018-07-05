@@ -22,7 +22,7 @@ before_install:
   - sudo apt-get update
 
 install:
-  - sudo apt-get install -yq systemd
+  - sudo apt-get install -yq systemd libseccomp2
   - sudo curl -Lf https://storage.googleapis.com/kubernetes-release/release/v$HYPERKUBE_VERSION/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
   - sudo chmod +x /usr/local/bin/kubectl
   # or use in pupernetes --kubectl-link /usr/local/bin/kubectl
@@ -38,6 +38,7 @@ script:
 after_failure:
   - uptime # check the load
   - free -h # pods may be evicted
+  - sudo journalctl -e --no-pager -o cat -u p8s-containerd.service
   - sudo journalctl -e --no-pager -o cat -u p8s-etcd.service
   - sudo journalctl -e --no-pager -o cat -u p8s-kubelet.service
   - sudo journalctl -e --no-pager -o cat -u p8s-kube-apiserver.service

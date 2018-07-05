@@ -76,7 +76,7 @@ jobs:
           command: make pupernetes-docker
       - run:
           name: apt
-          command: sudo apt-get update -q && sudo apt-get install -yq systemd
+          command: sudo apt-get update -q && sudo apt-get install -yq systemd libseccomp2
       - run:
           name: setup
           command: sudo ./pupernetes daemon setup sandbox/ -v 5 --kubeconfig-path $HOME/.kube/config
@@ -131,7 +131,7 @@ jobs:
           command: make pupernetes-docker
       - run:
           name: apt
-          command: sudo apt-get update -q && sudo apt-get install -yq systemd
+          command: sudo apt-get update -q && sudo apt-get install -yq systemd libseccomp2
 
       - run:
           name: setup
@@ -159,7 +159,7 @@ jobs:
           command: make pupernetes-docker
       - run:
           name: apt
-          command: sudo apt-get update -q && sudo apt-get install -yq systemd
+          command: sudo apt-get update -q && sudo apt-get install -yq systemd libseccomp2
 
       - run:
           name: run
@@ -183,7 +183,7 @@ jobs:
           command: make pupernetes-docker
       - run:
           name: apt
-          command: sudo apt-get update -q && sudo apt-get install -yq systemd
+          command: sudo apt-get update -q && sudo apt-get install -yq systemd libseccomp2
 
       - run:
           name: run

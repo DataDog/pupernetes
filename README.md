@@ -75,6 +75,11 @@ A recent systemd version is better to gain:
 * `journalctl --since`
 * more convenient dbus API
 
+
+#### Containerd
+
+If running containerd, you need to add `libseccomp2` on your system.
+
 #### Resources
 
 * 4GB of memory is recommended
