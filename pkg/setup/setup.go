@@ -24,6 +24,7 @@ import (
 	"github.com/DataDog/pupernetes/pkg/setup/requirements"
 	defaultTemplates "github.com/DataDog/pupernetes/pkg/setup/templates"
 	"github.com/DataDog/pupernetes/pkg/util"
+	"time"
 )
 
 const (
@@ -84,7 +85,8 @@ type Environment struct {
 	binaryEtcd      *exeBinary
 
 	// dependencies
-	binaryCNI *depBinary
+	downloadTimeout time.Duration
+	binaryCNI       *depBinary
 
 	templateMetadata *templateMetadata
 
@@ -165,6 +167,8 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		etcdUnitName:          config.ViperConfig.GetString("systemd-unit-prefix") + "etcd.service",
 		kubeletUnitName:       config.ViperConfig.GetString("systemd-unit-prefix") + "kubelet.service",
 		kubeAPIServerUnitName: config.ViperConfig.GetString("systemd-unit-prefix") + "kube-apiserver.service",
+
+		downloadTimeout: config.ViperConfig.GetDuration("download-timeout"),
 	}
 
 	e.systemdUnitNames = []string{
@@ -175,10 +179,11 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 	// Kubernetes
 	e.binaryHyperkube = &exeBinary{
 		depBinary: depBinary{
-			archivePath:   path.Join(e.binABSPath, fmt.Sprintf("hyperkube-v%s.tar.gz", config.ViperConfig.GetString("hyperkube-version"))),
-			binaryABSPath: path.Join(e.binABSPath, "hyperkube"),
-			archiveURL:    fmt.Sprintf("https://dl.k8s.io/v%s/kubernetes-server-linux-amd64.tar.gz", config.ViperConfig.GetString("hyperkube-version")),
-			version:       config.ViperConfig.GetString("hyperkube-version"),
+			archivePath:     path.Join(e.binABSPath, fmt.Sprintf("hyperkube-v%s.tar.gz", config.ViperConfig.GetString("hyperkube-version"))),
+			binaryABSPath:   path.Join(e.binABSPath, "hyperkube"),
+			archiveURL:      fmt.Sprintf("https://dl.k8s.io/v%s/kubernetes-server-linux-amd64.tar.gz", config.ViperConfig.GetString("hyperkube-version")),
+			version:         config.ViperConfig.GetString("hyperkube-version"),
+			downloadTimeout: e.downloadTimeout,
 		},
 		commandVersion: []string{"kubelet", "--version"},
 	}
@@ -186,10 +191,11 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 	// Vault
 	e.binaryVault = &exeBinary{
 		depBinary: depBinary{
-			archivePath:   path.Join(e.binABSPath, fmt.Sprintf("vault-v%s.zip", config.ViperConfig.GetString("vault-version"))),
-			binaryABSPath: path.Join(e.binABSPath, "vault"),
-			archiveURL:    fmt.Sprintf("https://releases.hashicorp.com/vault/%s/vault_%s_linux_amd64.zip", config.ViperConfig.GetString("vault-version"), config.ViperConfig.GetString("vault-version")),
-			version:       config.ViperConfig.GetString("vault-version"),
+			archivePath:     path.Join(e.binABSPath, fmt.Sprintf("vault-v%s.zip", config.ViperConfig.GetString("vault-version"))),
+			binaryABSPath:   path.Join(e.binABSPath, "vault"),
+			archiveURL:      fmt.Sprintf("https://releases.hashicorp.com/vault/%s/vault_%s_linux_amd64.zip", config.ViperConfig.GetString("vault-version"), config.ViperConfig.GetString("vault-version")),
+			version:         config.ViperConfig.GetString("vault-version"),
+			downloadTimeout: e.downloadTimeout,
 		},
 		commandVersion: []string{"--version"},
 	}
@@ -197,20 +203,22 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 	// Etcd
 	e.binaryEtcd = &exeBinary{
 		depBinary: depBinary{
-			archivePath:   path.Join(e.binABSPath, fmt.Sprintf("etcd-v%s.tar.gz", config.ViperConfig.GetString("etcd-version"))),
-			binaryABSPath: path.Join(e.binABSPath, "etcd"),
-			archiveURL:    fmt.Sprintf("https://github.com/coreos/etcd/releases/download/v%s/etcd-v%s-linux-amd64.tar.gz", config.ViperConfig.GetString("etcd-version"), config.ViperConfig.GetString("etcd-version")),
-			version:       config.ViperConfig.GetString("etcd-version"),
+			archivePath:     path.Join(e.binABSPath, fmt.Sprintf("etcd-v%s.tar.gz", config.ViperConfig.GetString("etcd-version"))),
+			binaryABSPath:   path.Join(e.binABSPath, "etcd"),
+			archiveURL:      fmt.Sprintf("https://github.com/coreos/etcd/releases/download/v%s/etcd-v%s-linux-amd64.tar.gz", config.ViperConfig.GetString("etcd-version"), config.ViperConfig.GetString("etcd-version")),
+			version:         config.ViperConfig.GetString("etcd-version"),
+			downloadTimeout: e.downloadTimeout,
 		},
 		commandVersion: []string{"--version"},
 	}
 
 	// CNI
 	e.binaryCNI = &depBinary{
-		archivePath:   path.Join(e.binABSPath, fmt.Sprintf("cni-v%s.tar.gz", config.ViperConfig.GetString("cni-version"))),
-		binaryABSPath: path.Join(e.binABSPath, "bridge"),
-		archiveURL:    fmt.Sprintf("https://github.com/containernetworking/plugins/releases/download/v%s/cni-plugins-amd64-v%s.tgz", config.ViperConfig.GetString("cni-version"), config.ViperConfig.GetString("cni-version")),
-		version:       config.ViperConfig.GetString("cni-version"),
+		archivePath:     path.Join(e.binABSPath, fmt.Sprintf("cni-v%s.tar.gz", config.ViperConfig.GetString("cni-version"))),
+		binaryABSPath:   path.Join(e.binABSPath, "bridge"),
+		archiveURL:      fmt.Sprintf("https://github.com/containernetworking/plugins/releases/download/v%s/cni-plugins-amd64-v%s.tgz", config.ViperConfig.GetString("cni-version"), config.ViperConfig.GetString("cni-version")),
+		version:         config.ViperConfig.GetString("cni-version"),
+		downloadTimeout: e.downloadTimeout,
 	}
 
 	// SystemdUnits X-Section
