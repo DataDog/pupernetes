@@ -116,7 +116,7 @@ func (e *Environment) Clean() error {
 		toRemove = append(toRemove, e.secretsABSPath)
 	}
 	if e.cleanOptions.Network {
-		toRemove = append(toRemove, e.networkABSPath)
+		toRemove = append(toRemove, e.networkConfigABSPath, e.networkStateABSPath)
 	}
 	if e.cleanOptions.Logs {
 		toRemove = append(toRemove, e.logsABSPath)

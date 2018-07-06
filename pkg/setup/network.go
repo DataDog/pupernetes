@@ -52,7 +52,7 @@ func pickInCIDR(cidr string, index int) (*net.IP, error) {
 }
 
 func (e *Environment) writeCNIConfig(c *cniConfig) error {
-	cniConfPath := path.Join(e.networkABSPath, cniFileName)
+	cniConfPath := path.Join(e.networkConfigABSPath, cniFileName)
 	f, err := os.OpenFile(cniConfPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0444)
 	if err != nil {
 		glog.Errorf("Cannot create %s: %v", cniConfPath, err)
@@ -160,7 +160,7 @@ func (e *Environment) newCNIBridgeConfig(bridgeName string) *cniConfig {
 		Ipam: &ipam{
 			Type:    "host-local",
 			Subnet:  e.podCIDR.String(),
-			DataDir: path.Join(e.rootABSPath, "networks"),
+			DataDir: e.networkStateABSPath,
 			Routes:  []route{{Destination: "0.0.0.0/0", Gateway: e.podBridgeGatewayIP.String()}},
 		},
 	}

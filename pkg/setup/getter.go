@@ -107,7 +107,7 @@ func (e *Environment) GetKubeletClient() *http.Client {
 
 // GetResolvConfPath returns an abstract path of the resolv.conf file
 func (e *Environment) GetResolvConfPath() string {
-	return path.Join(e.networkABSPath, "resolv.conf")
+	return path.Join(e.networkConfigABSPath, "resolv.conf")
 }
 
 // GetPublicIP returns the public ip address
