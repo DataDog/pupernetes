@@ -266,7 +266,7 @@ func (e *Environment) setupNetwork() error {
 	// docker set a drop by default
 	b, err := exec.Command("iptables", "-P", "FORWARD", "ACCEPT").CombinedOutput()
 	if err != nil {
-		glog.Errorf("Cannot run iprables forward: %s", string(b))
+		glog.Errorf("Cannot run iptables forward: %s", string(b))
 		return err
 	}
 	return nil
