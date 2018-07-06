@@ -21,8 +21,8 @@ import (
 )
 
 const (
-	cniFileName = "cni.json"
-	bridgeName  = "cni-p8s"
+	cniFileName       = "cni.json"
+	defaultBridgeName = "cni-p8s"
 )
 
 func incIP(ip net.IP) {
@@ -233,7 +233,7 @@ func (e *Environment) getNameservers() ([]string, error) {
 	return getNameserverFromSystemdOutput(b), nil
 }
 
-func (e *Environment) generateCNIConf() error {
+func (e *Environment) generateCNIConf(bridgeName string) error {
 	c := e.newCNIBridgeConfig(bridgeName)
 	err := e.writeCNIConfig(c)
 	if err != nil {
@@ -258,16 +258,23 @@ func (e *Environment) setupNetwork() error {
 		return err
 	}
 
-	err = e.generateCNIConf()
+	err = e.generateCNIConf(defaultBridgeName)
 	if err != nil {
 		return err
 	}
 
 	// docker set a drop by default
-	b, err := exec.Command("iptables", "-P", "FORWARD", "ACCEPT").CombinedOutput()
-	if err != nil {
-		glog.Errorf("Cannot run iptables forward: %s", string(b))
-		return err
+	iptablesRules := [][]string{
+		{"iptables", "-A", "FORWARD", "--in-interface", defaultBridgeName, "-j", "ACCEPT"},
+		{"iptables", "-A", "FORWARD", "--out-interface", defaultBridgeName, "-j", "ACCEPT"},
+	}
+	for _, rule := range iptablesRules {
+		glog.V(4).Infof("Adding iptables rule: %s", strings.Join(rule, " "))
+		b, err := exec.Command(rule[0], rule[1:]...).CombinedOutput()
+		if err != nil {
+			glog.Errorf("Cannot run %s: %s", strings.Join(rule, " "), string(b))
+			return err
+		}
 	}
 	return nil
 }
