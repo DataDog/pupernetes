@@ -180,6 +180,7 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		kubectlLink:            config.ViperConfig.GetString("kubectl-link"),
 
 		downloadTimeout: config.ViperConfig.GetDuration("download-timeout"),
+
 		systemdUnitPrefix:         config.ViperConfig.GetString("systemd-unit-prefix"),
 		etcdUnitName:              config.ViperConfig.GetString("systemd-unit-prefix") + "etcd.service",
 		kubeletUnitName:           config.ViperConfig.GetString("systemd-unit-prefix") + "kubelet.service",
@@ -231,10 +232,11 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 	// Containerd
 	e.binaryContainerd = &exeBinary{
 		depBinary: depBinary{
-			archivePath:   path.Join(e.binABSPath, fmt.Sprintf("containerd-v%s.tar.gz", config.ViperConfig.GetString("containerd-version"))),
-			binaryABSPath: path.Join(e.binABSPath, "containerd"),
-			archiveURL:    fmt.Sprintf("https://github.com/containerd/containerd/releases/download/v%s/containerd-%s.linux-amd64.tar.gz", config.ViperConfig.GetString("containerd-version"), config.ViperConfig.GetString("containerd-version")),
-			version:       config.ViperConfig.GetString("containerd-version"),
+			archivePath:     path.Join(e.binABSPath, fmt.Sprintf("containerd-v%s.tar.gz", config.ViperConfig.GetString("containerd-version"))),
+			binaryABSPath:   path.Join(e.binABSPath, "containerd"),
+			archiveURL:      fmt.Sprintf("https://github.com/containerd/containerd/releases/download/v%s/containerd-%s.linux-amd64.tar.gz", config.ViperConfig.GetString("containerd-version"), config.ViperConfig.GetString("containerd-version")),
+			version:         config.ViperConfig.GetString("containerd-version"),
+			downloadTimeout: e.downloadTimeout,
 		},
 		commandVersion: []string{"--version"},
 	}
@@ -242,10 +244,11 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 	// Runc
 	e.binaryRunc = &exeBinary{
 		depBinary: depBinary{
-			archivePath:   path.Join(e.binABSPath, fmt.Sprintf("runc-v%s", config.ViperConfig.GetString("runc-version"))),
-			binaryABSPath: path.Join(e.binABSPath, "runc"),
-			archiveURL:    fmt.Sprintf("https://github.com/opencontainers/runc/releases/download/v%s/runc.amd64", config.ViperConfig.GetString("runc-version")),
-			version:       config.ViperConfig.GetString("runc-version"),
+			archivePath:     path.Join(e.binABSPath, fmt.Sprintf("runc-v%s", config.ViperConfig.GetString("runc-version"))),
+			binaryABSPath:   path.Join(e.binABSPath, "runc"),
+			archiveURL:      fmt.Sprintf("https://github.com/opencontainers/runc/releases/download/v%s/runc.amd64", config.ViperConfig.GetString("runc-version")),
+			version:         config.ViperConfig.GetString("runc-version"),
+			downloadTimeout: e.downloadTimeout,
 		},
 		commandVersion: []string{"--version"},
 	}
