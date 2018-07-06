@@ -38,13 +38,12 @@ ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
 	--node-ip={{ .NodeIP }} \
 	--node-labels=p8s=mononode \
 	--application-metrics-count-limit=50 \
+	--network-plugin=cni \
+	--cni-conf-dir={{.RootABSPath}}/net.d \
 	--cni-bin-dir={{.RootABSPath}}/bin \
 	--container-runtime={{.ContainerRuntime}} \
 	--runtime-request-timeout=15m \
 	--container-runtime-endpoint=unix://{{.ContainerRuntimeEndpoint}} \
-	--network-plugin=cni \
-	--cni-conf-dir={{.RootABSPath}}/net.d \
-	--cni-bin-dir={{.RootABSPath}}/bin \
 
 Restart=no
 `),

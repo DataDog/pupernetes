@@ -41,6 +41,9 @@ ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
 	--application-metrics-count-limit=50 \
 	--enforce-node-allocatable="" \
 	--cgroups-per-qos=false \
+	--network-plugin=cni \
+	--cni-conf-dir={{.RootABSPath}}/net.d \
+	--cni-bin-dir={{.RootABSPath}}/bin \
 
 Restart=no
 `),
