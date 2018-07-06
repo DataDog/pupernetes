@@ -294,8 +294,11 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 	}
 
 	containerRuntime := "docker"
+	ContainerRuntimeEndpoint := "/var/run/docker.sock"
 	if e.containerRuntimeInterface {
+		// TODO static to containerd
 		containerRuntime = "remote"
+		ContainerRuntimeEndpoint = "/run/containerd/containerd.sock"
 	}
 	// Template for manifests
 	e.templateMetadata = &templateMetadata{
@@ -308,7 +311,7 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		DNSClusterIP:             e.dnsClusterIP.String(),
 		KubeletRootDirABSPath:    e.kubeletRootDir,
 		ContainerRuntime:         containerRuntime,
-		ContainerRuntimeEndpoint: "/run/containerd/containerd.sock", // TODO
+		ContainerRuntimeEndpoint: ContainerRuntimeEndpoint, // TODO
 		// NodeIP: during network phase
 	}
 
