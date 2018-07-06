@@ -143,8 +143,12 @@ jobs:
           command: sudo cp -v .ci/pupernetes-validation.yaml sandbox/manifest-api/pupernetes-validation.yaml
 
       - run:
-          name: run
+          name: run-docker
           command: sudo timeout 600 ./pupernetes daemon run sandbox/ --bind-address 0.0.0.0:8989 --kubeconfig-path $HOME/.kube/config
+
+      - run:
+          name: run-containerd
+          command: sudo timeout 600 ./pupernetes daemon run sandbox/ --bind-address 0.0.0.0:8989 --kubeconfig-path $HOME/.kube/config --container-runtime containerd
 
       - run:
           name: clean
