@@ -33,6 +33,8 @@ func init() {
 	ViperConfig.SetDefault("etcd-version", "3.1.11")
 	ViperConfig.SetDefault("cni-version", "0.7.0")
 
+	ViperConfig.SetDefault("download-timeout", time.Minute*30)
+
 	ViperConfig.SetDefault("kubernetes-cluster-ip-range", "192.168.254.0/24")
 	ViperConfig.SetDefault("bind-address", defaultAPIAddress)
 	ViperConfig.SetDefault("api-address", defaultAPIAddress)

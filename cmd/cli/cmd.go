@@ -284,6 +284,9 @@ func NewCommand() (*cobra.Command, *int) {
 	daemonCommand.PersistentFlags().String("cni-version", config.ViperConfig.GetString("cni-version"), "container network interface (cni) version")
 	config.ViperConfig.BindPFlag("cni-version", daemonCommand.PersistentFlags().Lookup("cni-version"))
 
+	daemonCommand.PersistentFlags().String("download-timeout", config.ViperConfig.GetString("download-timeout"), "timeout for each downloaded archive")
+	config.ViperConfig.BindPFlag("download-timeout", daemonCommand.PersistentFlags().Lookup("download-timeout"))
+
 	daemonCommand.PersistentFlags().String("kubelet-root-dir", config.ViperConfig.GetString("kubelet-root-dir"), "directory path for managing kubelet files")
 	config.ViperConfig.BindPFlag("kubelet-root-dir", daemonCommand.PersistentFlags().Lookup("kubelet-root-dir"))
 

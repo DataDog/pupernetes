@@ -16,13 +16,16 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"os/signal"
+	"syscall"
 )
 
 type depBinary struct {
-	archivePath   string
-	binaryABSPath string
-	archiveURL    string
-	version       string
+	archivePath     string
+	binaryABSPath   string
+	archiveURL      string
+	version         string
+	downloadTimeout time.Duration
 }
 
 type exeBinary struct {
@@ -49,8 +52,8 @@ func (x *exeBinary) isUpToDate() bool {
 }
 
 func (d *depBinary) downloadToFile() error {
-	glog.V(2).Infof("Downloading the archive %s to %s", d.archiveURL, d.archivePath)
-	client := &http.Client{Timeout: time.Minute * 15}
+	glog.V(2).Infof("Downloading the archive %s to %s with a timeout of %s", d.archiveURL, d.archivePath, d.downloadTimeout.String())
+	client := &http.Client{Timeout: d.downloadTimeout}
 	resp, err := client.Get(d.archiveURL)
 	if err != nil {
 		glog.Errorf("Cannot download %s: %v", d.archiveURL, err)
@@ -87,15 +90,36 @@ func (d *depBinary) download() error {
 		glog.V(2).Infof("Archive already here: %s", d.archivePath)
 		return nil
 	}
-	err = d.downloadToFile()
-	if err != nil {
-		glog.Errorf("Fail to download %s: %v", d.archiveURL, err)
-		glog.Infof("Retrying to download in %s ...", downloadBinaryRetryDelay.String())
-		time.Sleep(downloadBinaryRetryDelay)
-		// we don't need to delete the file as we open it with O_TRUNC
-		return d.downloadToFile()
+
+	sigChan := make(chan os.Signal)
+	defer close(sigChan)
+
+	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
+	defer signal.Reset(syscall.SIGTERM, syscall.SIGINT)
+	errChan := make(chan error)
+	defer close(errChan)
+
+	go func(ch chan error) {
+		err = d.downloadToFile()
+		if err != nil {
+			glog.Errorf("Fail to download %s: %v", d.archiveURL, err)
+			glog.Infof("Retrying to download in %s ...", downloadBinaryRetryDelay.String())
+			time.Sleep(downloadBinaryRetryDelay)
+			// we don't need to delete the file as we open it with O_TRUNC
+			errChan <- d.downloadToFile()
+		}
+		errChan <- nil
+	}(errChan)
+
+	select {
+	case s := <-sigChan:
+		glog.Warningf("Received signal %q, %s is probably incomplete, removing", s.String(), d.archivePath)
+		_ = d.removeArchive()
+		return fmt.Errorf("cannot download, signal received: %q", s.String())
+
+	case err := <-errChan:
+		return err
 	}
-	return nil
 }
 
 func (d *depBinary) removeArchive() error {
