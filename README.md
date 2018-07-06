@@ -65,6 +65,7 @@ This project has been initially designed to perform the end to end testing of th
 * `systemd-resolve` (or a non-systemd managed `/etc/resolv.conf`)
 * `mount`
 * `iptables`
+* `nsenter`
 
 Additionally any implicit requirements needed by the **kubelet**, like the container runtime and [more](https://github.com/kubernetes/kubernetes/issues/26093).
 Currently only reporting `docker`, please see the [current limitations](#current-limitations).

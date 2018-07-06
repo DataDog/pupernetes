@@ -22,7 +22,15 @@ before_install:
   - sudo apt-get update
 
 install:
-  - sudo apt-get install -yq systemd libseccomp2
+  - sudo apt-get install -yq systemd libseccomp2 curl autopoint
+
+  - mkdir -pv ~/util-linux
+  - curl -Lf https://www.kernel.org/pub/linux/utils/util-linux/v2.24/util-linux-2.24.1.tar.gz | tar -xz --strip-component 1 -C ~/util-linux
+  - ~/util-linux/autogen.sh
+  - pushd ~/util-linux/ && ./configure --without-python --disable-all-programs --enable-nsenter && popd
+  - make -C ~/util-linux -j nsenter
+  - sudo cp -v ~/util-linux/nsenter /usr/local/bin
+
   - sudo curl -Lf https://storage.googleapis.com/kubernetes-release/release/v$HYPERKUBE_VERSION/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
   - sudo chmod +x /usr/local/bin/kubectl
   # or use in pupernetes --kubectl-link /usr/local/bin/kubectl
