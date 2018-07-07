@@ -310,7 +310,7 @@ func NewCommand() (*cobra.Command, *int) {
 	daemonCommand.PersistentFlags().String("pod-ip-range", config.ViperConfig.GetString("pod-ip-range"), "pod common network interface CIDR")
 	config.ViperConfig.BindPFlag("pod-ip-range", daemonCommand.PersistentFlags().Lookup("pod-ip-range"))
 
-	daemonCommand.PersistentFlags().String("container-runtime", config.ViperConfig.GetString("container-runtime"), `container runtime interface to use (experimental: "containerd")`)
+	daemonCommand.PersistentFlags().String("container-runtime", config.ViperConfig.GetString("container-runtime"), `container runtime interface to use (experimental: "containerd"), leave empty to use docker`)
 	config.ViperConfig.BindPFlag("container-runtime", daemonCommand.PersistentFlags().Lookup("container-runtime"))
 
 	daemonCommand.PersistentFlags().StringP("clean", "c", config.ViperConfig.GetString("clean"), fmt.Sprintf("clean options before %s: %s", setupCommand.Name(), options.GetOptionNames(options.Clean{})))

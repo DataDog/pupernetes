@@ -25,6 +25,8 @@ const (
 	JobForeground = "fg"
 
 	defaultAPIAddress = "127.0.0.1:8989"
+
+	CRIContainerd = "containerd"
 )
 
 func init() {
