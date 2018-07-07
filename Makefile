@@ -3,12 +3,14 @@ CFLAGS?=-i
 GOOS=linux
 CGO_ENABLED?=0
 
-pupernetes:
+pupernetes: go-constraint
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) $(CC) build $(CFLAGS) -o $@ cmd/main.go
 
+go-constraint:
+	go version | grep "go version go1.10"
+
 clean:
-	$(RM) pupernetes
-	$(RM) pupernetes.sha512sum
+	$(RM) pupernetes pupernetes.sha512sum
 
 re: clean pupernetes
 
@@ -53,5 +55,13 @@ verify: verify-misc verify-gofmt verify-docs verify-license
 sha512sum: pupernetes
 	$@ ./$^ > $^.$@
 
-# Everything but the pupernetes target
-.PHONY: clean re gofmt docs license check verify-gofmt verify-docs verify-license verify sha512sum
+pupernetes-docker: clean
+	docker run --rm --net=host -v $(PWD):/go/src/github.com/DataDog/pupernetes -w /go/src/github.com/DataDog/pupernetes golang:1.10 make sha512sum
+
+ci-validation:
+	./.ci/pupernetes-validation.sh
+
+ci-sonobuoy:
+	./.ci/sonobuoy.sh
+
+.PHONY: clean re gofmt docs license check verify-gofmt verify-docs verify-license verify sha512sum ci-validation ci-sonobuoy go-constraint

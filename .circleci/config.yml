@@ -16,7 +16,7 @@ templates:
       SUDO_USER: "circleci"
 
 jobs:
-  make:
+  build:
     <<: *docker_job_template
     steps:
       - checkout
@@ -73,7 +73,7 @@ jobs:
       - checkout
       - run:
           name: make
-          command: make
+          command: make pupernetes-docker
       - run:
           name: apt
           command: sudo apt-get update -q && sudo apt-get install -yq systemd
@@ -128,7 +128,7 @@ jobs:
       - checkout
       - run:
           name: make
-          command: make
+          command: make pupernetes-docker
       - run:
           name: apt
           command: sudo apt-get update -q && sudo apt-get install -yq systemd
@@ -156,7 +156,7 @@ jobs:
       - checkout
       - run:
           name: make
-          command: make
+          command: make pupernetes-docker
       - run:
           name: apt
           command: sudo apt-get update -q && sudo apt-get install -yq systemd
@@ -172,7 +172,7 @@ jobs:
 
       - run:
           name: validation
-          command: ./.ci/pupernetes-validation.sh
+          command: make ci-validation
 
   sonobuoy:
     <<: *machine_job_template
@@ -180,7 +180,7 @@ jobs:
       - checkout
       - run:
           name: make
-          command: make
+          command: make pupernetes-docker
       - run:
           name: apt
           command: sudo apt-get update -q && sudo apt-get install -yq systemd
@@ -196,7 +196,7 @@ jobs:
 
       - run:
           name: sonobuoy
-          command: ./.ci/sonobuoy.sh
+          command: make ci-sonobuoy
 
       - run:
           name: reset
@@ -204,31 +204,32 @@ jobs:
 
       - run:
           name: validation
-          command: ./.ci/pupernetes-validation.sh
+          command: make ci-validation
+
 
 workflows:
   version: 2
-  tests:
+  pupernetes:
     jobs:
+      - build
       - tests
-
-  build:
-    jobs:
-      - make
-
-  verify:
-    jobs:
       - gofmt
       - docs
       - license
       - misc
-
-  daemon:
-    jobs:
-      - setup_fg
-      - run_fg
-      - run_systemd
-
-  sonobuoy:
-    jobs:
-      - sonobuoy
+      - setup_fg:
+          requires:
+            - build
+            - tests
+      - run_fg:
+          requires:
+            - build
+            - tests
+      - run_systemd:
+          requires:
+            - build
+            - tests
+      - sonobuoy:
+         requires:
+           - build
+           - tests

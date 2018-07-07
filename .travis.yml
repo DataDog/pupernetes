@@ -32,7 +32,7 @@ before_script:
 
 script:
   - sudo ./pupernetes daemon run sandbox/ -v 4 --job-type systemd --bind-address 0.0.0.0:8989 --hyperkube-version $HYPERKUBE_VERSION --kubeconfig-path $HOME/.kube/config
-  - ./.ci/pupernetes-validation.sh
+  - make ci-validation
 
 # debug commands
 after_failure:
