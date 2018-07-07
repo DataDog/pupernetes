@@ -172,6 +172,16 @@ func (e *Environment) createEnd2EndSection() []*unit2.UnitOption {
 		},
 		{
 			Section: customSystemdSection,
+			Name:    "ContainerdVersion",
+			Value:   e.binaryContainerd.version,
+		},
+		{
+			Section: customSystemdSection,
+			Name:    "RuncVersion",
+			Value:   e.binaryRunc.version,
+		},
+		{
+			Section: customSystemdSection,
 			Name:    "Timestamp",
 			Value:   strconv.Itoa(int(time.Now().Unix())),
 		},
