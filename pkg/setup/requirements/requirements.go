@@ -22,7 +22,7 @@ const (
 func checkCommand(command string, args ...string) error {
 	err := exec.Command(command, args...).Run()
 	if err != nil {
-		glog.Errorf("Unexpected error on cmd %s: %v", command, err)
+		glog.Errorf("Requirement failure: unexpected error on cmd %s: %v", command, err)
 		return err
 	}
 	return nil
@@ -66,6 +66,15 @@ func CheckRequirements() error {
 		return err
 	}
 	err = checkCommand("systemctl", "--version")
+	if err != nil {
+		return err
+	}
+	// this binary is required by CNI
+	err = checkCommand("nsenter", "--version")
+	if err != nil {
+		return err
+	}
+	err = checkCommand("iptables", "--version")
 	if err != nil {
 		return err
 	}
