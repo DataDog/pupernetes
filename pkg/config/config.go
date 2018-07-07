@@ -26,6 +26,7 @@ const (
 
 	defaultAPIAddress = "127.0.0.1:8989"
 
+	// CRIContainerd is a container runtime engine
 	CRIContainerd = "containerd"
 )
 

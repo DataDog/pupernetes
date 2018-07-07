@@ -251,7 +251,9 @@ func (e *Environment) setupNetwork() error {
 		glog.Errorf("Cannot get outboundIP: %v", err)
 		return err
 	}
+	e.nodeIP = e.outboundIP.String()
 	glog.V(4).Infof("Outbound IP is: %v", e.outboundIP.String())
+	glog.V(4).Infof("Node IP is: %v", e.nodeIP)
 
 	err = e.generateResolvConf()
 	if err != nil {

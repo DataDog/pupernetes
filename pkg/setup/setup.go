@@ -111,6 +111,7 @@ type Environment struct {
 
 	// Network
 	outboundIP            *net.IP
+	nodeIP                string
 	kubernetesClusterCIDR *net.IPNet
 	kubernetesClusterIP   *net.IP
 	podCIDR               *net.IPNet
@@ -124,17 +125,18 @@ type Environment struct {
 	kubectlLink string
 
 	// CRI
-	containerRuntimeInterface bool
+	containerRuntimeInterface string
 }
 
 type templateMetadata struct {
+	// pointers are used when fields are initialized later
 	HyperkubeImageURL        string  `json:"hyperkube-image-url"`
 	Hostname                 *string `json:"hostname"`
 	RootABSPath              *string `json:"root"`
 	ServiceClusterIPRange    string  `json:"service-cluster-ip-range"`
 	KubernetesClusterIP      string  `json:"kubernetes-cluster-ip"`
 	DNSClusterIP             string  `json:"dns-cluster-ip"`
-	NodeIP                   string  `json:"node-ip"`
+	NodeIP                   *string `json:"node-ip"`
 	KubeletRootDirABSPath    string  `json:"kubelet-root-dir"`
 	ContainerRuntime         string  `json:"container-runtime"`
 	ContainerRuntimeEndpoint string  `json:"container-runtime-endpoint"`
@@ -185,14 +187,8 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		etcdUnitName:              config.ViperConfig.GetString("systemd-unit-prefix") + "etcd.service",
 		kubeletUnitName:           config.ViperConfig.GetString("systemd-unit-prefix") + "kubelet.service",
 		kubeAPIServerUnitName:     config.ViperConfig.GetString("systemd-unit-prefix") + "kube-apiserver.service",
-		containerRuntimeInterface: config.ViperConfig.GetString("container-runtime") == "containerd", // TODO it's static to containerd
+		containerRuntimeInterface: config.ViperConfig.GetString("container-runtime"),
 	}
-
-	if e.containerRuntimeInterface {
-		e.systemdUnitNames = append(e.systemdUnitNames, fmt.Sprintf("%s%s.service", config.ViperConfig.GetString("systemd-unit-prefix"), config.ViperConfig.GetString("container-runtime")))
-	}
-	e.systemdUnitNames = append(e.systemdUnitNames, e.etcdUnitName, e.kubeAPIServerUnitName, e.kubeletUnitName)
-
 	// Kubernetes
 	e.binaryHyperkube = &exeBinary{
 		depBinary: depBinary{
@@ -294,17 +290,18 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 
 	// kubeconfig
 	if e.kubeConfigUserPath == "" {
-		kubeDirPath := path.Join(getHome(), ".kube")
-		e.kubeConfigUserPath = path.Join(kubeDirPath, "config")
+		e.kubeConfigUserPath = path.Join(getHome(), ".kube", "config")
 	}
 
 	containerRuntime := "docker"
 	ContainerRuntimeEndpoint := "/var/run/dockershim.sock"
-	if e.containerRuntimeInterface {
-		// TODO static to containerd
+	if e.containerRuntimeInterface == config.CRIContainerd {
 		containerRuntime = "remote"
 		ContainerRuntimeEndpoint = "/run/containerd/containerd.sock"
+		e.systemdUnitNames = append(e.systemdUnitNames, fmt.Sprintf("%s%s.service", e.systemdUnitPrefix, e.containerRuntimeInterface))
 	}
+	e.systemdUnitNames = append(e.systemdUnitNames, e.etcdUnitName, e.kubeAPIServerUnitName, e.kubeletUnitName)
+
 	// Template for manifests
 	e.templateMetadata = &templateMetadata{
 		// TODO conf this
@@ -316,8 +313,8 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		DNSClusterIP:             e.dnsClusterIP.String(),
 		KubeletRootDirABSPath:    e.kubeletRootDir,
 		ContainerRuntime:         containerRuntime,
-		ContainerRuntimeEndpoint: ContainerRuntimeEndpoint, // TODO
-		// NodeIP: during network phase
+		ContainerRuntimeEndpoint: ContainerRuntimeEndpoint,
+		NodeIP: &e.nodeIP, // initialized later
 	}
 
 	// Vault root token
