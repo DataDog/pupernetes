@@ -27,6 +27,7 @@ goget:
 	@which ineffassign || go get github.com/gordonklaus/ineffassign
 	@which golint || go get golang.org/x/lint/golint
 	@which misspell || go get github.com/client9/misspell/cmd/misspell
+	@which wwhrd || go get github.com/frapposelli/wwhrd
 
 # Private targets
 PKG=.cmd .pkg .docs
@@ -47,7 +48,7 @@ verify-gofmt:
 verify-docs:
 	./scripts/verify/docs.sh
 
-verify-license:
+verify-license: goget
 	./scripts/verify/license.sh
 
 verify: verify-misc verify-gofmt verify-docs verify-license
@@ -55,8 +56,8 @@ verify: verify-misc verify-gofmt verify-docs verify-license
 sha512sum: pupernetes
 	$@ ./$^ > $^.$@
 
-pupernetes-docker: clean
-	docker run --rm --net=host -v $(PWD):/go/src/github.com/DataDog/pupernetes -w /go/src/github.com/DataDog/pupernetes golang:1.10 make sha512sum
+pupernetes-docker:
+	docker run --rm --net=host -v $(PWD):/go/src/github.com/DataDog/pupernetes -w /go/src/github.com/DataDog/pupernetes golang:1.10 make
 
 ci-validation:
 	./.ci/pupernetes-validation.sh

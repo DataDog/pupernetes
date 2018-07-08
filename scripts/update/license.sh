@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
-set -ex
+set -exo pipefail
 
 export LC_ALL=C
-
-go get github.com/frapposelli/wwhrd
 
 cd $(dirname $0)/../..
 
