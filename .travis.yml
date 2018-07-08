@@ -18,16 +18,16 @@ env:
 #    - HYPERKUBE_VERSION=1.6.6 TODO there are some kubelet issues
 #    - HYPERKUBE_VERSION=1.5.6 TODO there are some kubelet issues
 
+cache:
+  directories:
+  - ~/util-linux
+
 before_install:
   - sudo apt-get update
 
 install:
   - sudo apt-get install -yq systemd libseccomp2 curl autopoint
-
-  - mkdir -pv ~/util-linux
-  - curl -Lf https://www.kernel.org/pub/linux/utils/util-linux/v2.24/util-linux-2.24.1.tar.gz | tar -xz --strip-component 1 -C ~/util-linux
-  - ~/util-linux/autogen.sh
-  - pushd ~/util-linux/ && ./configure --without-python --disable-all-programs --enable-nsenter && popd
+  - ls -l ~/util-linux || bash -xec "mkdir -pv ~/util-linux && curl -Lf https://www.kernel.org/pub/linux/utils/util-linux/v2.24/util-linux-2.24.1.tar.gz | tar -xz --strip-component 1 -C ~/util-linux && ~/util-linux/autogen.sh && pushd ~/util-linux/ && ./configure --without-python --disable-all-programs --enable-nsenter && popd"
   - make -C ~/util-linux -j nsenter
   - sudo cp -v ~/util-linux/nsenter /usr/local/bin
 
