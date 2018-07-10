@@ -40,7 +40,10 @@ Compile statically the binary and generate the sha512sum.
 CGO_ENABLED=0 make sha512sum
 
 # or using docker
-docker run --rm -v "$GOPATH":/go -w /go/src/github.com/DataDog/pupernetes golang:1.10 make sha512sum
+docker run --rm -v "$GOPATH":/go -w /go/src/github.com/DataDog/pupernetes golang:1.10 make re sha512sum
+
+# equivalent to
+make pupernetes-docker
 ```
 
 Check the shared object dependencies:
