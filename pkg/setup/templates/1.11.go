@@ -296,6 +296,64 @@ spec:
 			Name:        "kube-proxy.yaml",
 			Destination: ManifestAPI,
 			Content: []byte(`---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kube-proxy
+  namespace: kube-system
+data:
+  config.yaml: |
+    apiVersion: kubeproxy.config.k8s.io/v1alpha1
+    kind: KubeProxyConfiguration
+    bindAddress: 0.0.0.0
+    clientConnection:
+      kubeconfig: /var/lib/kubernetes/kubeconfig.yaml
+    clusterCIDR: "{{ .ServiceClusterIPRange }}"
+    healthzBindAddress: 0.0.0.0:10256
+    hostnameOverride: "{{ .Hostname }}"
+    iptables:
+      masqueradeAll: true
+    metricsBindAddress: 127.0.0.1:10249
+    mode: iptables
+
+  kubeconfig.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: kube
+        cluster:
+          server: https://127.0.0.1:6443
+          certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    users:
+      - name: service-account
+        user:
+          tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    contexts:
+      - name: kube
+        context:
+          cluster: kube
+          user: service-account
+    current-context: kube
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-proxy
+  namespace: kube-system
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: system:kube-proxy
+subjects:
+  - kind: ServiceAccount
+    name: kube-proxy
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: system:node-proxier
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
@@ -308,6 +366,7 @@ spec:
         app: kube-proxy
     spec:
       hostNetwork: true
+      serviceAccountName: kube-proxy
       containers:
       - name: kube-proxy
         image: "{{ .HyperkubeImageURL }}"
@@ -315,11 +374,12 @@ spec:
         command:
         - /hyperkube
         - proxy
-        - --master=http://127.0.0.1:8080
-        - --proxy-mode=iptables
-        - --masquerade-all
+        - --config=/var/lib/kubernetes/config.yaml
         securityContext:
           privileged: true
+        volumeMounts:
+        - name: config
+          mountPath: /var/lib/kubernetes/
         livenessProbe:
           httpGet:
             path: /healthz
@@ -333,6 +393,10 @@ spec:
             cpu: "50m"
           limits:
             cpu: "100m"
+      volumes:
+      - name: config
+        configMap:
+          name: kube-proxy
 `),
 		},
 		{
