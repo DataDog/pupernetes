@@ -308,38 +308,14 @@ data:
     kind: KubeProxyConfiguration
     bindAddress: 0.0.0.0
     clientConnection:
-      acceptContentTypes: ""
-      burst: 10
-      contentType: application/vnd.kubernetes.protobuf
       kubeconfig: /var/lib/kubernetes/kubeconfig.yaml
-      qps: 5
     clusterCIDR: "{{ .ServiceClusterIPRange }}"
-    configSyncPeriod: 15m0s
-    conntrack:
-      max: 0
-      maxPerCore: 32768
-      min: 131072
-      tcpCloseWaitTimeout: 1h0m0s
-      tcpEstablishedTimeout: 24h0m0s
-    enableProfiling: false
     healthzBindAddress: 0.0.0.0:10256
-    hostnameOverride: ""
+    hostnameOverride: "{{ .Hostname }}"
     iptables:
       masqueradeAll: true
-      masqueradeBit: 14
-      minSyncPeriod: 0s
-      syncPeriod: 30s
-    ipvs:
-      minSyncPeriod: 0s
-      scheduler: ""
-      syncPeriod: 30s
     metricsBindAddress: 127.0.0.1:10249
     mode: iptables
-    nodePortAddresses: null
-    oomScoreAdj: -999
-    portRange: ""
-    resourceContainer: /kube-proxy
-    udpIdleTimeout: 250ms
 
   kubeconfig.yaml: |
     apiVersion: v1
