@@ -280,6 +280,7 @@ func (e *Environment) setupDirectories() error {
 		e.secretsABSPath,
 		e.networkABSPath,
 		e.kubeletRootDir,
+		KubeletCRILogPath,
 	} {
 		glog.V(4).Infof("Creating directory: %s", dir)
 		err := os.MkdirAll(dir, os.ModePerm)
