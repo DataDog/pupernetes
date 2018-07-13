@@ -84,7 +84,7 @@ A recent systemd version is better to gain:
 
 Ensure your hostname is discoverable:
 ```bash
-dig $(hostname) -short
+dig $(hostname) +short
 ```
 
 ### Development
