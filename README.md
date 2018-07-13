@@ -173,8 +173,8 @@ These are the current supported versions:
 - [x] 1.9
 - [x] 1.8
 - [x] 1.7
-- [x] 1.6
-- [x] 1.5
+- [x] 1.6 (experimental)
+- [x] 1.5 (experimental)
 - [ ] 1.4
 - [ ] 1.3
 
