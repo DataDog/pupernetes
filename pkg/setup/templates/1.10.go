@@ -70,7 +70,8 @@ ExecStart={{.RootABSPath}}/bin/hyperkube apiserver \
 	--service-account-key-file={{.RootABSPath}}/secrets/service-accounts.rsa \
 	--kubelet-client-certificate={{.RootABSPath}}/secrets/kubernetes.certificate \
 	--kubelet-client-key={{.RootABSPath}}/secrets/kubernetes.private_key \
-	--requestheader-client-ca-file={{.RootABSPath}}/secrets/kube-controller-manager.bundle \
+	--kubelet-https \
+	--requestheader-client-ca-file={{.RootABSPath}}/secrets/kubernetes.issuing_ca \
 	--requestheader-allowed-names=aggregator,e2e,p8s \
 	--requestheader-extra-headers-prefix=X-Remote-Extra- \
 	--requestheader-group-headers=X-Remote-Group \
@@ -214,9 +215,9 @@ spec:
     - --leader-elect-lease-duration=150s
     - --leader-elect-renew-deadline=100s
     - --leader-elect-retry-period=20s
-    - --cluster-signing-cert-file=/etc/secrets/kube-controller-manager.certificate
-    - --cluster-signing-key-file=/etc/secrets/kube-controller-manager.private_key
-    - --root-ca-file=/etc/secrets/kube-controller-manager.bundle
+    - --cluster-signing-cert-file=/etc/secrets/pupernetes.certificate
+    - --cluster-signing-key-file=/etc/secrets/pupernetes.private_key
+    - --root-ca-file=/etc/secrets/pupernetes.issuing_ca
     - --service-account-private-key-file=/etc/secrets/service-accounts.rsa
     - --concurrent-deployment-syncs=2
     - --concurrent-endpoint-syncs=2
