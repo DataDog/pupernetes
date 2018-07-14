@@ -72,7 +72,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube apiserver \
 	--kubelet-client-key={{.RootABSPath}}/secrets/kubernetes.private_key \
 	--kubelet-https \
 	--requestheader-client-ca-file={{.RootABSPath}}/secrets/kubernetes.issuing_ca \
-	--requestheader-allowed-names=aggregator,e2e,p8s \
+	--requestheader-allowed-names=aggregator,p8s \
 	--requestheader-extra-headers-prefix=X-Remote-Extra- \
 	--requestheader-group-headers=X-Remote-Group \
 	--requestheader-username-headers=X-Remote-User \

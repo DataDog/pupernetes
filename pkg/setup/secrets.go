@@ -116,17 +116,17 @@ func (e *Environment) generateVaultPKI() error {
 	certificate := []byte(sec.Data["certificate"].(string))
 	issuingCA := []byte(sec.Data["issuing_ca"].(string))
 
-	err = ioutil.WriteFile(path.Join(e.secretsABSPath, rootCertificateAuthorityName+".private_key"), privateKey, 0444)
+	err = ioutil.WriteFile(path.Join(e.secretsABSPath, rootCertificateAuthorityName+".private_key"), privateKey, 0400)
 	if err != nil {
 		glog.Errorf("Cannot write secret file: %v", err)
 		return err
 	}
-	err = ioutil.WriteFile(path.Join(e.secretsABSPath, rootCertificateAuthorityName+".certificate"), certificate, 0444)
+	err = ioutil.WriteFile(path.Join(e.secretsABSPath, rootCertificateAuthorityName+".certificate"), certificate, 0400)
 	if err != nil {
 		glog.Errorf("Cannot write secret file: %v", err)
 		return err
 	}
-	err = ioutil.WriteFile(path.Join(e.secretsABSPath, rootCertificateAuthorityName+".issuing_ca"), issuingCA, 0444)
+	err = ioutil.WriteFile(path.Join(e.secretsABSPath, rootCertificateAuthorityName+".issuing_ca"), issuingCA, 0400)
 	if err != nil {
 		glog.Errorf("Cannot write secret file: %v", err)
 		return err
@@ -177,15 +177,6 @@ func (e *Environment) generateSecretFor(vRaw *vault.Client, vClient *vault.Logic
 		}
 		glog.V(4).Infof("Successfully created %s", certABSPath)
 	}
-
-	// Creating the pem_bundle
-	certificate := []byte(sec.Data["certificate"].(string))
-	issuingCA := []byte(sec.Data["issuing_ca"].(string))
-	err = ioutil.WriteFile(path.Join(e.secretsABSPath, component+".bundle"), append(certificate, issuingCA...), 0444)
-	if err != nil {
-		glog.Errorf("Cannot write secret file: %v", err)
-		return err
-	}
 	return nil
 }
 
@@ -197,7 +188,7 @@ func (e *Environment) generateServiceAccountRSA() error {
 		return nil
 	}
 
-	rsaFile, err := os.OpenFile(rsaPath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0444)
+	rsaFile, err := os.OpenFile(rsaPath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0400)
 	if err != nil {
 		glog.Errorf("Cannot open file for rsa: %v", err)
 		return err

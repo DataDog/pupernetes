@@ -71,6 +71,14 @@ ExecStart={{.RootABSPath}}/bin/hyperkube apiserver \
 	--kubelet-client-certificate={{.RootABSPath}}/secrets/kubernetes.certificate \
 	--kubelet-client-key={{.RootABSPath}}/secrets/kubernetes.private_key \
 	--kubelet-https \
+	--requestheader-client-ca-file={{.RootABSPath}}/secrets/kubernetes.issuing_ca \
+	--requestheader-allowed-names=aggregator,p8s \
+	--requestheader-extra-headers-prefix=X-Remote-Extra- \
+	--requestheader-group-headers=X-Remote-Group \
+	--requestheader-username-headers=X-Remote-User \
+	--proxy-client-cert-file={{.RootABSPath}}/secrets/kubernetes.certificate \
+	--proxy-client-key-file={{.RootABSPath}}/secrets/kubernetes.private_key \
+	--kubelet-https \
 	--kubelet-certificate-authority={{.RootABSPath}}/secrets/kubernetes.issuing_ca \
 	--target-ram-mb=0 \
 	--watch-cache=false \
@@ -79,6 +87,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube apiserver \
 	--deserialization-cache-size=0 \
 	--audit-log-path=- \
 	--audit-policy-file={{.RootABSPath}}/manifest-config/audit.yaml \
+	--etcd-compaction-interval=0 \
 	--event-ttl=10m \
 
 Restart=no
@@ -218,6 +227,7 @@ spec:
     - --concurrent-resource-quota-syncs=2
     - --concurrent-service-syncs=1
     - --concurrent-serviceaccount-token-syncs=2
+    - --horizontal-pod-autoscaler-use-rest-clients=true
     volumeMounts:
       - name: secrets
         mountPath: /etc/secrets
