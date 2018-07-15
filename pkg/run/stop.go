@@ -111,7 +111,7 @@ func (r *Runtime) drainingPods() error {
 	stateTicker := time.NewTicker(3 * time.Second)
 	defer stateTicker.Stop()
 
-	timeoutDelay := r.waitKubeletGC
+	timeoutDelay := r.conf.WaitKubeletGC
 	if !r.isAPIServerHookDone() {
 		timeoutDelay = timeoutDelay / 3
 		glog.Warningf("APIserver hooks aren't deployed, RBAC-less? Lowering the timeout to %s for static pods polling", timeoutDelay.String())

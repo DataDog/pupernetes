@@ -27,12 +27,12 @@ func (r *Runtime) applyManifests() error {
 }
 
 func (r *Runtime) checkInClusterDNS() error {
-	if r.dnsQueriesForReadiness == nil {
+	if r.conf.DNSQueryForReadiness == nil {
 		glog.V(2).Infof("No dns query supplied for readiness condition, skipping")
 		return nil
 	}
 	c := dns.Client{Timeout: time.Millisecond * 500}
-	for _, query := range r.dnsQueriesForReadiness {
+	for _, query := range r.conf.DNSQueryForReadiness {
 		if !strings.HasSuffix(query, ".") {
 			// dns: domain must be fully qualified
 			query = query + "."
