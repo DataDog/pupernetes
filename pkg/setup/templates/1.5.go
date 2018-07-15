@@ -152,19 +152,6 @@ users:
 `),
 		},
 		{
-			Name:        "audit.yaml",
-			Destination: ManifestConfig,
-			Content: []byte(`---
-apiVersion: audit.k8s.io/v1beta1
-kind: Policy
-rules:
-- level: Metadata
-  resources:
-  - group: ""
-    resources: ["pods/log", "pods/exec"]
-`),
-		},
-		{
 			Name: "kube-controller-manager.yaml",
 			// automountServiceAccountToken: false
 			// doesn't exist so we need to use a static pod

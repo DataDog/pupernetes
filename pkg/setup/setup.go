@@ -37,6 +37,7 @@ const (
 	defaultEtcdDataDirName        = "etcd-data"
 	defaultSecretDirName          = "secrets"
 	defaultNetworkDirName         = "net.d"
+	defaultLogsDirName            = "logs"
 
 	defaultKubectlClusterName = "p8s"
 	defaultKubectlUserName    = "p8s"
@@ -57,6 +58,7 @@ type Environment struct {
 	manifestConfigABSPath    string
 	secretsABSPath           string
 	networkABSPath           string
+	logsABSPath              string
 
 	kubeletRootDir string
 
@@ -153,6 +155,7 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		kubeletRootDir:           config.ViperConfig.GetString("kubelet-root-dir"),
 		secretsABSPath:           path.Join(rootABSPath, defaultSecretDirName),
 		networkABSPath:           path.Join(rootABSPath, defaultNetworkDirName),
+		logsABSPath:              path.Join(rootABSPath, defaultLogsDirName),
 		templateVersion:          getMajorMinorVersion(config.ViperConfig.GetString("hyperkube-version")),
 
 		kubeConfigUserPath:     config.ViperConfig.GetString("kubeconfig-path"),
@@ -281,6 +284,7 @@ func (e *Environment) setupDirectories() error {
 		e.networkABSPath,
 		e.kubeletRootDir,
 		KubeletCRILogPath,
+		e.logsABSPath,
 	} {
 		glog.V(4).Infof("Creating directory: %s", dir)
 		err := os.MkdirAll(dir, os.ModePerm)

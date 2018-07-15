@@ -155,19 +155,6 @@ users:
 `),
 		},
 		{
-			Name:        "audit.yaml",
-			Destination: ManifestConfig,
-			Content: []byte(`---
-apiVersion: audit.k8s.io/v1beta1
-kind: Policy
-rules:
-- level: Metadata
-  resources:
-  - group: ""
-    resources: ["pods/log", "pods/exec"]
-`),
-		},
-		{
 			Name:        "kube-controller-manager.yaml",
 			Destination: ManifestAPI,
 			Content: []byte(`---
