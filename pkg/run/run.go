@@ -34,14 +34,14 @@ type Config struct {
 	// RunTimeout is the total time to run
 	RunTimeout time.Duration
 
-	// WaitKubeletGC is the duration period to wait until the kubelet is garbage collected
-	WaitKubeletGC time.Duration
+	// KubeletGCTimeout is the duration period to wait until the kubelet is garbage collected
+	KubeletGCTimeout time.Duration
 
-	// DNSQueryForReadiness are the dns query to execute to ack the readiness
-	DNSQueryForReadiness []string
+	// ReadinessDNSQueries are the dns query to execute to ack the readiness
+	ReadinessDNSQueries []string
 
-	// SkipProbe allows to discard any check on the environment to keep running
-	SkipProbe bool
+	// SkipProbes allows to discard any check on the environment to keep running
+	SkipProbes bool
 }
 
 // Runtime is the main state to execute a managed pupernetes Run
@@ -139,7 +139,7 @@ func (r *Runtime) Run() error {
 
 		case <-probeTick.C:
 			_, err := r.probeUnitStatuses()
-			if err != nil && !r.conf.SkipProbe {
+			if err != nil && !r.conf.SkipProbes {
 				r.SigChan <- syscall.SIGTERM
 				continue
 			}
@@ -148,7 +148,7 @@ func (r *Runtime) Run() error {
 				continue
 			}
 			failures := r.state.GetKubeletProbeFail()
-			if failures >= appProbeThreshold && !r.conf.SkipProbe {
+			if failures >= appProbeThreshold && !r.conf.SkipProbes {
 				glog.Warningf("Probing failed, stopping ...")
 				// display some helpers to investigate:
 				glog.Infof("Investigate the kubelet logs with: journalctl -u %skubelet.service -o cat -e --no-pager", r.env.GetSystemdUnitPrefix())
