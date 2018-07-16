@@ -78,7 +78,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube apiserver \
 	--default-watch-cache-size=0 \
 	--watch-cache-sizes="" \
 	--deserialization-cache-size=0 \
-	--audit-log-path=- \
+	--audit-log-path={{.RootABSPath}}/logs/audit.log \
 	--audit-policy-file={{.RootABSPath}}/manifest-config/audit.yaml \
 	--event-ttl=10m \
 
@@ -165,7 +165,7 @@ rules:
 - level: Metadata
   resources:
   - group: ""
-    resources: ["pods/log", "pods/exec"]
+    resources: ["*"]
 `),
 		},
 		{

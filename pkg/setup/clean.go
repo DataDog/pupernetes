@@ -118,6 +118,9 @@ func (e *Environment) Clean() error {
 	if e.cleanOptions.Network {
 		toRemove = append(toRemove, e.networkABSPath)
 	}
+	if e.cleanOptions.Logs {
+		toRemove = append(toRemove, e.logsABSPath)
+	}
 	if e.cleanOptions.Systemd {
 		glog.V(3).Infof("Shutting down systemd units")
 		conn, err := dbus.NewSystemdConnection()

@@ -34,7 +34,7 @@ pupernetes daemon clean /opt/state/ -c etcd,network,secrets
 ### Options inherited from parent commands
 
 ```
-  -c, --clean string                 clean options before setup: binaries,etcd,iptables,kubectl,kubelet,manifests,mounts,network,secrets,systemd,all,none (default "etcd,kubelet,mounts,iptables")
+  -c, --clean string                 clean options before setup: binaries,etcd,iptables,kubectl,kubelet,logs,manifests,mounts,network,secrets,systemd,all,none (default "etcd,kubelet,logs,mounts,iptables")
       --cni-version string           container network interface (cni) version (default "0.7.0")
       --download-timeout string      timeout for each downloaded archive (default "30m0s")
       --etcd-version string          etcd version (default "3.1.11")

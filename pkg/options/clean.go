@@ -28,6 +28,7 @@ type Clean struct {
 	Kubectl   bool `json:"kubectl,omitempty"`
 	Mounts    bool `json:"mounts,omitempty"`
 	Iptables  bool `json:"iptables,omitempty"`
+	Logs      bool `json:"logs,omitempty"`
 }
 
 // NewCleanOptions instantiate a new Clean from the cleanString
