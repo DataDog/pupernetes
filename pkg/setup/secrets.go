@@ -32,29 +32,28 @@ var pemParts = []string{"certificate", "issuing_ca", "private_key"}
 func tearDownCommand(cmd *exec.Cmd, originalErr error) error {
 	glog.V(4).Infof("Stopping vault")
 	cmd.Process.Signal(syscall.SIGTERM)
-	select {
-	case <-time.After(0):
-		err := cmd.Wait()
-		if err == nil {
-			return originalErr
-		}
-		glog.Errorf("Unexpected error during vault shutdown: %v", err)
-		return err
-	case <-time.After(time.Second * 10):
-		glog.Warningf("Timeout, SIGKILL vault")
-		cmd.Process.Signal(syscall.SIGKILL)
-		err := cmd.Wait()
-		if err == nil {
-			return fmt.Errorf("timeout during the vault shutdown")
-		}
-		glog.Errorf("Unexpected error during vault timeout shutdown: %v", err)
-		return err
+
+	err := cmd.Wait()
+	if err == nil {
+		return originalErr
 	}
+	glog.Errorf("Unexpected error during vault shutdown: %v", err)
+	cmd.Process.Signal(syscall.SIGKILL)
+	err = cmd.Wait()
+	if err == nil {
+		return fmt.Errorf("error during the vault shutdown: SIGKILL")
+	}
+	glog.Errorf("Unexpected error during vault timeout shutdown: %v", err)
+	return err
 }
 
 func waitForUnseal(vRaw *vault.Client) error {
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
+
+	timeout := time.NewTimer(time.Second * 5)
+	defer timeout.Stop()
+
 	for {
 		select {
 		case <-ticker.C:
@@ -63,82 +62,12 @@ func waitForUnseal(vRaw *vault.Client) error {
 				return nil
 			}
 			glog.Warningf("Vault still not ready: %v", err)
-		case <-time.After(time.Second * 5):
+		case <-timeout.C:
 			err := fmt.Errorf("timeout awaiting vault")
 			glog.Errorf("%v", err)
 			return err
 		}
 	}
-}
-
-func (e *Environment) createIntermediateCertificateAuthority(vRaw *vault.Client, vClient *vault.Logical, certificateAuthorityName string) error {
-	glog.V(3).Infof("Mounting %s intermediate CA", certificateAuthorityName)
-	err := vRaw.Sys().Mount(certificateAuthorityName, &vault.MountInput{
-		Config:     vault.MountConfigInput{MaxLeaseTTL: "87600h"},
-		Type:       "pki",
-		PluginName: "pki",
-	})
-	if err != nil {
-		glog.Errorf("Cannot mount pki: %v", err)
-		return err
-	}
-
-	glog.V(3).Infof("Creating %s intermediate CA", certificateAuthorityName)
-	intermediateCAConf := make(map[string]interface{})
-	intermediateCAConf["common_name"] = "p8s"
-	intermediateCAConf["ttl"] = "87600h"
-	intermediateSec, err := vClient.Write(certificateAuthorityName+"/intermediate/generate/exported", intermediateCAConf)
-	if err != nil {
-		glog.Errorf("Cannot write: %v", err)
-		return err
-	}
-	glog.V(4).Infof("Generated %s intermediate CSR:\n%s", certificateAuthorityName, intermediateSec.Data["csr"])
-	err = ioutil.WriteFile(path.Join(e.secretsABSPath, certificateAuthorityName+".private_key"), []byte(intermediateSec.Data["private_key"].(string)), 0444)
-	if err != nil {
-		glog.Errorf("Cannot write secret file: %v", err)
-		return err
-	}
-
-	// https://www.vaultproject.io/api/secret/pki/index.html#sign-intermediate
-	csrConf := make(map[string]interface{})
-	csrConf["common_name"] = "p8s"
-	csrConf["ttl"] = "87600h"
-	csrConf["format"] = "pem"
-	csrConf["csr"] = intermediateSec.Data["csr"]
-	intermediateSec, err = vClient.Write(rootCertificateAuthorityName+"/root/sign-intermediate", csrConf)
-	if err != nil {
-		glog.Errorf("Cannot write: %v", err)
-		return err
-	}
-
-	// Debug lines
-	glog.V(4).Infof("Intermediate CSR of %s signed", certificateAuthorityName)
-	for key, val := range intermediateSec.Data {
-		glog.V(4).Infof("%s:%s", key, val)
-	}
-
-	certificate := []byte(intermediateSec.Data["certificate"].(string))
-	issuingCA := []byte(intermediateSec.Data["issuing_ca"].(string))
-	err = ioutil.WriteFile(path.Join(e.secretsABSPath, certificateAuthorityName+".certificate"), certificate, 0444)
-	if err != nil {
-		glog.Errorf("Cannot write secret file: %v", err)
-		return err
-	}
-	err = ioutil.WriteFile(path.Join(e.secretsABSPath, certificateAuthorityName+".issuing_ca"), issuingCA, 0444)
-	if err != nil {
-		glog.Errorf("Cannot write secret file: %v", err)
-		return err
-	}
-
-	// Creating the pem_bundle
-	err = ioutil.WriteFile(path.Join(e.secretsABSPath, certificateAuthorityName+".bundle"), append(certificate, issuingCA...), 0444)
-	if err != nil {
-		glog.Errorf("Cannot write secret file: %v", err)
-		return err
-	}
-
-	glog.V(4).Infof("Wrote all needed files for %s CA", certificateAuthorityName)
-	return nil
 }
 
 func (e *Environment) generateVaultPKI() error {
@@ -158,9 +87,7 @@ func (e *Environment) generateVaultPKI() error {
 	}
 
 	/*
-		The ROOT CA is pupernetes, then an intermediate CA is created for the kube-controller-manager.
-		The kube-controller-manager needs to be a CA to sign certificates through the Kubernetes API.
-
+		The ROOT CA is pupernetes.
 		The certificates for etcd and kubernetes are issued against the pupernetes ROOT CA.
 	*/
 
@@ -179,16 +106,29 @@ func (e *Environment) generateVaultPKI() error {
 	rootCAConf := make(map[string]interface{})
 	rootCAConf["common_name"] = "p8s"
 	rootCAConf["ttl"] = "87600h"
-	_, err = vClient.Write(rootCertificateAuthorityName+"/root/generate/internal", rootCAConf)
+	sec, err := vClient.Write(rootCertificateAuthorityName+"/root/generate/exported", rootCAConf)
 	if err != nil {
 		glog.Errorf("Cannot write: %v", err)
 		return err
 	}
 
-	// Intermediate CA - kube-controller-manager
-	err = e.createIntermediateCertificateAuthority(vRaw, vClient, "kube-controller-manager")
+	privateKey := []byte(sec.Data["private_key"].(string))
+	certificate := []byte(sec.Data["certificate"].(string))
+	issuingCA := []byte(sec.Data["issuing_ca"].(string))
+
+	err = ioutil.WriteFile(path.Join(e.secretsABSPath, rootCertificateAuthorityName+".private_key"), privateKey, 0400)
 	if err != nil {
-		glog.Errorf("Fail to create the Intermediate CA: %v", err)
+		glog.Errorf("Cannot write secret file: %v", err)
+		return err
+	}
+	err = ioutil.WriteFile(path.Join(e.secretsABSPath, rootCertificateAuthorityName+".certificate"), certificate, 0400)
+	if err != nil {
+		glog.Errorf("Cannot write secret file: %v", err)
+		return err
+	}
+	err = ioutil.WriteFile(path.Join(e.secretsABSPath, rootCertificateAuthorityName+".issuing_ca"), issuingCA, 0400)
+	if err != nil {
+		glog.Errorf("Cannot write secret file: %v", err)
 		return err
 	}
 
@@ -237,20 +177,10 @@ func (e *Environment) generateSecretFor(vRaw *vault.Client, vClient *vault.Logic
 		}
 		glog.V(4).Infof("Successfully created %s", certABSPath)
 	}
-
-	// Creating the pem_bundle
-	certificate := []byte(sec.Data["certificate"].(string))
-	issuingCA := []byte(sec.Data["issuing_ca"].(string))
-	err = ioutil.WriteFile(path.Join(e.secretsABSPath, component+".bundle"), append(certificate, issuingCA...), 0444)
-	if err != nil {
-		glog.Errorf("Cannot write secret file: %v", err)
-		return err
-	}
 	return nil
 }
 
 func (e *Environment) generateServiceAccountRSA() error {
-	// TODO use golang for that
 	rsaPath := path.Join(e.secretsABSPath, "service-accounts.rsa")
 	_, err := os.Stat(rsaPath)
 	if err == nil {
@@ -258,7 +188,7 @@ func (e *Environment) generateServiceAccountRSA() error {
 		return nil
 	}
 
-	rsaFile, err := os.OpenFile(rsaPath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0444)
+	rsaFile, err := os.OpenFile(rsaPath, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0400)
 	if err != nil {
 		glog.Errorf("Cannot open file for rsa: %v", err)
 		return err
