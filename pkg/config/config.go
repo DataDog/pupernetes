@@ -47,6 +47,7 @@ func init() {
 	ViperConfig.SetDefault("clean", "etcd,kubelet,logs,mounts,iptables")
 	ViperConfig.SetDefault("drain", "all")
 	ViperConfig.SetDefault("run-timeout", time.Hour*7)
+	ViperConfig.SetDefault("skip-probes", false)
 	ViperConfig.SetDefault("gc", time.Second*60)
 
 	// The supported job-type are "fg" and "systemd"

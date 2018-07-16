@@ -146,7 +146,12 @@ func NewCommand() (*cobra.Command, *int) {
 			if config.ViperConfig.GetBool("dns-check") {
 				dnsQuery = config.ViperConfig.GetStringSlice("dns-queries")
 			}
-			r, err := run.NewRunner(env, config.ViperConfig.GetDuration("run-timeout"), config.ViperConfig.GetDuration("gc"), dnsQuery)
+			r, err := run.NewRunner(env, &run.Config{
+				RunTimeout:          config.ViperConfig.GetDuration("run-timeout"),
+				KubeletGCTimeout:    config.ViperConfig.GetDuration("gc"),
+				ReadinessDNSQueries: dnsQuery,
+				SkipProbes:          config.ViperConfig.GetBool("skip-probes"),
+			})
 			if err != nil {
 				exitCode = 2
 				return
@@ -334,6 +339,9 @@ func NewCommand() (*cobra.Command, *int) {
 
 	runCommand.PersistentFlags().Bool("dns-check", config.ViperConfig.GetBool("dns-check"), "needed dns queries to notify readiness")
 	config.ViperConfig.BindPFlag("dns-check", runCommand.PersistentFlags().Lookup("dns-check"))
+
+	runCommand.PersistentFlags().Bool("skip-probes", config.ViperConfig.GetBool("skip-probes"), "skip probing systemd units and kubelet healthz")
+	config.ViperConfig.BindPFlag("skip-probes", runCommand.PersistentFlags().Lookup("skip-probes"))
 
 	// Reset
 	rootCommand.AddCommand(resetCommand)

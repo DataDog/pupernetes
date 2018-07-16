@@ -29,19 +29,33 @@ const (
 	appProbeThreshold = 10
 )
 
+// Config for the Runtime
+type Config struct {
+	// RunTimeout is the total time to run
+	RunTimeout time.Duration
+
+	// KubeletGCTimeout is the duration period to wait until the kubelet is garbage collected
+	KubeletGCTimeout time.Duration
+
+	// ReadinessDNSQueries are the dns query to execute to ack the readiness
+	ReadinessDNSQueries []string
+
+	// SkipProbes allows to discard any check on the environment to keep running
+	SkipProbes bool
+}
+
 // Runtime is the main state to execute a managed pupernetes Run
 type Runtime struct {
 	env *setup.Environment
 
+	conf *Config
+
 	api *http.Server
 
-	SigChan                chan os.Signal
-	httpClient             *http.Client
-	state                  *state.State
-	runTimeout             time.Duration
-	dnsQueriesForReadiness []string
-	waitKubeletGC          time.Duration
-	kubeDeleteOption       *v1.DeleteOptions
+	SigChan          chan os.Signal
+	httpClient       *http.Client
+	state            *state.State
+	kubeDeleteOption *v1.DeleteOptions
 
 	runTimestamp       time.Time
 	journalTailerMutex sync.RWMutex
@@ -51,7 +65,7 @@ type Runtime struct {
 }
 
 // NewRunner instantiate a new Runtimer with the given Environment
-func NewRunner(env *setup.Environment, runTimeout, waitKubeletGC time.Duration, dnsQueryForReadiness []string) (*Runtime, error) {
+func NewRunner(env *setup.Environment, conf *Config) (*Runtime, error) {
 	var zero int64
 
 	s, err := state.NewState()
@@ -67,9 +81,7 @@ func NewRunner(env *setup.Environment, runTimeout, waitKubeletGC time.Duration, 
 		httpClient: &http.Client{
 			Timeout: time.Millisecond * 500,
 		},
-		runTimeout:             runTimeout,
-		dnsQueriesForReadiness: dnsQueryForReadiness,
-		waitKubeletGC:          waitKubeletGC,
+		conf: conf,
 		kubeDeleteOption: &v1.DeleteOptions{
 			GracePeriodSeconds: &zero,
 		},
@@ -88,8 +100,8 @@ func (r *Runtime) Run() error {
 
 	defer close(r.ApplyChan)
 
-	glog.Infof("Timeout for this current run is %s", r.runTimeout.String())
-	timeoutTimer := time.NewTimer(r.runTimeout)
+	glog.Infof("Timeout for this current run is %s", r.conf.RunTimeout.String())
+	timeoutTimer := time.NewTimer(r.conf.RunTimeout)
 	defer timeoutTimer.Stop()
 
 	go r.api.ListenAndServe()
@@ -122,10 +134,13 @@ func (r *Runtime) Run() error {
 			return r.Stop(nil)
 
 		case <-timeoutTimer.C:
-			glog.Warningf("Timeout %s reached, stopping ...", r.runTimeout.String())
-			return r.Stop(fmt.Errorf("timeout reached during run phase: %s", r.runTimeout.String()))
+			glog.Warningf("Timeout %s reached, stopping ...", r.conf.RunTimeout.String())
+			return r.Stop(fmt.Errorf("timeout reached during run phase: %s", r.conf.RunTimeout.String()))
 
 		case <-probeTick.C:
+			if r.conf.SkipProbes {
+				continue
+			}
 			_, err := r.probeUnitStatuses()
 			if err != nil {
 				r.SigChan <- syscall.SIGTERM
