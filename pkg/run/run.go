@@ -138,8 +138,11 @@ func (r *Runtime) Run() error {
 			return r.Stop(fmt.Errorf("timeout reached during run phase: %s", r.conf.RunTimeout.String()))
 
 		case <-probeTick.C:
+			if r.conf.SkipProbes {
+				continue
+			}
 			_, err := r.probeUnitStatuses()
-			if err != nil && !r.conf.SkipProbes {
+			if err != nil {
 				r.SigChan <- syscall.SIGTERM
 				continue
 			}
@@ -148,7 +151,7 @@ func (r *Runtime) Run() error {
 				continue
 			}
 			failures := r.state.GetKubeletProbeFail()
-			if failures >= appProbeThreshold && !r.conf.SkipProbes {
+			if failures >= appProbeThreshold {
 				glog.Warningf("Probing failed, stopping ...")
 				// display some helpers to investigate:
 				glog.Infof("Investigate the kubelet logs with: journalctl -u %skubelet.service -o cat -e --no-pager", r.env.GetSystemdUnitPrefix())
