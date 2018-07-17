@@ -25,6 +25,7 @@ func (e *Environment) extractContainerd() error {
 	_, err = os.Stat(e.binaryContainerd.binaryABSPath)
 	if err != nil {
 		glog.Errorf("Unexpected error: %v after untar %s", err, output)
+		return err
 	}
 	glog.V(2).Infof("Successfully untar %s: %s", e.binaryContainerd.archivePath, output)
 	return err

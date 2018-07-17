@@ -26,6 +26,7 @@ func (e *Environment) extractCNI() error {
 	_, err = os.Stat(e.binaryCNI.binaryABSPath)
 	if err != nil {
 		glog.Errorf("Unexpected error: %v after untar %s", err, output)
+		return err
 	}
 	output = strings.Replace(output, "./", "", -1)
 	output = strings.Replace(output, "\n", " ", -1)

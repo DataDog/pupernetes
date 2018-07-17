@@ -26,6 +26,7 @@ func (e *Environment) extractEtcd() error {
 	_, err = os.Stat(e.binaryEtcd.binaryABSPath)
 	if err != nil {
 		glog.Errorf("Unexpected error: %v after untar %s", err, output)
+		return err
 	}
 	glog.V(2).Infof("Successfully untar %s: %s", e.binaryEtcd.archivePath, output)
 	return err

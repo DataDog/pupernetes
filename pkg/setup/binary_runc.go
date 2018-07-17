@@ -25,6 +25,7 @@ func (e *Environment) extractRunc() error {
 	_, err = os.Stat(e.binaryRunc.binaryABSPath)
 	if err != nil {
 		glog.Errorf("Unexpected error: %v after cp %s", err, output)
+		return err
 	}
 	err = os.Chmod(e.binaryRunc.binaryABSPath, 0700)
 	if err != nil {
