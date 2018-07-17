@@ -1,9 +1,10 @@
 package state
 
 import (
+	"sync"
+
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
-	"sync"
 )
 
 // State keeps track of the current stats
@@ -113,7 +114,7 @@ func (s *State) IsKubectlApplied() bool {
 func (s *State) SetAPIServerProbeLastError(msg string) {
 	s.Lock()
 	if s.apiServerProbeLastError != msg {
-		glog.Infof("Kubenertes apiserver not ready yet: %s", msg)
+		glog.Infof("Kubernetes apiserver not ready yet: %s", msg)
 		s.apiServerProbeLastError = msg
 	}
 	s.Unlock()
@@ -124,7 +125,7 @@ func (s *State) SetAPIServerProbeLastError(msg string) {
 func (s *State) SetDNSLastError(msg string) {
 	s.Lock()
 	if s.dnsLastError != msg {
-		glog.Infof("Kubenertes dns not ready yet: %s", msg)
+		glog.Infof("Kubernetes dns not ready yet: %s", msg)
 		s.dnsLastError = msg
 	}
 	s.Unlock()
