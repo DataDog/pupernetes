@@ -265,7 +265,7 @@ func (e *Environment) setupNetwork() error {
 		return err
 	}
 
-	// docker set a drop by default
+	// docker set an iptables rule to drop by default
 	iptablesRules := [][]string{
 		{"iptables", "-A", "FORWARD", "--in-interface", defaultBridgeName, "-j", "ACCEPT"},
 		{"iptables", "-A", "FORWARD", "--out-interface", defaultBridgeName, "-j", "ACCEPT"},

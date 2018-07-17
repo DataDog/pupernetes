@@ -38,7 +38,7 @@ func init() {
 	ViperConfig.SetDefault("containerd-version", "1.1.0")
 	ViperConfig.SetDefault("runc-version", "1.0.0-rc5")
 
-	ViperConfig.SetDefault("container-runtime", "")
+	ViperConfig.SetDefault("container-runtime", "docker")
 
 	ViperConfig.SetDefault("download-timeout", time.Minute*30)
 
