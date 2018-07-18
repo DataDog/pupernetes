@@ -100,7 +100,9 @@ func (r *Runtime) Run() error {
 
 	defer close(r.ApplyChan)
 
-	glog.Infof("Timeout for this current run is %s", r.conf.RunTimeout.String())
+	if r.conf.RunTimeout > 0 {
+		glog.Infof("Timeout for this current run is %s", r.conf.RunTimeout.String())
+	}
 	timeoutTimer := time.NewTimer(r.conf.RunTimeout)
 	defer timeoutTimer.Stop()
 
@@ -134,8 +136,10 @@ func (r *Runtime) Run() error {
 			return r.Stop(nil)
 
 		case <-timeoutTimer.C:
-			glog.Warningf("Timeout %s reached, stopping ...", r.conf.RunTimeout.String())
-			return r.Stop(fmt.Errorf("timeout reached during run phase: %s", r.conf.RunTimeout.String()))
+			if r.conf.RunTimeout > 0 {
+				glog.Warningf("Timeout %s reached, stopping ...", r.conf.RunTimeout.String())
+				return r.Stop(fmt.Errorf("timeout reached during run phase: %s", r.conf.RunTimeout.String()))
+			}
 
 		case <-probeTick.C:
 			if r.conf.SkipProbes {

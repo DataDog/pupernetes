@@ -49,7 +49,7 @@ pupernetes daemon run /opt/state/ --dns-check --dns-queries quay.io.,coredns.kub
       --gc duration               grace period for the kubelet GC trigger when draining run, no-op if not draining (default 1m0s)
   -h, --help                      help for run
       --job-type string           type of job: fg or systemd (default "fg")
-      --run-timeout duration      maximum time to run pupernetes for until self shutdown (default 7h0m0s)
+      --run-timeout duration      maximum time to run pupernetes for until self shutdown
       --skip-probes               skip probing systemd units and kubelet healthz
       --systemd-job-name string   unit name used when running as systemd service (default "pupernetes")
 ```
