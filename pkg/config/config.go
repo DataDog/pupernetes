@@ -6,8 +6,9 @@
 package config
 
 import (
-	"github.com/spf13/viper"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 // ViperConfig is a global variable for the viper configuration
@@ -46,7 +47,6 @@ func init() {
 
 	ViperConfig.SetDefault("clean", "etcd,kubelet,logs,mounts,iptables")
 	ViperConfig.SetDefault("drain", "all")
-	ViperConfig.SetDefault("run-timeout", time.Hour*7)
 	ViperConfig.SetDefault("skip-probes", false)
 	ViperConfig.SetDefault("gc", time.Second*60)
 
