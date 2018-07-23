@@ -17,11 +17,13 @@ import (
 	"path"
 	"strings"
 
-	"github.com/DataDog/pupernetes/pkg/config"
 	"github.com/golang/glog"
 )
 
-const cniFileName = "cni.json"
+const (
+	cniFileName       = "cni.json"
+	defaultBridgeName = "cni-p8s"
+)
 
 func incIP(ip net.IP) {
 	for j := len(ip) - 1; j >= 0; j-- {
@@ -49,26 +51,8 @@ func pickInCIDR(cidr string, index int) (*net.IP, error) {
 	return &IP, nil
 }
 
-func getKubernetesClusterIP() (*net.IP, error) {
-	ip, err := pickInCIDR(config.ViperConfig.GetString("kubernetes-cluster-ip-range"), 1)
-	if err != nil {
-		glog.Errorf("Cannot get Kubernetes cluster IP: %v", err)
-		return nil, err
-	}
-	return ip, nil
-}
-
-func getDNSClusterIP() (*net.IP, error) {
-	ip, err := pickInCIDR(config.ViperConfig.GetString("kubernetes-cluster-ip-range"), 2)
-	if err != nil {
-		glog.Errorf("Cannot get Kubernetes cluster IP: %v", err)
-		return nil, err
-	}
-	return ip, nil
-}
-
 func (e *Environment) writeCNIConfig(c *cniConfig) error {
-	cniConfPath := path.Join(e.networkABSPath, cniFileName)
+	cniConfPath := path.Join(e.networkConfigABSPath, cniFileName)
 	f, err := os.OpenFile(cniConfPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0444)
 	if err != nil {
 		glog.Errorf("Cannot create %s: %v", cniConfPath, err)
@@ -79,6 +63,7 @@ func (e *Environment) writeCNIConfig(c *cniConfig) error {
 		glog.Errorf("Cannot marshal CNI conf: %v", err)
 		return err
 	}
+	glog.V(5).Infof("CNI config: %s", string(b))
 	buf := bytes.NewBuffer(nil)
 	err = json.Indent(buf, b, "", "  ")
 	if err != nil {
@@ -165,7 +150,7 @@ func (e *Environment) generateResolvConf() error {
 	return nil
 }
 
-func (e *Environment) newCNIBridgeConfig(bridgeName, subnet string) *cniConfig {
+func (e *Environment) newCNIBridgeConfig(bridgeName string) *cniConfig {
 	return &cniConfig{
 		Name:             "p8s",
 		Type:             "bridge",
@@ -174,9 +159,9 @@ func (e *Environment) newCNIBridgeConfig(bridgeName, subnet string) *cniConfig {
 		IPMasq:           true,
 		Ipam: &ipam{
 			Type:    "host-local",
-			Subnet:  subnet,
-			DataDir: path.Join(e.rootABSPath, "networks"),
-			Routes:  []route{{Destination: "0.0.0.0/0"}},
+			Subnet:  e.podCIDR.String(),
+			DataDir: e.networkStateABSPath,
+			Routes:  []route{{Destination: "0.0.0.0/0", Gateway: e.podBridgeGatewayIP.String()}},
 		},
 	}
 }
@@ -248,15 +233,14 @@ func (e *Environment) getNameservers() ([]string, error) {
 	return getNameserverFromSystemdOutput(b), nil
 }
 
-func isDockerBridge() bool {
-	const dockerInterface = "docker0"
-	_, err := net.InterfaceByName(dockerInterface)
+func (e *Environment) generateCNIConf(bridgeName string) error {
+	c := e.newCNIBridgeConfig(bridgeName)
+	err := e.writeCNIConfig(c)
 	if err != nil {
-		glog.V(4).Infof("Interface %s is not present: %v", dockerInterface, err)
-		return false
+		glog.Errorf("Cannot write CNI config: %v", err)
+		return err
 	}
-	glog.V(4).Infof("Interface %s is present", dockerInterface)
-	return true
+	return nil
 }
 
 func (e *Environment) setupNetwork() error {
@@ -267,18 +251,32 @@ func (e *Environment) setupNetwork() error {
 		glog.Errorf("Cannot get outboundIP: %v", err)
 		return err
 	}
+	e.nodeIP = e.outboundIP.String()
 	glog.V(4).Infof("Outbound IP is: %v", e.outboundIP.String())
+	glog.V(4).Infof("Node IP is: %v", e.nodeIP)
 
 	err = e.generateResolvConf()
 	if err != nil {
 		return err
 	}
 
-	if isDockerBridge() {
-		e.isDockerBridge = true
-		return nil
+	err = e.generateCNIConf(defaultBridgeName)
+	if err != nil {
+		return err
 	}
-	e.isDockerBridge = false
 
+	// docker set an iptables rule to drop by default
+	iptablesRules := [][]string{
+		{"iptables", "-A", "FORWARD", "--in-interface", defaultBridgeName, "-j", "ACCEPT"},
+		{"iptables", "-A", "FORWARD", "--out-interface", defaultBridgeName, "-j", "ACCEPT"},
+	}
+	for _, rule := range iptablesRules {
+		glog.V(4).Infof("Adding iptables rule: %s", strings.Join(rule, " "))
+		b, err := exec.Command(rule[0], rule[1:]...).CombinedOutput()
+		if err != nil {
+			glog.Errorf("Cannot run %s: %s", strings.Join(rule, " "), string(b))
+			return err
+		}
+	}
 	return nil
 }

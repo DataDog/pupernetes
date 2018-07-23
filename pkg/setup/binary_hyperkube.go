@@ -25,6 +25,7 @@ func (e *Environment) extractHyperkube() error {
 	_, err = os.Stat(e.binaryHyperkube.binaryABSPath)
 	if err != nil {
 		glog.Errorf("Unexpected error: %v after untar %s", err, output)
+		return err
 	}
 	glog.V(2).Infof("Successfully untar %s: %s", e.binaryHyperkube.archivePath, output)
 	wd, err := os.Getwd()

@@ -26,6 +26,9 @@ const (
 	JobForeground = "fg"
 
 	defaultAPIAddress = "127.0.0.1:8989"
+
+	// CRIContainerd is a container runtime engine
+	CRIContainerd = "containerd"
 )
 
 func init() {
@@ -33,10 +36,15 @@ func init() {
 	ViperConfig.SetDefault("vault-version", "0.9.5")
 	ViperConfig.SetDefault("etcd-version", "3.1.11")
 	ViperConfig.SetDefault("cni-version", "0.7.0")
+	ViperConfig.SetDefault("containerd-version", "1.1.0")
+	ViperConfig.SetDefault("runc-version", "1.0.0-rc5")
+
+	ViperConfig.SetDefault("container-runtime", "docker")
 
 	ViperConfig.SetDefault("download-timeout", time.Minute*30)
 
 	ViperConfig.SetDefault("kubernetes-cluster-ip-range", "192.168.254.0/24")
+	ViperConfig.SetDefault("pod-ip-range", "192.168.253.0/24")
 	ViperConfig.SetDefault("bind-address", defaultAPIAddress)
 	ViperConfig.SetDefault("api-address", defaultAPIAddress)
 	ViperConfig.SetDefault("kubelet-root-dir", "/var/lib/p8s-kubelet")

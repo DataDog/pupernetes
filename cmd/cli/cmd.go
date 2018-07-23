@@ -304,6 +304,15 @@ func NewCommand() (*cobra.Command, *int) {
 	daemonCommand.PersistentFlags().String("kubeconfig-path", config.ViperConfig.GetString("kubeconfig-path"), "path to the kubeconfig file")
 	config.ViperConfig.BindPFlag("kubeconfig-path", daemonCommand.PersistentFlags().Lookup("kubeconfig-path"))
 
+	daemonCommand.PersistentFlags().String("kubernetes-cluster-ip-range", config.ViperConfig.GetString("kubernetes-cluster-ip-range"), "kubernetes cluster CIDR")
+	config.ViperConfig.BindPFlag("kubernetes-cluster-ip-range", daemonCommand.PersistentFlags().Lookup("kubernetes-cluster-ip-range"))
+
+	daemonCommand.PersistentFlags().String("pod-ip-range", config.ViperConfig.GetString("pod-ip-range"), "pod common network interface CIDR")
+	config.ViperConfig.BindPFlag("pod-ip-range", daemonCommand.PersistentFlags().Lookup("pod-ip-range"))
+
+	daemonCommand.PersistentFlags().String("container-runtime", config.ViperConfig.GetString("container-runtime"), `container runtime interface to use (experimental: "containerd")`)
+	config.ViperConfig.BindPFlag("container-runtime", daemonCommand.PersistentFlags().Lookup("container-runtime"))
+
 	daemonCommand.PersistentFlags().StringP("clean", "c", config.ViperConfig.GetString("clean"), fmt.Sprintf("clean options before %s: %s", setupCommand.Name(), options.GetOptionNames(options.Clean{})))
 	config.ViperConfig.BindPFlag("clean", daemonCommand.PersistentFlags().Lookup("clean"))
 

@@ -103,9 +103,6 @@ func (e *Environment) setupManifests() error {
 		glog.Errorf("Cannot setup manifests: %v", err)
 		return err
 	}
-	// Adding runtime metadata - depending on network stage
-	e.templateMetadata.NodeIP = e.GetPublicIP()
-
 	err := e.populateDefaultTemplates()
 	if err != nil {
 		return err

@@ -64,6 +64,8 @@ This project has been initially designed to perform the end to end testing of th
 * `systemctl`
 * `systemd-resolve` (or a non-systemd managed `/etc/resolv.conf`)
 * `mount`
+* `iptables`
+* `nsenter`
 
 Additionally any implicit requirements needed by the **kubelet**, like the container runtime and [more](https://github.com/kubernetes/kubernetes/issues/26093).
 Currently only reporting `docker`, please see the [current limitations](#current-limitations).
@@ -75,9 +77,14 @@ A recent systemd version is better to gain:
 * `journalctl --since`
 * more convenient dbus API
 
+
+#### Containerd
+
+If running containerd, you need to add `libseccomp2` on your system.
+
 #### Resources
 
-* 4GB of memory is recommended
+* 4GB of memory is required
 * 5GB of free disk space for the binaries and the container images
 
 #### DNS
@@ -200,20 +207,11 @@ You can have a look at which metrics are available [here](./docs/metrics.csv).
 
 ## Current limitations
 
-* Container runtime
-  * You need docker already up and running
-  * You cannot use cri-containerd / crio without changing manually the systemd unit `/run/systemd/system/p8s-kubelet.service`
 * Systemd
   * Currently working with systemd only
   * Could be containerized with extensive mounts
     * binaries
     * dbus
-* Networking
-  * The CNI bridge cannot be used yet
-  * Kubernetes cluster IP range is statically set
-* Secrets
-  * IP SAN
-    * Statically configured with the given Kubernetes cluster IP range
 * Support for Custom Metrics
   * You can register an API Service for an External Metrics Provider.
   This is only supported for 1.10.x and 1.11.x.

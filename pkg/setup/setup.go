@@ -57,7 +57,8 @@ type Environment struct {
 	manifestStaticPodABSPath string
 	manifestConfigABSPath    string
 	secretsABSPath           string
-	networkABSPath           string
+	networkConfigABSPath     string
+	networkStateABSPath      string
 	logsABSPath              string
 
 	kubeletRootDir string
@@ -76,15 +77,18 @@ type Environment struct {
 	dbusClient        *dbus.Conn
 	systemdUnitPrefix string
 
-	etcdUnitName          string
-	kubeletUnitName       string
-	kubeAPIServerUnitName string
-	systemdUnitNames      []string
+	containerRuntimeUnitName string
+	etcdUnitName             string
+	kubeletUnitName          string
+	kubeAPIServerUnitName    string
+	systemdUnitNames         []string
 
 	// executable dependencies
-	binaryHyperkube *exeBinary
-	binaryVault     *exeBinary
-	binaryEtcd      *exeBinary
+	binaryHyperkube  *exeBinary
+	binaryVault      *exeBinary
+	binaryEtcd       *exeBinary
+	binaryContainerd *exeBinary
+	binaryRunc       *exeBinary
 
 	// dependencies
 	downloadTimeout time.Duration
@@ -106,26 +110,36 @@ type Environment struct {
 	podListRequest *http.Request
 
 	// Network
-	outboundIP          *net.IP
-	kubernetesClusterIP *net.IP
-	dnsClusterIP        *net.IP
-	isDockerBridge      bool
+	outboundIP            *net.IP
+	nodeIP                string
+	kubernetesClusterCIDR *net.IPNet
+	kubernetesClusterIP   *net.IP
+	podCIDR               *net.IPNet
+	podBridgeGatewayIP    *net.IP
+	dnsClusterIP          *net.IP
+	isDockerBridge        bool
 
 	// Vault token
 	vaultRootToken string
 
 	kubectlLink string
+
+	// CRI
+	containerRuntimeInterface string
 }
 
 type templateMetadata struct {
-	HyperkubeImageURL     string  `json:"hyperkube-image-url"`
-	Hostname              *string `json:"hostname"`
-	RootABSPath           *string `json:"root"`
-	ServiceClusterIPRange string  `json:"service-cluster-ip-range"`
-	KubernetesClusterIP   string  `json:"kubernetes-cluster-ip"`
-	DNSClusterIP          string  `json:"dns-cluster-ip"`
-	NodeIP                string  `json:"node-ip"`
-	KubeletRootDirABSPath string  `json:"kubelet-root-dir"`
+	// pointers are used when fields are initialized later
+	HyperkubeImageURL        string  `json:"hyperkube-image-url"`
+	Hostname                 *string `json:"hostname"`
+	RootABSPath              *string `json:"root"`
+	ServiceClusterIPRange    string  `json:"service-cluster-ip-range"`
+	KubernetesClusterIP      string  `json:"kubernetes-cluster-ip"`
+	DNSClusterIP             string  `json:"dns-cluster-ip"`
+	NodeIP                   *string `json:"node-ip"`
+	KubeletRootDirABSPath    string  `json:"kubelet-root-dir"`
+	ContainerRuntime         string  `json:"container-runtime"`
+	ContainerRuntimeEndpoint string  `json:"container-runtime-endpoint"`
 }
 
 // NewConfigSetup creates an Environment
@@ -154,7 +168,8 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		manifestSystemdUnit:      path.Join(rootABSPath, defaultTemplates.ManifestSystemdUnit),
 		kubeletRootDir:           config.ViperConfig.GetString("kubelet-root-dir"),
 		secretsABSPath:           path.Join(rootABSPath, defaultSecretDirName),
-		networkABSPath:           path.Join(rootABSPath, defaultNetworkDirName),
+		networkConfigABSPath:     path.Join(rootABSPath, defaultNetworkDirName),
+		networkStateABSPath:      path.Join(rootABSPath, "networks"),
 		logsABSPath:              path.Join(rootABSPath, defaultLogsDirName),
 		templateVersion:          getMajorMinorVersion(config.ViperConfig.GetString("hyperkube-version")),
 
@@ -166,18 +181,13 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		drainOptions:           options.NewDrainOptions(config.ViperConfig.GetString("drain")),
 		kubectlLink:            config.ViperConfig.GetString("kubectl-link"),
 
-		systemdUnitPrefix:     config.ViperConfig.GetString("systemd-unit-prefix"),
-		etcdUnitName:          config.ViperConfig.GetString("systemd-unit-prefix") + "etcd.service",
-		kubeletUnitName:       config.ViperConfig.GetString("systemd-unit-prefix") + "kubelet.service",
-		kubeAPIServerUnitName: config.ViperConfig.GetString("systemd-unit-prefix") + "kube-apiserver.service",
-
 		downloadTimeout: config.ViperConfig.GetDuration("download-timeout"),
-	}
 
-	e.systemdUnitNames = []string{
-		e.etcdUnitName,
-		e.kubeAPIServerUnitName,
-		e.kubeletUnitName,
+		systemdUnitPrefix:         config.ViperConfig.GetString("systemd-unit-prefix"),
+		etcdUnitName:              config.ViperConfig.GetString("systemd-unit-prefix") + "etcd.service",
+		kubeletUnitName:           config.ViperConfig.GetString("systemd-unit-prefix") + "kubelet.service",
+		kubeAPIServerUnitName:     config.ViperConfig.GetString("systemd-unit-prefix") + "kube-apiserver.service",
+		containerRuntimeInterface: config.ViperConfig.GetString("container-runtime"),
 	}
 	// Kubernetes
 	e.binaryHyperkube = &exeBinary{
@@ -215,6 +225,30 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		commandVersion: []string{"--version"},
 	}
 
+	// Containerd
+	e.binaryContainerd = &exeBinary{
+		depBinary: depBinary{
+			archivePath:     path.Join(e.binABSPath, fmt.Sprintf("containerd-v%s.tar.gz", config.ViperConfig.GetString("containerd-version"))),
+			binaryABSPath:   path.Join(e.binABSPath, "containerd"),
+			archiveURL:      fmt.Sprintf("https://github.com/containerd/containerd/releases/download/v%s/containerd-%s.linux-amd64.tar.gz", config.ViperConfig.GetString("containerd-version"), config.ViperConfig.GetString("containerd-version")),
+			version:         config.ViperConfig.GetString("containerd-version"),
+			downloadTimeout: e.downloadTimeout,
+		},
+		commandVersion: []string{"--version"},
+	}
+
+	// Runc
+	e.binaryRunc = &exeBinary{
+		depBinary: depBinary{
+			archivePath:     path.Join(e.binABSPath, fmt.Sprintf("runc-v%s", config.ViperConfig.GetString("runc-version"))),
+			binaryABSPath:   path.Join(e.binABSPath, "runc"),
+			archiveURL:      fmt.Sprintf("https://github.com/opencontainers/runc/releases/download/v%s/runc.amd64", config.ViperConfig.GetString("runc-version")),
+			version:         config.ViperConfig.GetString("runc-version"),
+			downloadTimeout: e.downloadTimeout,
+		},
+		commandVersion: []string{"--version"},
+	}
+
 	// CNI
 	e.binaryCNI = &depBinary{
 		archivePath:     path.Join(e.binABSPath, fmt.Sprintf("cni-v%s.tar.gz", config.ViperConfig.GetString("cni-version"))),
@@ -227,35 +261,60 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 	// SystemdUnits X-Section
 	e.systemdEnd2EndSection = e.createEnd2EndSection()
 
-	e.kubernetesClusterIP, err = getKubernetesClusterIP()
+	// Network
+	_, e.kubernetesClusterCIDR, err = net.ParseCIDR(config.ViperConfig.GetString("kubernetes-cluster-ip-range"))
 	if err != nil {
-		glog.Errorf("Unexpected error: %v", err)
+		glog.Errorf("Unexpected error while parsing kubernetes cluster IP range: %v", err)
 		return nil, err
 	}
-
-	e.dnsClusterIP, err = getDNSClusterIP()
+	e.kubernetesClusterIP, err = pickInCIDR(e.kubernetesClusterCIDR.String(), 1)
 	if err != nil {
-		glog.Errorf("Unexpected error: %v", err)
+		glog.Errorf("Cannot get Kubernetes cluster IP: %v", err)
+		return nil, err
+	}
+	e.dnsClusterIP, err = pickInCIDR(e.kubernetesClusterCIDR.String(), 2)
+	if err != nil {
+		glog.Errorf("Cannot get DNS cluster IP: %v", err)
+		return nil, err
+	}
+	_, e.podCIDR, err = net.ParseCIDR(config.ViperConfig.GetString("pod-ip-range"))
+	if err != nil {
+		glog.Errorf("Unexpected error while parsing pod IP range: %v", err)
+		return nil, err
+	}
+	e.podBridgeGatewayIP, err = pickInCIDR(e.podCIDR.String(), 1)
+	if err != nil {
+		glog.Errorf("Cannot get pod gateway IP: %v", err)
 		return nil, err
 	}
 
 	// kubeconfig
 	if e.kubeConfigUserPath == "" {
-		kubeDirPath := path.Join(getHome(), ".kube")
-		e.kubeConfigUserPath = path.Join(kubeDirPath, "config")
+		e.kubeConfigUserPath = path.Join(getHome(), ".kube", "config")
 	}
+
+	containerRuntime := "docker"
+	ContainerRuntimeEndpoint := "/var/run/dockershim.sock"
+	if e.containerRuntimeInterface == config.CRIContainerd {
+		containerRuntime = "remote"
+		ContainerRuntimeEndpoint = "/run/containerd/containerd.sock"
+		e.systemdUnitNames = append(e.systemdUnitNames, fmt.Sprintf("%s%s.service", e.systemdUnitPrefix, e.containerRuntimeInterface))
+	}
+	e.systemdUnitNames = append(e.systemdUnitNames, e.etcdUnitName, e.kubeAPIServerUnitName, e.kubeletUnitName)
 
 	// Template for manifests
 	e.templateMetadata = &templateMetadata{
 		// TODO conf this
-		HyperkubeImageURL:     fmt.Sprintf("gcr.io/google_containers/hyperkube:v%s", e.binaryHyperkube.version),
-		Hostname:              &e.hostname,
-		RootABSPath:           &e.rootABSPath,
-		ServiceClusterIPRange: config.ViperConfig.GetString("kubernetes-cluster-ip-range"),
-		KubernetesClusterIP:   e.kubernetesClusterIP.String(),
-		DNSClusterIP:          e.dnsClusterIP.String(),
-		KubeletRootDirABSPath: e.kubeletRootDir,
-		// NodeIP: during network phase
+		HyperkubeImageURL:        fmt.Sprintf("gcr.io/google_containers/hyperkube:v%s", e.binaryHyperkube.version),
+		Hostname:                 &e.hostname,
+		RootABSPath:              &e.rootABSPath,
+		ServiceClusterIPRange:    e.kubernetesClusterCIDR.String(),
+		KubernetesClusterIP:      e.kubernetesClusterIP.String(),
+		DNSClusterIP:             e.dnsClusterIP.String(),
+		KubeletRootDirABSPath:    e.kubeletRootDir,
+		ContainerRuntime:         containerRuntime,
+		ContainerRuntimeEndpoint: ContainerRuntimeEndpoint,
+		NodeIP: &e.nodeIP, // initialized later
 	}
 
 	// Vault root token
@@ -281,7 +340,7 @@ func (e *Environment) setupDirectories() error {
 		path.Join(e.manifestTemplatesABSPath, defaultTemplates.ManifestConfig),
 		e.etcdDataABSPath,
 		e.secretsABSPath,
-		e.networkABSPath,
+		e.networkConfigABSPath,
 		e.kubeletRootDir,
 		KubeletCRILogPath,
 		e.logsABSPath,
@@ -307,6 +366,8 @@ func (e *Environment) Setup() error {
 		e.setupDirectories,
 		e.setupBinaryCNI,
 		e.setupBinaryEtcd,
+		e.setupBinaryContainerd,
+		e.setupBinaryRunc,
 		e.setupBinaryVault,
 		e.setupBinaryHyperkube,
 		e.setupNetwork,

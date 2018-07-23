@@ -25,6 +25,7 @@ func (e *Environment) extractVault() error {
 	_, err = os.Stat(e.binaryVault.binaryABSPath)
 	if err != nil {
 		glog.Errorf("Unexpected error: %v after unzip %s", err, output)
+		return err
 	}
 	glog.V(2).Infof("Successfully unzip %s: %s", e.binaryVault.archivePath, output)
 	return err
