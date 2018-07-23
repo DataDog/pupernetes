@@ -27,7 +27,7 @@ before_install:
 
 install:
   - sudo apt-get install -yq systemd libseccomp2 curl autopoint
-  - ls -l ~/util-linux || bash -xec "mkdir -pv ~/util-linux && curl -Lf https://www.kernel.org/pub/linux/utils/util-linux/v2.24/util-linux-2.24.1.tar.gz | tar -xz --strip-component 1 -C ~/util-linux && ~/util-linux/autogen.sh && pushd ~/util-linux/ && ./configure --without-python --disable-all-programs --enable-nsenter && popd"
+  - ls -l ~/util-linux/nsenter || bash -xec "mkdir -pv ~/util-linux && curl -Lf https://www.kernel.org/pub/linux/utils/util-linux/v2.24/util-linux-2.24.1.tar.gz | tar -xz --strip-component 1 -C ~/util-linux && ~/util-linux/autogen.sh && pushd ~/util-linux/ && ./configure --without-python --disable-all-programs --enable-nsenter && popd"
   - make -C ~/util-linux -j nsenter
   - sudo cp -v ~/util-linux/nsenter /usr/local/bin
 
