@@ -11,6 +11,8 @@ import (
 	"os/exec"
 
 	"github.com/golang/glog"
+
+	"github.com/DataDog/pupernetes/pkg/config"
 )
 
 func (e *Environment) extractRunc() error {
@@ -37,6 +39,10 @@ func (e *Environment) extractRunc() error {
 }
 
 func (e *Environment) setupBinaryRunc() error {
+	if e.containerRuntimeInterface != config.CRIContainerd {
+		glog.V(2).Infof("Skipping the download of runc: using %q", e.containerRuntimeInterface)
+		return nil
+	}
 	_, err := os.Stat(e.binaryRunc.binaryABSPath)
 	if err == nil && e.binaryRunc.isUpToDate() {
 		glog.V(4).Infof("Runc already setup and up to date: %s", e.binaryRunc.binaryABSPath)

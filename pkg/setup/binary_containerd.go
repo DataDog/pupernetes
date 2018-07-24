@@ -11,6 +11,8 @@ import (
 	"os/exec"
 
 	"github.com/golang/glog"
+
+	"github.com/DataDog/pupernetes/pkg/config"
 )
 
 func (e *Environment) extractContainerd() error {
@@ -32,6 +34,10 @@ func (e *Environment) extractContainerd() error {
 }
 
 func (e *Environment) setupBinaryContainerd() error {
+	if e.containerRuntimeInterface != config.CRIContainerd {
+		glog.V(2).Infof("Skipping the download of containerd: using %q", e.containerRuntimeInterface)
+		return nil
+	}
 	_, err := os.Stat(e.binaryContainerd.binaryABSPath)
 	if err == nil && e.binaryContainerd.isUpToDate() {
 		glog.V(4).Infof("Containerd already setup and up to date: %s", e.binaryContainerd.binaryABSPath)
