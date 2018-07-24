@@ -119,7 +119,7 @@ make
 
 You need to download the last version:
 ```bash
-VERSION=0.6.1
+VERSION=0.7.0
 curl -LOf https://github.com/DataDog/pupernetes/releases/download/v${VERSION}/pupernetes
 chmod +x ./pupernetes
 ./pupernetes --help

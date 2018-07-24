@@ -1,3 +1,4 @@
+- [v0.7.0](#v070)
 - [v0.6.1](#v061)
 - [v0.6.0](#v060)
 - [v0.5.0](#v050)
@@ -5,6 +6,29 @@
 - [v0.3.0](#v030)
 - [v0.2.1](#v021)
 - [v0.2.0](#v020)
+
+## v0.7.0
+
+### Enhancement
+* Skip useless binaries downloads #104
+* Remove default timeout #102
+* Support for containerd, use cni everywhere #90
+* Introduce skip probe #100
+* API aggregation, remove intermediate CA #98
+* Introduce the audit logs to dir #99
+* Use kube proxy configuration file #93
+* Introduce a timeout and a sig handler during downloads #91
+* Logging improvements on setup requirements #89
+
+### Bugfixes
+* Do create the directory for pod logs #96
+
+### Other
+* Fix typo #101
+* Fix a typo in the dig command #97
+* Improve circleci #92
+* Refactor CI, introduce examples #71
+* Fix ignition path #83
 
 ## v0.6.1
 
