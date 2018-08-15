@@ -54,6 +54,7 @@ func init() {
 	ViperConfig.SetDefault("vault-root-token", "")
 
 	ViperConfig.SetDefault("clean", "etcd,kubelet,logs,mounts,iptables")
+	ViperConfig.SetDefault("keep", "")
 	ViperConfig.SetDefault("drain", "all")
 	ViperConfig.SetDefault("skip-probes", false)
 	ViperConfig.SetDefault("gc", time.Second*60)

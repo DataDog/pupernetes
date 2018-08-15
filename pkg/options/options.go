@@ -29,36 +29,13 @@ func containsString(slice []string, elt string) bool {
 	return false
 }
 
-func setAll(d interface{}) {
+func setAllOptionsTo(d interface{}, set bool) {
 	for _, name := range structs.Names(d) {
 		if name == "common" {
 			continue
 		}
-		reflect.ValueOf(d).Elem().FieldByName(name).SetBool(true)
+		reflect.ValueOf(d).Elem().FieldByName(name).SetBool(set)
 	}
-	reflect.ValueOf(d).Elem().FieldByName("All").SetBool(true)
-	reflect.ValueOf(d).Elem().FieldByName("None").SetBool(false)
-}
-
-func setAllBut(d interface{}, but string) {
-	but = strings.Title(but)
-	for _, name := range structs.Names(d) {
-		if name == "common" || name == but {
-			continue
-		}
-		reflect.ValueOf(d).Elem().FieldByName(name).SetBool(true)
-	}
-}
-
-func setNone(d interface{}) {
-	for _, name := range structs.Names(d) {
-		if name == "common" {
-			continue
-		}
-		reflect.ValueOf(d).Elem().FieldByName(name).SetBool(false)
-	}
-	reflect.ValueOf(d).Elem().FieldByName("All").SetBool(false)
-	reflect.ValueOf(d).Elem().FieldByName("None").SetBool(true)
 }
 
 // GetOptionNames returns the options from the given interface
@@ -77,7 +54,7 @@ func GetOptionNames(opt interface{}) string {
 	return strings.Join(names, ",")
 }
 
-func newOptions(stringOptions string, opt interface{}) interface{} {
+func newOptions(stringOptions string, value bool, opt interface{}) interface{} {
 	stringOptions = strings.TrimSpace(stringOptions)
 	defer func() {
 		b, err := json.Marshal(opt)
@@ -89,6 +66,7 @@ func newOptions(stringOptions string, opt interface{}) interface{} {
 		t = strings.TrimPrefix(t, "*options.")
 		glog.V(3).Infof("%s options are: %s", t, string(b))
 	}()
+	setAllOptionsTo(opt, !value)
 	availableOptions := structs.Names(opt)
 	for i := range availableOptions {
 		availableOptions[i] = strings.ToLower(availableOptions[i])
@@ -96,11 +74,15 @@ func newOptions(stringOptions string, opt interface{}) interface{} {
 	for _, elt := range strings.Split(stringOptions, ",") {
 		switch elt {
 		case "all":
-			setAll(opt)
+			setAllOptionsTo(opt, value)
+			reflect.ValueOf(opt).Elem().FieldByName("All").SetBool(value)
+			reflect.ValueOf(opt).Elem().FieldByName("None").SetBool(!value)
 			return opt
 
 		case "none":
-			setNone(opt)
+			setAllOptionsTo(opt, !value)
+			reflect.ValueOf(opt).Elem().FieldByName("All").SetBool(!value)
+			reflect.ValueOf(opt).Elem().FieldByName("None").SetBool(value)
 			return opt
 
 		case "common":
@@ -108,17 +90,12 @@ func newOptions(stringOptions string, opt interface{}) interface{} {
 			continue
 
 		default:
-			if elt[0] == '-' && len(elt) > 1 {
-				glog.V(3).Infof("Setting all options except %q", elt[1:])
-				setAllBut(opt, elt[1:])
-				return opt
-			}
 			if !containsString(availableOptions, elt) {
 				glog.Warningf("Cannot use %q as option it's not in %s", elt, availableOptions)
 				continue
 			}
 			elt = strings.Title(elt)
-			reflect.ValueOf(opt).Elem().FieldByName(elt).SetBool(true)
+			reflect.ValueOf(opt).Elem().FieldByName(elt).SetBool(value)
 		}
 	}
 	return opt

@@ -13,12 +13,14 @@ import (
 
 func TestNewCleanOptions(t *testing.T) {
 	testCases := []struct {
-		input     string
-		expected  *Clean
-		cliString string
+		cleanInput string
+		keepInput  string
+		expected   *Clean
+		cliString  string
 	}{
 		{
 			"all",
+			"",
 			&Clean{
 				common{
 					true,
@@ -40,6 +42,7 @@ func TestNewCleanOptions(t *testing.T) {
 		},
 		{
 			"none",
+			"",
 			&Clean{
 				common{
 					false,
@@ -61,6 +64,7 @@ func TestNewCleanOptions(t *testing.T) {
 		},
 		{
 			"none,all",
+			"",
 			&Clean{
 				common{
 					false,
@@ -82,6 +86,7 @@ func TestNewCleanOptions(t *testing.T) {
 		},
 		{
 			"all,none",
+			"",
 			&Clean{
 				common{
 					true,
@@ -103,6 +108,7 @@ func TestNewCleanOptions(t *testing.T) {
 		},
 		{
 			"etcd",
+			"",
 			&Clean{
 				common{
 					false,
@@ -124,6 +130,7 @@ func TestNewCleanOptions(t *testing.T) {
 		},
 		{
 			"all,etcd",
+			"",
 			&Clean{
 				common{
 					true,
@@ -145,6 +152,7 @@ func TestNewCleanOptions(t *testing.T) {
 		},
 		{
 			"etcd,binaries",
+			"",
 			&Clean{
 				common{
 					false,
@@ -166,6 +174,7 @@ func TestNewCleanOptions(t *testing.T) {
 		},
 		{
 			"etcd,binaries,secrets",
+			"",
 			&Clean{
 				common{
 					false,
@@ -186,7 +195,8 @@ func TestNewCleanOptions(t *testing.T) {
 			"binaries,etcd,secrets",
 		},
 		{
-			"-binaries",
+			"",
+			"binaries",
 			&Clean{
 				common{
 					false,
@@ -207,7 +217,8 @@ func TestNewCleanOptions(t *testing.T) {
 			"etcd,iptables,kubectl,kubelet,logs,manifests,mounts,network,secrets,systemd",
 		},
 		{
-			"-binaries,binaries",
+			"etcd",
+			"binaries",
 			&Clean{
 				common{
 					false,
@@ -229,6 +240,7 @@ func TestNewCleanOptions(t *testing.T) {
 		},
 		{
 			"none,etcd",
+			"",
 			&Clean{
 				common{
 					false,
@@ -250,8 +262,8 @@ func TestNewCleanOptions(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		t.Run(testCase.input, func(t *testing.T) {
-			actual := NewCleanOptions(testCase.input)
+		t.Run(testCase.cleanInput+";"+testCase.keepInput, func(t *testing.T) {
+			actual := NewCleanOptions(testCase.cleanInput, testCase.keepInput)
 			assert.Equal(t, testCase.expected, actual)
 			assert.Equal(t, testCase.cliString, actual.StringCLI())
 		})

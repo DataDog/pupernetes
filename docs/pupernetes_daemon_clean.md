@@ -40,6 +40,7 @@ pupernetes daemon clean /opt/state/ -c etcd,network,secrets
       --download-timeout string              timeout for each downloaded archive (default "30m0s")
       --etcd-version string                  etcd version (default "3.1.11")
       --hyperkube-version string             hyperkube version (default "1.10.3")
+  -k, --keep string                          clean everything but the given options before setup: binaries,etcd,iptables,kubectl,kubelet,logs,manifests,mounts,network,secrets,systemd,all,none
       --kubeconfig-path string               path to the kubeconfig file
       --kubectl-link string                  path to create a kubectl link
       --kubelet-root-dir string              directory path for managing kubelet files (default "/var/lib/p8s-kubelet")

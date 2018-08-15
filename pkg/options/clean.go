@@ -31,10 +31,14 @@ type Clean struct {
 	Logs      bool `json:"logs,omitempty"`
 }
 
-// NewCleanOptions instantiate a new Clean from the cleanString
+// NewCleanOptions instantiate a new Clean from the cleanString and keepString
 // The clean string is lowercase clean options comma separated like: etcd,binaries ...
-func NewCleanOptions(cleanString string) *Clean {
-	return newOptions(cleanString, &Clean{}).(*Clean)
+// keepString takes precedence over the clean one
+func NewCleanOptions(cleanString, keepString string) *Clean {
+	if keepString == "" {
+		return newOptions(cleanString, true, &Clean{}).(*Clean)
+	}
+	return newOptions(keepString, false, &Clean{}).(*Clean)
 }
 
 // StringJSON represents the clean options as a JSON
