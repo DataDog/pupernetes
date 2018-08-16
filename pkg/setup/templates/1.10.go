@@ -77,7 +77,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube apiserver \
 	--insecure-port=8080 \
 	--allow-privileged=true \
 	--service-cluster-ip-range={{ .ServiceClusterIPRange }} \
-	--admission-control=NamespaceLifecycle,PodPreset,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota \
+	--admission-control=NamespaceLifecycle,PodPreset,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota,EventRateLimit \
 	--kubelet-preferred-address-types=InternalIP,LegacyHostIP,ExternalDNS,InternalDNS,Hostname \
 	--authorization-mode=RBAC \
 	--etcd-servers=http://127.0.0.1:2379 \
@@ -110,6 +110,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube apiserver \
 	--audit-policy-file={{.RootABSPath}}/manifest-config/audit.yaml \
 	--etcd-compaction-interval=0 \
 	--event-ttl=10m \
+	--admission-control-config-file={{.RootABSPath}}/manifest-config/admission.yaml \
 
 Restart=no
 `),
@@ -268,6 +269,33 @@ rules:
   resources:
   - group: ""
     resources: ["*"]
+`),
+		},
+		{
+			Name:        "admission.yaml",
+			Destination: ManifestConfig,
+			Content: []byte(`---
+kind: AdmissionConfiguration
+apiVersion: apiserver.k8s.io/v1alpha1
+plugins:
+- name: EventRateLimit
+  path: eventconfig.yaml
+`),
+		},
+		{
+			Name:        "eventconfig.yaml",
+			Destination: ManifestConfig,
+			Content: []byte(`---
+kind: Configuration
+apiVersion: eventratelimit.admission.k8s.io/v1alpha1
+limits:
+- type: Namespace
+  qps: 50
+  burst: 100
+  cacheSize: 2000
+- type: User
+  qps: 10
+  burst: 50
 `),
 		},
 		{
