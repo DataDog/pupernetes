@@ -263,12 +263,19 @@ users:
 apiVersion: audit.k8s.io/v1beta1
 kind: Policy
 rules:
-- level: Metadata
-  omitStages:
-    - RequestReceived
-  resources:
-  - group: ""
-    resources: ["*"]
+  - level: Request
+    verbs:
+      - create
+    omitStages:
+      - RequestReceived
+    resources:
+    - group: ""
+      resources:
+        - events
+
+  - level: Metadata
+    omitStages:
+      - RequestReceived
 `),
 		},
 		{
