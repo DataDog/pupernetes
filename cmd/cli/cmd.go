@@ -316,7 +316,7 @@ func NewCommand() (*cobra.Command, *int) {
 	daemonCommand.PersistentFlags().StringP("clean", "c", config.ViperConfig.GetString("clean"), fmt.Sprintf("clean options before %s: %s", setupCommand.Name(), options.GetOptionNames(options.Clean{})))
 	config.ViperConfig.BindPFlag("clean", daemonCommand.PersistentFlags().Lookup("clean"))
 
-	daemonCommand.PersistentFlags().StringP("keep", "k", config.ViperConfig.GetString("keep"), fmt.Sprintf("clean everything but the given options before %s: %s", setupCommand.Name(), options.GetOptionNames(options.Clean{})))
+	daemonCommand.PersistentFlags().StringP("keep", "k", config.ViperConfig.GetString("keep"), fmt.Sprintf("clean everything but the given options before %s: %s, this flag overrides any clean options", setupCommand.Name(), options.GetOptionNames(options.Clean{})))
 	config.ViperConfig.BindPFlag("keep", daemonCommand.PersistentFlags().Lookup("keep"))
 
 	// clean
