@@ -11,9 +11,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/DataDog/pupernetes/pkg/util/sets"
 	"github.com/fatih/structs"
 	"github.com/golang/glog"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 var cleanOptions = sets.NewString(getOptionNames(&Clean{})...) // does not include "all" or "none"

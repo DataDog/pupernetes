@@ -314,10 +314,10 @@ func NewCommand() (*cobra.Command, *int) {
 	daemonCommand.PersistentFlags().String("container-runtime", config.ViperConfig.GetString("container-runtime"), `container runtime interface to use (experimental: "containerd")`)
 	config.ViperConfig.BindPFlag("container-runtime", daemonCommand.PersistentFlags().Lookup("container-runtime"))
 
-	daemonCommand.PersistentFlags().StringP("clean", "c", config.ViperConfig.GetString("clean"), fmt.Sprintf("clean options before %s: %s", setupCommand.Name(), options.GetCleanOptionsString()))
+	daemonCommand.PersistentFlags().StringP("clean", "c", config.ViperConfig.GetString("clean"), fmt.Sprintf("clean options before %s: %s", setupCommand.Name(), options.GetOptionsString(options.Clean{})))
 	config.ViperConfig.BindPFlag("clean", daemonCommand.PersistentFlags().Lookup("clean"))
 
-	daemonCommand.PersistentFlags().StringP("keep", "k", config.ViperConfig.GetString("keep"), fmt.Sprintf("clean everything but the given options before %s: %s, this flag overrides any clean options", setupCommand.Name(), options.GetCleanOptionsString()))
+	daemonCommand.PersistentFlags().StringP("keep", "k", config.ViperConfig.GetString("keep"), fmt.Sprintf("clean everything but the given options before %s: %s, this flag overrides any clean options", setupCommand.Name(), options.GetOptionsString(options.Clean{})))
 	config.ViperConfig.BindPFlag("keep", daemonCommand.PersistentFlags().Lookup("keep"))
 
 	// clean
@@ -329,7 +329,7 @@ func NewCommand() (*cobra.Command, *int) {
 	// run
 	daemonCommand.AddCommand(runCommand)
 
-	runCommand.PersistentFlags().StringP("drain", "d", config.ViperConfig.GetString("drain"), fmt.Sprintf("drain options after %s: %s", runCommand.Name(), options.GetDrainOptionsString()))
+	runCommand.PersistentFlags().StringP("drain", "d", config.ViperConfig.GetString("drain"), fmt.Sprintf("drain options after %s: %s", runCommand.Name(), options.GetOptionsString(options.Drain{})))
 	config.ViperConfig.BindPFlag("drain", runCommand.PersistentFlags().Lookup("drain"))
 
 	runCommand.PersistentFlags().Duration("run-timeout", config.ViperConfig.GetDuration("run-timeout"), fmt.Sprintf("maximum time to run %s for until self shutdown", programName))

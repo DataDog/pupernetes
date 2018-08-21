@@ -9,9 +9,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/DataDog/pupernetes/pkg/util/sets"
 	"github.com/fatih/structs"
 	"github.com/golang/glog"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 var commonOptions = sets.NewString("all", "none")
@@ -21,17 +21,8 @@ type common struct {
 	None bool `json:"none,omitempty"`
 }
 
-// GetCleanOptionsString returns a string representation of available "--clean" options.
-func GetCleanOptionsString() string {
-	return getOptionsString(Clean{})
-}
-
-// GetDrainOptionsString returns a string representation of available "--drain" options.
-func GetDrainOptionsString() string {
-	return getOptionsString(Drain{})
-}
-
-func getOptionsString(opt interface{}) string {
+// GetOptionsString returns a string representation of available options for the given interface.
+func GetOptionsString(opt interface{}) string {
 	names := getOptionNames(opt)
 	sort.Strings(names)
 	names = append(names, "all", "none")
