@@ -6,97 +6,69 @@
 package options
 
 import (
-	"encoding/json"
-	"reflect"
 	"sort"
 	"strings"
 
+	"github.com/DataDog/pupernetes/pkg/util/sets"
 	"github.com/fatih/structs"
 	"github.com/golang/glog"
 )
+
+var commonOptions = sets.NewString("all", "none")
 
 type common struct {
 	All  bool `json:"all,omitempty"`
 	None bool `json:"none,omitempty"`
 }
 
-func containsString(slice []string, elt string) bool {
-	for _, item := range slice {
-		if elt == item {
-			return true
-		}
-	}
-	return false
+// GetCleanOptionsString returns a string representation of available "--clean" options.
+func GetCleanOptionsString() string {
+	return getOptionsString(Clean{})
 }
 
-func setAllOptionsTo(d interface{}, set bool) {
-	for _, name := range structs.Names(d) {
-		if name == "common" {
-			continue
-		}
-		reflect.ValueOf(d).Elem().FieldByName(name).SetBool(set)
-	}
+// GetDrainOptionsString returns a string representation of available "--drain" options.
+func GetDrainOptionsString() string {
+	return getOptionsString(Drain{})
 }
 
-// GetOptionNames returns the options from the given interface
-// The interface must be a Clean or Drain one
-func GetOptionNames(opt interface{}) string {
-	var names []string
-	for _, elt := range structs.Names(opt) {
-		elt = strings.ToLower(elt)
-		if elt == "common" {
-			continue
-		}
-		names = append(names, elt)
-	}
+func getOptionsString(opt interface{}) string {
+	names := getOptionNames(opt)
 	sort.Strings(names)
 	names = append(names, "all", "none")
 	return strings.Join(names, ",")
 }
 
-func newOptions(stringOptions string, enabled bool, opt interface{}) interface{} {
-	stringOptions = strings.TrimSpace(stringOptions)
-	defer func() {
-		b, err := json.Marshal(opt)
-		if err != nil {
-			glog.Errorf("Cannot display options: %v", err)
-			return
-		}
-		t := reflect.TypeOf(opt).String()
-		t = strings.TrimPrefix(t, "*options.")
-		glog.V(3).Infof("%s options are: %s", t, string(b))
-	}()
-	setAllOptionsTo(opt, !enabled)
-	availableOptions := structs.Names(opt)
-	for i := range availableOptions {
-		availableOptions[i] = strings.ToLower(availableOptions[i])
-	}
-	for _, elt := range strings.Split(stringOptions, ",") {
-		switch elt {
-		case "all":
-			setAllOptionsTo(opt, enabled)
-			reflect.ValueOf(opt).Elem().FieldByName("All").SetBool(enabled)
-			reflect.ValueOf(opt).Elem().FieldByName("None").SetBool(!enabled)
-			return opt
-
-		case "none":
-			setAllOptionsTo(opt, !enabled)
-			reflect.ValueOf(opt).Elem().FieldByName("All").SetBool(!enabled)
-			reflect.ValueOf(opt).Elem().FieldByName("None").SetBool(enabled)
-			return opt
-
-		case "common":
-			glog.Warningf("Cannot use %q as option", elt)
+func getOptionNames(v interface{}) []string {
+	var names []string
+	for _, name := range structs.Names(v) {
+		name = strings.ToLower(name)
+		if name == "common" {
 			continue
-
-		default:
-			if !containsString(availableOptions, elt) {
-				glog.Warningf("Cannot use %q as option it's not in %s", elt, availableOptions)
-				continue
-			}
-			elt = strings.Title(elt)
-			reflect.ValueOf(opt).Elem().FieldByName(elt).SetBool(enabled)
 		}
+		names = append(names, name)
 	}
-	return opt
+	return names
+}
+
+func newOptions(optionsString string, availableOptions sets.String) sets.String {
+	opts := sets.NewStringFromString(optionsString, ",")
+
+	diff := opts.Difference(availableOptions.Union(commonOptions))
+	if diff.Len() > 0 {
+		glog.Warningf("%q are not in available options %q", diff, availableOptions)
+	}
+
+	if opts.Has("all") && opts.Has("none") {
+		glog.Warningf("\"all\" and \"none\" are mutually exclusive options. Using \"all\"")
+		opts.Delete("none") // "all" has precedence over "none"
+	}
+
+	if opts.Has("all") {
+		opts = opts.Union(availableOptions)
+	}
+	if opts.Has("none") {
+		opts = sets.NewString("none")
+	}
+
+	return opts
 }

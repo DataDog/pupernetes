@@ -47,17 +47,17 @@ func TestNewDrainOptions(t *testing.T) {
 			"none,all",
 			&Drain{
 				common{
-					false,
 					true,
+					false,
 				},
-				false,
-				false,
-				false,
+				true,
+				true,
+				true,
 			},
-			"",
+			"all",
 		},
 		{
-			"all,none",
+			"all,none", // "all" has precedence over "none"
 			&Drain{
 				common{
 					true,
