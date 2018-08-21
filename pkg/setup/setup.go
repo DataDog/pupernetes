@@ -177,7 +177,7 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		kubeConfigAuthPath:     path.Join(rootABSPath, defaultTemplates.ManifestConfig, "kubeconfig-auth.yaml"),
 		kubeConfigInsecurePath: path.Join(rootABSPath, defaultTemplates.ManifestConfig, "kubeconfig-insecure.yaml"),
 		etcdDataABSPath:        path.Join(rootABSPath, defaultEtcdDataDirName),
-		cleanOptions:           options.NewCleanOptions(config.ViperConfig.GetString("clean")),
+		cleanOptions:           options.NewCleanOptions(config.ViperConfig.GetString("clean"), config.ViperConfig.GetString("keep")),
 		drainOptions:           options.NewDrainOptions(config.ViperConfig.GetString("drain")),
 		kubectlLink:            config.ViperConfig.GetString("kubectl-link"),
 

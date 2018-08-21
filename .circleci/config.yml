@@ -94,17 +94,17 @@ jobs:
       - run:
           name: clean-setup-shortcut
           # As we kept the binaries, pupernetes should be very fast
-          command: sudo timeout 15 ./pupernetes daemon setup sandbox/ -c -binaries --kubeconfig-path $HOME/.kube/config
+          command: sudo timeout 15 ./pupernetes daemon setup sandbox/ -k binaries --kubeconfig-path $HOME/.kube/config
 
       - run:
           name: version-setup
           # Clean everything but the binaries and download and extract the outdated hyperkube tarball
-          command: sudo ./pupernetes daemon setup sandbox/ --hyperkube-version 1.9.4 -c -binaries --kubeconfig-path $HOME/.kube/config
+          command: sudo ./pupernetes daemon setup sandbox/ --hyperkube-version 1.9.4 -k binaries --kubeconfig-path $HOME/.kube/config
 
       - run:
           name: clean-but-binaries
           # Clean everything but the binaries
-          command: sudo ./pupernetes daemon clean sandbox/ -c -binaries --kubeconfig-path $HOME/.kube/config
+          command: sudo ./pupernetes daemon clean sandbox/ -k binaries --kubeconfig-path $HOME/.kube/config
 
       - run:
           name: rm-kubectl

@@ -26,7 +26,7 @@ type Drain struct {
 // NewDrainOptions instantiate a new Drain from the drainString
 // The drain string is lowercase drain options comma separated like: pods,iptables ...
 func NewDrainOptions(drainString string) *Drain {
-	return newOptions(drainString, &Drain{}).(*Drain)
+	return newOptions(drainString, true, &Drain{}).(*Drain)
 }
 
 // StringJSON represents the clean options as a JSON
