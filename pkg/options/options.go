@@ -51,7 +51,8 @@ func getOptionNames(v interface{}) []string {
 }
 
 func newOptions(optionsString string, availableOptions sets.String) sets.String {
-	opts := sets.NewStringFromString(optionsString, ",")
+	optionsString = strings.TrimSpace(optionsString)
+	opts := sets.NewString(strings.Split(optionsString, ",")...)
 
 	diff := opts.Difference(availableOptions.Union(commonOptions))
 	if diff.Len() > 0 {

@@ -14,12 +14,6 @@ func NewString(items ...string) String {
 	return s
 }
 
-// NewStringFromString returns a new set containing the items from the split string.
-func NewStringFromString(s, sep string) String {
-	s = strings.TrimSpace(s)
-	return NewString(strings.Split(s, sep)...)
-}
-
 // Insert adds items to the set.
 func (s String) Insert(items ...string) {
 	for _, item := range items {
