@@ -43,12 +43,11 @@ func NewCleanOptions(cleanString, keepString string) *Clean {
 	if keepString == "" {
 		opts = newOptions(cleanString, cleanOptions)
 	} else {
-		opts = cleanOptions.Difference(newOptions(keepString, cleanOptions))
+		keepOptions := newOptions(keepString, cleanOptions)
+		opts = cleanOptions.Difference(keepOptions) // keep is the opposite of clean
 	}
 
-	if opts.Has("-binaries") { // deprecated
-		opts = cleanOptions.Difference(sets.NewString("binaries"))
-	}
+	glog.V(3).Infof("Clean options are %q", opts.UnsortedList())
 
 	return &Clean{
 		common:    common{opts.Has("all"), opts.Has("none")},

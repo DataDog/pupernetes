@@ -31,6 +31,9 @@ type Drain struct {
 // The drain string is lowercase drain options comma separated like: pods,iptables ...
 func NewDrainOptions(drainString string) *Drain {
 	opts := newOptions(drainString, drainOptions)
+
+	glog.V(3).Infof("Drain options are %q", opts.UnsortedList())
+
 	return &Drain{
 		common:    common{opts.Has("all"), opts.Has("none")},
 		Pods:      opts.Has("pods"),

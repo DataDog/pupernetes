@@ -47,7 +47,8 @@ func newOptions(optionsString string, availableOptions sets.String) sets.String 
 
 	diff := opts.Difference(availableOptions.Union(commonOptions))
 	if diff.Len() > 0 {
-		glog.Warningf("%q are not in available options %q", diff, availableOptions)
+		glog.Warningf("%q are not in available options %q", diff.UnsortedList(), availableOptions.UnsortedList())
+		opts = opts.Difference(diff) // remove unavailable options
 	}
 
 	if opts.Has("all") && opts.Has("none") {
