@@ -33,6 +33,11 @@ func TestNewOptions(t *testing.T) {
 			sets.NewString("kubectl", "iptables"),
 			sets.NewString(),
 		},
+		{
+			"all,none", // "all" has precedence over "none"
+			sets.NewString("kubectl", "iptables"),
+			sets.NewString("kubectl", "iptables", "all"),
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.optionsString, func(t *testing.T) {
