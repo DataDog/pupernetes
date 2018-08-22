@@ -14,7 +14,7 @@ pupernetes daemon run [directory] [flags]
 
 ```
 
-# Setup and run the environment with the default options: 
+# Setup and run the environment with the default options:
 pupernetes daemon run /opt/state/
 
 # Clean all the environment, setup and run the environment:
@@ -23,15 +23,15 @@ pupernetes daemon run /opt/state/ -c all
 # Clean everything but the binaries, setup and run the environment:
 pupernetes daemon run /opt/state/ -c etcd,kubectl,kubelet,manifests,network,secrets,systemd,mounts
 
-# Setup and run the environment with a 5 minutes timeout: 
+# Setup and run the environment with a 5 minutes timeout:
 pupernetes daemon run /opt/state/ --run-timeout 5m
 
-# Setup and run the environment, then guarantee a kubelet garbage collection during the drain phase: 
+# Setup and run the environment, then guarantee a kubelet garbage collection during the drain phase:
 pupernetes daemon run /opt/state/ --gc 1m
 
 # Setup and run the environment as a systemd service:
-# Get logs with "journalctl -o cat -efu pupernetes" 
-# Get status with "systemctl status pupernetes --no-pager" 
+# Get logs with "journalctl -o cat -efu pupernetes"
+# Get status with "systemctl status pupernetes --no-pager"
 pupernetes daemon run /opt/state/ --job-type systemd
 
 # Setup and run the environment with a readiness on dns:

@@ -8,14 +8,18 @@ package options
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fatih/structs"
-	"github.com/golang/glog"
 	"sort"
 	"strings"
+
+	"github.com/fatih/structs"
+	"github.com/golang/glog"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
-// Clean is a convenient key / value bool struct to store which component
-// should be clean
+var cleanOptions = sets.NewString(getOptionNames(&Clean{})...) // does not include "all" or "none"
+
+// Clean is a convenient key / value bool struct to store which components
+// should be cleaned.
 type Clean struct {
 	common
 	Etcd      bool `json:"etcd,omitempty"`
@@ -35,10 +39,30 @@ type Clean struct {
 // The clean string is lowercase clean options comma separated like: etcd,binaries ...
 // keepString takes precedence over the clean one
 func NewCleanOptions(cleanString, keepString string) *Clean {
+	var opts sets.String
 	if keepString == "" {
-		return newOptions(cleanString, true, &Clean{}).(*Clean)
+		opts = newOptions(cleanString, cleanOptions)
+	} else {
+		keepOptions := newOptions(keepString, cleanOptions)
+		opts = cleanOptions.Difference(keepOptions) // keep is the opposite of clean
 	}
-	return newOptions(keepString, false, &Clean{}).(*Clean)
+
+	glog.V(3).Infof("Clean options are %q", opts.UnsortedList())
+
+	return &Clean{
+		common:    common{opts.Has("all"), opts.Has("none")},
+		Etcd:      opts.Has("etcd"),
+		Binaries:  opts.Has("binaries"),
+		Manifests: opts.Has("manifests"),
+		Kubelet:   opts.Has("kubelet"),
+		Secrets:   opts.Has("secrets"),
+		Network:   opts.Has("network"),
+		Systemd:   opts.Has("systemd"),
+		Kubectl:   opts.Has("kubectl"),
+		Mounts:    opts.Has("mounts"),
+		Iptables:  opts.Has("iptables"),
+		Logs:      opts.Has("logs"),
+	}
 }
 
 // StringJSON represents the clean options as a JSON

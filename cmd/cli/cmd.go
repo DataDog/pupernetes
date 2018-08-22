@@ -13,6 +13,8 @@ import (
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
 
+	"time"
+
 	"github.com/DataDog/pupernetes/pkg/api"
 	"github.com/DataDog/pupernetes/pkg/config"
 	"github.com/DataDog/pupernetes/pkg/job"
@@ -20,7 +22,6 @@ import (
 	"github.com/DataDog/pupernetes/pkg/run"
 	"github.com/DataDog/pupernetes/pkg/setup"
 	"github.com/DataDog/pupernetes/pkg/wait"
-	"time"
 )
 
 const programName = "pupernetes"
@@ -77,7 +78,7 @@ func NewCommand() (*cobra.Command, *int) {
 		Short:      fmt.Sprintf("%s and run the environment", setupCommand.Name()),
 		Args:       cobra.ExactArgs(1), // basePathDirectory
 		Example: fmt.Sprintf(`
-# Setup and run the environment with the default options: 
+# Setup and run the environment with the default options:
 %s run /opt/state/
 
 # Clean all the environment, setup and run the environment:
@@ -86,15 +87,15 @@ func NewCommand() (*cobra.Command, *int) {
 # Clean everything but the binaries, setup and run the environment:
 %s run /opt/state/ -c etcd,kubectl,kubelet,manifests,network,secrets,systemd,mounts
 
-# Setup and run the environment with a 5 minutes timeout: 
+# Setup and run the environment with a 5 minutes timeout:
 %s run /opt/state/ --run-timeout 5m
 
-# Setup and run the environment, then guarantee a kubelet garbage collection during the drain phase: 
+# Setup and run the environment, then guarantee a kubelet garbage collection during the drain phase:
 %s run /opt/state/ --gc 1m
 
 # Setup and run the environment as a systemd service:
-# Get logs with "journalctl -o cat -efu %s" 
-# Get status with "systemctl status %s --no-pager" 
+# Get logs with "journalctl -o cat -efu %s"
+# Get status with "systemctl status %s --no-pager"
 %s run /opt/state/ --%s %s
 
 # Setup and run the environment with a readiness on dns:
@@ -313,10 +314,10 @@ func NewCommand() (*cobra.Command, *int) {
 	daemonCommand.PersistentFlags().String("container-runtime", config.ViperConfig.GetString("container-runtime"), `container runtime interface to use (experimental: "containerd")`)
 	config.ViperConfig.BindPFlag("container-runtime", daemonCommand.PersistentFlags().Lookup("container-runtime"))
 
-	daemonCommand.PersistentFlags().StringP("clean", "c", config.ViperConfig.GetString("clean"), fmt.Sprintf("clean options before %s: %s", setupCommand.Name(), options.GetOptionNames(options.Clean{})))
+	daemonCommand.PersistentFlags().StringP("clean", "c", config.ViperConfig.GetString("clean"), fmt.Sprintf("clean options before %s: %s", setupCommand.Name(), options.GetOptionsString(options.Clean{})))
 	config.ViperConfig.BindPFlag("clean", daemonCommand.PersistentFlags().Lookup("clean"))
 
-	daemonCommand.PersistentFlags().StringP("keep", "k", config.ViperConfig.GetString("keep"), fmt.Sprintf("clean everything but the given options before %s: %s, this flag overrides any clean options", setupCommand.Name(), options.GetOptionNames(options.Clean{})))
+	daemonCommand.PersistentFlags().StringP("keep", "k", config.ViperConfig.GetString("keep"), fmt.Sprintf("clean everything but the given options before %s: %s, this flag overrides any clean options", setupCommand.Name(), options.GetOptionsString(options.Clean{})))
 	config.ViperConfig.BindPFlag("keep", daemonCommand.PersistentFlags().Lookup("keep"))
 
 	// clean
@@ -328,7 +329,7 @@ func NewCommand() (*cobra.Command, *int) {
 	// run
 	daemonCommand.AddCommand(runCommand)
 
-	runCommand.PersistentFlags().StringP("drain", "d", config.ViperConfig.GetString("drain"), fmt.Sprintf("drain options after %s: %s", runCommand.Name(), options.GetOptionNames(options.Drain{})))
+	runCommand.PersistentFlags().StringP("drain", "d", config.ViperConfig.GetString("drain"), fmt.Sprintf("drain options after %s: %s", runCommand.Name(), options.GetOptionsString(options.Drain{})))
 	config.ViperConfig.BindPFlag("drain", runCommand.PersistentFlags().Lookup("drain"))
 
 	runCommand.PersistentFlags().Duration("run-timeout", config.ViperConfig.GetDuration("run-timeout"), fmt.Sprintf("maximum time to run %s for until self shutdown", programName))

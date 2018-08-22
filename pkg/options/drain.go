@@ -8,14 +8,18 @@ package options
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fatih/structs"
-	"github.com/golang/glog"
 	"sort"
 	"strings"
+
+	"github.com/fatih/structs"
+	"github.com/golang/glog"
+	"k8s.io/apimachinery/pkg/util/sets"
 )
 
-// Drain is a convenient key / value bool struct to store which component
-// should be drain
+var drainOptions = sets.NewString(getOptionNames(&Drain{})...) // does not include "all" or "none"
+
+// Drain is a convenient key / value bool struct to store which components
+// should be drained.
 type Drain struct {
 	common
 	Pods      bool `json:"pods,omitempty"`
@@ -26,7 +30,16 @@ type Drain struct {
 // NewDrainOptions instantiate a new Drain from the drainString
 // The drain string is lowercase drain options comma separated like: pods,iptables ...
 func NewDrainOptions(drainString string) *Drain {
-	return newOptions(drainString, true, &Drain{}).(*Drain)
+	opts := newOptions(drainString, drainOptions)
+
+	glog.V(3).Infof("Drain options are %q", opts.UnsortedList())
+
+	return &Drain{
+		common:    common{opts.Has("all"), opts.Has("none")},
+		Pods:      opts.Has("pods"),
+		KubeletGC: opts.Has("kubeletgc"),
+		Iptables:  opts.Has("iptables"),
+	}
 }
 
 // StringJSON represents the clean options as a JSON
