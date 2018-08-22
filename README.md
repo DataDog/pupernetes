@@ -196,7 +196,7 @@ pupernetes can start a specific container runime with the flag `--container-runt
 
 These are the current supported container runtimes:
 - [Docker](https://github.com/docker/for-linux)
-- [containerd](https://github.com/containerd/containerd)
+- [containerd](https://github.com/containerd/containerd) (experimental)
 
 ### Systemd as job type
 
