@@ -77,7 +77,7 @@ Currently only reporting `docker`, please see the [current limitations](#current
 
 #### Docker
 
-If your using `Docker` as the container runtime, you must already have Docker installed.
+If you're using `Docker` as the container runtime, you must already have Docker installed.
 
 #### Systemd
 
