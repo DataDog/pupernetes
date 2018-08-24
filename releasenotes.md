@@ -1,3 +1,4 @@
+- [v0.8.0](#v080)
 - [v0.7.0](#v070)
 - [v0.6.1](#v061)
 - [v0.6.0](#v060)
@@ -6,6 +7,20 @@
 - [v0.3.0](#v030)
 - [v0.2.1](#v021)
 - [v0.2.0](#v020)
+
+## v0.8.0
+
+### Enhancement
+* Create Kubernetes 1.12 template collection #107
+* Add the admission control config file #109
+* Introduce the keep verb #108
+* Extend the audit logs to everything #110
+* Remove useless stage in audit logs #106
+
+### Bugfixes
+
+### Other
+* Refactor options package to use sets. #111
 
 ## v0.7.0
 
