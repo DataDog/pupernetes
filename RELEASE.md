@@ -80,6 +80,9 @@ Updates:
     * /opt/bin/pupernetes.sha512sum
 - [README](README.md)
     * [download section](README.md#download) :`${VERSION}`.
+- [exemples](examples)
+    * [travis](examples/travis.yaml)
+    * [circleci](examples/circleci.yaml)
 
 Commit and push the changes and open the PR.
 
