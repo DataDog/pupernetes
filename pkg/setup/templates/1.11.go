@@ -195,7 +195,7 @@ oom_score = 0
   [plugins.cgroups]
     no_prometheus = false
   [plugins.cri]
-    stream_server_address = ""
+    stream_server_address = "127.0.0.1"
     stream_server_port = "10010"
     enable_selinux = false
     sandbox_image = "k8s.gcr.io/pause:3.1"
