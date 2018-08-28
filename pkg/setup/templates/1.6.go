@@ -21,7 +21,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
 	--healthz-port=10248 \
 	--kubeconfig={{.RootABSPath}}/manifest-config/kubeconfig-insecure.yaml \
 	--require-kubeconfig \
-	--resolv-conf={{.RootABSPath}}/net.d/resolv.conf \
+	--resolv-conf={{.RootABSPath}}/net.d/resolv-conf \
 	--cluster-dns={{ .DNSClusterIP }} \
 	--cluster-domain=cluster.local \
 	--cert-dir={{.RootABSPath}}/secrets \
