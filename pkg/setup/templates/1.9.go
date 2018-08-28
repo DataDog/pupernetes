@@ -56,6 +56,7 @@ Description=containerd
 After=network.target
 
 [Service]
+KillMode=process
 Environment=PATH=/bin:/sbin:/usr/bin:/usr/sbin/:/usr/local/bin:/usr/local/sbin:{{.RootABSPath}}/bin
 ExecStart={{.RootABSPath}}/bin/containerd \
 	--config {{.RootABSPath}}/manifest-config/containerd-config.toml
