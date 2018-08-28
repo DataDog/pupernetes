@@ -32,11 +32,11 @@ const (
 )
 
 func init() {
-	ViperConfig.SetDefault("hyperkube-version", "1.10.3")
+	ViperConfig.SetDefault("hyperkube-version", "1.10.7")
 	ViperConfig.SetDefault("vault-version", "0.9.5")
-	ViperConfig.SetDefault("etcd-version", "3.1.11")
+	ViperConfig.SetDefault("etcd-version", "3.1.19")
 	ViperConfig.SetDefault("cni-version", "0.7.0")
-	ViperConfig.SetDefault("containerd-version", "1.1.0")
+	ViperConfig.SetDefault("containerd-version", "1.1.3")
 	ViperConfig.SetDefault("runc-version", "1.0.0-rc5")
 
 	ViperConfig.SetDefault("container-runtime", "docker")

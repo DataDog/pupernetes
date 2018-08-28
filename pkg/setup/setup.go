@@ -218,7 +218,7 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		depBinary: depBinary{
 			archivePath:     path.Join(e.binABSPath, fmt.Sprintf("etcd-v%s.tar.gz", config.ViperConfig.GetString("etcd-version"))),
 			binaryABSPath:   path.Join(e.binABSPath, "etcd"),
-			archiveURL:      fmt.Sprintf("https://github.com/coreos/etcd/releases/download/v%s/etcd-v%s-linux-amd64.tar.gz", config.ViperConfig.GetString("etcd-version"), config.ViperConfig.GetString("etcd-version")),
+			archiveURL:      fmt.Sprintf("https://github.com/etcd-io/etcd/releases/download/v%s/etcd-v%s-linux-amd64.tar.gz", config.ViperConfig.GetString("etcd-version"), config.ViperConfig.GetString("etcd-version")),
 			version:         config.ViperConfig.GetString("etcd-version"),
 			downloadTimeout: e.downloadTimeout,
 		},
