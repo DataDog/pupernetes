@@ -34,6 +34,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
 	--authentication-token-webhook-cache-ttl=5s \
 	--authorization-mode=Webhook  \
 	--cadvisor-port=0 \
+	--cgroup-driver={{ .CgroupDriver }} \
 	--max-pods=60 \
 	--node-ip={{ .NodeIP }} \
 	--node-labels=p8s=mononode \

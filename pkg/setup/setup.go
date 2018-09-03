@@ -6,15 +6,18 @@
 package setup
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 
 	"github.com/coreos/go-systemd/dbus"
 	"github.com/coreos/go-systemd/unit"
+	"github.com/docker/docker/client"
 	"github.com/golang/glog"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -24,7 +27,6 @@ import (
 	"github.com/DataDog/pupernetes/pkg/setup/requirements"
 	defaultTemplates "github.com/DataDog/pupernetes/pkg/setup/templates"
 	"github.com/DataDog/pupernetes/pkg/util"
-	"time"
 )
 
 const (
@@ -138,6 +140,7 @@ type templateMetadata struct {
 	DNSClusterIP             string  `json:"dns-cluster-ip"`
 	NodeIP                   *string `json:"node-ip"`
 	KubeletRootDirABSPath    string  `json:"kubelet-root-dir"`
+	CgroupDriver             string  `json:"cgroup-driver"`
 	ContainerRuntime         string  `json:"container-runtime"`
 	ContainerRuntimeEndpoint string  `json:"container-runtime-endpoint"`
 }
@@ -302,6 +305,19 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 	}
 	e.systemdUnitNames = append(e.systemdUnitNames, e.etcdUnitName, e.kubeAPIServerUnitName, e.kubeletUnitName)
 
+	cgroupDriver := "cgroupfs"
+	if containerRuntime == "docker" {
+		c, err := client.NewEnvClient()
+		if err != nil {
+			glog.Warningf("Failed to guess docker cgroup driver, falling back to default '%s': %v", err, cgroupDriver)
+		}
+		info, err := c.Info(context.TODO())
+		if err != nil {
+			glog.Warningf("Failed to guess docker cgroup driver, falling back to default '%s': %v", err, cgroupDriver)
+		}
+		cgroupDriver = info.CgroupDriver
+	}
+
 	// Template for manifests
 	e.templateMetadata = &templateMetadata{
 		// TODO conf this
@@ -314,7 +330,8 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		KubeletRootDirABSPath:    e.kubeletRootDir,
 		ContainerRuntime:         containerRuntime,
 		ContainerRuntimeEndpoint: ContainerRuntimeEndpoint,
-		NodeIP: &e.nodeIP, // initialized later
+		CgroupDriver:             cgroupDriver,
+		NodeIP:                   &e.nodeIP, // initialized later
 	}
 
 	// Vault root token
