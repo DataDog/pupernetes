@@ -22,6 +22,7 @@ Use this command to clean setup and run a Kubernetes local environment
       --kubelet-root-dir string              directory path for managing kubelet files (default "/var/lib/p8s-kubelet")
       --kubernetes-cluster-ip-range string   kubernetes cluster CIDR (default "192.168.254.0/24")
       --pod-ip-range string                  pod common network interface CIDR (default "192.168.253.0/24")
+      --skip-binaries-version                skip binaries version check, allows to use custom compiled binaries
       --systemd-unit-prefix string           prefix for systemd unit name (default "p8s-")
       --vault-version string                 vault version (default "0.9.5")
 ```

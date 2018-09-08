@@ -201,7 +201,8 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 			version:         config.ViperConfig.GetString("hyperkube-version"),
 			downloadTimeout: e.downloadTimeout,
 		},
-		commandVersion: []string{"kubelet", "--version"},
+		skipVersionVerify: config.ViperConfig.GetBool("skip-binaries-version"),
+		commandVersion:    []string{"kubelet", "--version"},
 	}
 
 	// Vault
@@ -213,7 +214,8 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 			version:         config.ViperConfig.GetString("vault-version"),
 			downloadTimeout: e.downloadTimeout,
 		},
-		commandVersion: []string{"--version"},
+		skipVersionVerify: config.ViperConfig.GetBool("skip-binaries-version"),
+		commandVersion:    []string{"--version"},
 	}
 
 	// Etcd
@@ -225,7 +227,8 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 			version:         config.ViperConfig.GetString("etcd-version"),
 			downloadTimeout: e.downloadTimeout,
 		},
-		commandVersion: []string{"--version"},
+		skipVersionVerify: config.ViperConfig.GetBool("skip-binaries-version"),
+		commandVersion:    []string{"--version"},
 	}
 
 	// Containerd
@@ -237,7 +240,8 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 			version:         config.ViperConfig.GetString("containerd-version"),
 			downloadTimeout: e.downloadTimeout,
 		},
-		commandVersion: []string{"--version"},
+		skipVersionVerify: config.ViperConfig.GetBool("skip-binaries-version"),
+		commandVersion:    []string{"--version"},
 	}
 
 	// Runc
@@ -249,7 +253,8 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 			version:         config.ViperConfig.GetString("runc-version"),
 			downloadTimeout: e.downloadTimeout,
 		},
-		commandVersion: []string{"--version"},
+		skipVersionVerify: config.ViperConfig.GetBool("skip-binaries-version"),
+		commandVersion:    []string{"--version"},
 	}
 
 	// CNI

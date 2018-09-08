@@ -320,6 +320,9 @@ func NewCommand() (*cobra.Command, *int) {
 	daemonCommand.PersistentFlags().StringP("keep", "k", config.ViperConfig.GetString("keep"), fmt.Sprintf("clean everything but the given options before %s: %s, this flag overrides any clean options", setupCommand.Name(), options.GetOptionsString(options.Clean{})))
 	config.ViperConfig.BindPFlag("keep", daemonCommand.PersistentFlags().Lookup("keep"))
 
+	daemonCommand.PersistentFlags().Bool("skip-binaries-version", config.ViperConfig.GetBool("skip-binaries-version"), "skip binaries version check, allows to use custom compiled binaries")
+	config.ViperConfig.BindPFlag("skip-binaries-version", daemonCommand.PersistentFlags().Lookup("skip-binaries-version"))
+
 	// clean
 	daemonCommand.AddCommand(cleanCommand)
 
