@@ -35,6 +35,7 @@ pupernetes wait -u p8s-kubelet
 
 ```
   -v, --verbose int   verbose level (default 2)
+      --version       display the version and exit 0
 ```
 
 ### SEE ALSO

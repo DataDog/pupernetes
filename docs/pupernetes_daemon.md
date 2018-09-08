@@ -31,6 +31,7 @@ Use this command to clean setup and run a Kubernetes local environment
 
 ```
   -v, --verbose int   verbose level (default 2)
+      --version       display the version and exit 0
 ```
 
 ### SEE ALSO
