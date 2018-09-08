@@ -30,12 +30,17 @@ type depBinary struct {
 
 type exeBinary struct {
 	depBinary
-	commandVersion []string
+	skipVersionVerify bool
+	commandVersion    []string
 }
 
 const downloadBinaryRetryDelay = time.Second * 5
 
 func (x *exeBinary) isUpToDate() bool {
+	if x.skipVersionVerify {
+		glog.V(4).Info("Skipping the verification of the version")
+		return true
+	}
 	b, err := exec.Command(x.binaryABSPath, x.commandVersion...).CombinedOutput()
 	output := strings.Trim(string(b), "\n")
 	if err != nil {
