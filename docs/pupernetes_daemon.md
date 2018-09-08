@@ -12,6 +12,7 @@ Use this command to clean setup and run a Kubernetes local environment
   -c, --clean string                         clean options before setup: binaries,etcd,iptables,kubectl,kubelet,logs,manifests,mounts,network,secrets,systemd,all,none (default "etcd,kubelet,logs,mounts,iptables")
       --cni-version string                   container network interface (cni) version (default "0.7.0")
       --container-runtime string             container runtime interface to use (experimental: "containerd") (default "docker")
+      --containerd-version string            containerd version (default "1.1.3")
       --download-timeout string              timeout for each downloaded archive (default "30m0s")
       --etcd-version string                  etcd version (default "3.1.19")
   -h, --help                                 help for daemon
