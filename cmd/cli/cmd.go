@@ -278,6 +278,9 @@ func NewCommand() (*cobra.Command, *int) {
 	// daemon command
 	rootCommand.AddCommand(daemonCommand)
 
+	daemonCommand.PersistentFlags().String("containerd-version", config.ViperConfig.GetString("containerd-version"), "containerd version")
+	config.ViperConfig.BindPFlag("containerd-version", daemonCommand.PersistentFlags().Lookup("containerd-version"))
+
 	daemonCommand.PersistentFlags().String("hyperkube-version", config.ViperConfig.GetString("hyperkube-version"), "hyperkube version")
 	config.ViperConfig.BindPFlag("hyperkube-version", daemonCommand.PersistentFlags().Lookup("hyperkube-version"))
 
