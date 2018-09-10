@@ -22,6 +22,7 @@ import (
 	"github.com/DataDog/pupernetes/pkg/run"
 	"github.com/DataDog/pupernetes/pkg/setup"
 	"github.com/DataDog/pupernetes/pkg/wait"
+	"github.com/DataDog/pupernetes/version"
 )
 
 const programName = "pupernetes"
@@ -39,6 +40,15 @@ func NewCommand() (*cobra.Command, *int) {
 			flag.Lookup("v").Value.Set(strconv.Itoa(verbose))
 		},
 	}
+	rootCommand.Run = func(cmd *cobra.Command, args []string) {
+		if config.ViperConfig.GetBool("version") {
+			version.DisplayVersion()
+			return
+		}
+		rootCommand.Help()
+	}
+	rootCommand.PersistentFlags().Bool("version", config.ViperConfig.GetBool("version"), "display the version and exit 0")
+	config.ViperConfig.BindPFlag("version", rootCommand.PersistentFlags().Lookup("version"))
 
 	daemonCommand := &cobra.Command{
 		Use:     "daemon command line",

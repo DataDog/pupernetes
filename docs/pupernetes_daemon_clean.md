@@ -51,6 +51,7 @@ pupernetes daemon clean /opt/state/ -c etcd,network,secrets
       --systemd-unit-prefix string           prefix for systemd unit name (default "p8s-")
       --vault-version string                 vault version (default "0.9.5")
   -v, --verbose int                          verbose level (default 2)
+      --version                              display the version and exit 0
 ```
 
 ### SEE ALSO

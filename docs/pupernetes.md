@@ -6,11 +6,16 @@ Use this command to manage a Kubernetes local environment
 
 Use this command to manage a Kubernetes local environment
 
+```
+pupernetes command line [flags]
+```
+
 ### Options
 
 ```
   -h, --help          help for pupernetes
   -v, --verbose int   verbose level (default 2)
+      --version       display the version and exit 0
 ```
 
 ### SEE ALSO

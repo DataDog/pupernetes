@@ -3,8 +3,15 @@ CFLAGS?=-i
 GOOS=linux
 CGO_ENABLED?=0
 
+
+# Used to populate variables in version package.
+VERSION=$(shell git describe --match 'v[0-9]*' --dirty='+dirty' --always)
+REVISION=$(shell git rev-parse HEAD)$(shell if ! git diff --no-ext-diff --quiet --exit-code; then echo +dirty; fi)
+PROJECT=github.com/DataDog/pupernetes
+VERSION_FLAGS=-ldflags '-s -w -X $(PROJECT)/version.Version=$(VERSION) -X $(PROJECT)/version.Revision=$(REVISION) -X $(PROJECT)/version.Package=$(PROJECT)'
+
 pupernetes: go-constraint
-	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) $(CC) build $(CFLAGS) -o $@ cmd/main.go
+	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) $(CC) build $(CFLAGS) $(VERSION_FLAGS) -o $@ cmd/main.go
 
 go-constraint:
 	go version | grep "go version go1.10"

@@ -41,6 +41,7 @@ pupernetes reset default $(kubectl get ns -o name) --apply
 
 ```
   -v, --verbose int   verbose level (default 2)
+      --version       display the version and exit 0
 ```
 
 ### SEE ALSO
