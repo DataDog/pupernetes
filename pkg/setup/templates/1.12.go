@@ -68,7 +68,7 @@ Restart=no
 			Name:        "cri-o.service",
 			Destination: ManifestSystemdUnit,
 			Content: []byte(`[Unit]
-Description=containerd
+Description=cri-o
 After=network.target
 
 [Service]
