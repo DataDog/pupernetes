@@ -66,6 +66,21 @@ Restart=no
 `),
 		},
 		{
+			Name:        "cri-o.service",
+			Destination: ManifestSystemdUnit,
+			Content: []byte(`[Unit]
+Description=containerd
+After=network.target
+
+[Service]
+KillMode=process
+Environment=PATH=/bin:/sbin:/usr/bin:/usr/sbin/:/usr/local/bin:/usr/local/sbin:{{.RootABSPath}}/bin
+ExecStart={{.RootABSPath}}/bin/crio
+
+Restart=no
+`),
+		},
+		{
 			Name:        "kube-apiserver.service",
 			Destination: ManifestSystemdUnit,
 			Content: []byte(`[Unit]

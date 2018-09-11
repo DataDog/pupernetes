@@ -29,6 +29,9 @@ const (
 
 	// CRIContainerd is a container runtime engine
 	CRIContainerd = "containerd"
+
+	// CRICrio is a container runtime engine
+	CRICrio = "cri-o"
 )
 
 func init() {
@@ -40,6 +43,7 @@ func init() {
 	ViperConfig.SetDefault("etcd-version", "3.1.19")
 	ViperConfig.SetDefault("cni-version", "0.7.0")
 	ViperConfig.SetDefault("containerd-version", "1.1.3")
+	ViperConfig.SetDefault("crio-version", "1.11.2")
 	ViperConfig.SetDefault("runc-version", "1.0.0-rc5")
 
 	ViperConfig.SetDefault("container-runtime", "docker")

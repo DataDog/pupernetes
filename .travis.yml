@@ -47,6 +47,7 @@ script:
 after_failure:
   - uptime # check the load
   - free -h # pods may be evicted
+  - sudo journalctl -e --no-pager -o cat -u p8s-cri-o.service
   - sudo journalctl -e --no-pager -o cat -u p8s-containerd.service
   - sudo journalctl -e --no-pager -o cat -u p8s-etcd.service
   - sudo journalctl -e --no-pager -o cat -u p8s-kubelet.service

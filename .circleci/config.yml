@@ -151,6 +151,10 @@ jobs:
           command: sudo timeout 600 ./pupernetes daemon run sandbox/ --bind-address 0.0.0.0:8989 --kubeconfig-path $HOME/.kube/config --container-runtime containerd
 
       - run:
+          name: run-cri-o
+          command: sudo timeout 600 ./pupernetes daemon run sandbox/ --bind-address 0.0.0.0:8989 --kubeconfig-path $HOME/.kube/config --container-runtime cri-o
+
+      - run:
           name: clean
           command: sudo ./pupernetes daemon clean sandbox/ -c all
 

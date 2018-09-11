@@ -22,6 +22,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
+	"time"
+
 	"github.com/DataDog/pupernetes/pkg/config"
 	"github.com/DataDog/pupernetes/pkg/options"
 	"github.com/DataDog/pupernetes/pkg/setup/requirements"
@@ -90,6 +92,7 @@ type Environment struct {
 	binaryVault      *exeBinary
 	binaryEtcd       *exeBinary
 	binaryContainerd *exeBinary
+	binaryCrio       *exeBinary
 	binaryRunc       *exeBinary
 
 	// dependencies
@@ -242,6 +245,18 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		},
 		skipVersionVerify: config.ViperConfig.GetBool("skip-binaries-version"),
 		commandVersion:    []string{"--version"},
+	}
+
+	// CRI-o
+	e.binaryCrio = &exeBinary{
+		depBinary: depBinary{
+			archivePath:     path.Join(e.binABSPath, fmt.Sprintf("containerd-v%s.tar.gz", config.ViperConfig.GetString("containerd-version"))),
+			binaryABSPath:   path.Join(e.binABSPath, "usr/bin/crio"),
+			archiveURL:      fmt.Sprintf("https://launchpad.net/~projectatomic/+archive/ubuntu/ppa/+files/cri-o-1.11_%s-1~ubuntu16.04.2~ppa11_amd64.deb", config.ViperConfig.GetString("crio-version")),
+			version:         config.ViperConfig.GetString("crio-version"),
+			downloadTimeout: e.downloadTimeout,
+		},
+		commandVersion: []string{"--version"},
 	}
 
 	// Runc
