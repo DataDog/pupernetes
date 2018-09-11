@@ -14,7 +14,7 @@ pupernetes: go-constraint
 	CGO_ENABLED=$(CGO_ENABLED) GOOS=$(GOOS) $(CC) build $(CFLAGS) $(VERSION_FLAGS) -o $@ cmd/main.go
 
 go-constraint:
-	go version | grep "go version go1.10"
+	go version | grep -E "go version go1.1[[:digit:]]"
 
 clean:
 	$(RM) pupernetes pupernetes.sha512sum
