@@ -43,10 +43,11 @@ func (e *Environment) setupBinaryCrio() error {
 		return nil
 	}
 	_, err := os.Stat(e.binaryCrio.binaryABSPath)
-	if err == nil && e.binaryCrio.isUpToDate() {
-		glog.V(4).Infof("CRI-o already setup and up to date: %s", e.binaryCrio.binaryABSPath)
-		return nil
-	}
+	// TODO
+	// if err == nil && e.binaryCrio.isUpToDate() {
+	// 	glog.V(4).Infof("CRI-o already setup and up to date: %s", e.binaryCrio.binaryABSPath)
+	// 	return nil
+	// }
 	err = e.binaryCrio.download()
 	if err != nil {
 		return err
