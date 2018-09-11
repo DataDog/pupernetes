@@ -75,9 +75,79 @@ After=network.target
 [Service]
 KillMode=process
 Environment=PATH=/bin:/sbin:/usr/bin:/usr/sbin/:/usr/local/bin:/usr/local/sbin:{{.RootABSPath}}/bin
-ExecStart={{.RootABSPath}}/bin/usr/bin/crio --runtime {{.RootABSPath}}/bin/runc
+ExecStartPre=/bin/mkdir -pv {{.RootABSPath}}/hooks.d
+ExecStart={{.RootABSPath}}/bin/crio \
+	--config {{.RootABSPath}}/manifest-config/cri-o.conf 
 
 Restart=no
+`),
+		},
+		{
+			Name:        "seccomp.json",
+			Destination: ManifestConfig,
+			Content:     seccomp,
+		},
+		{
+			Name:        "cri-o.conf",
+			Destination: ManifestConfig,
+			Content: []byte(`
+[crio]
+[crio.api]
+listen = "/var/run/crio/crio.sock"
+stream_address = ""
+stream_port = "10010"
+stream_enable_tls = false
+stream_tls_cert = ""
+stream_tls_key = ""
+stream_tls_ca = ""
+file_locking = true
+
+[crio.runtime]
+runtime = "{{.RootABSPath}}/bin/runc"
+runtime_untrusted_workload = ""
+default_workload_trust = "trusted"
+no_pivot = false
+conmon = "{{.RootABSPath}}/bin/conmon"
+conmon_env = [
+	"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:{{.RootABSPath}}/bin",
+]
+selinux = false
+seccomp_profile = "{{.RootABSPath}}/manifest-config/seccomp.json"
+apparmor_profile = "crio-default"
+cgroup_manager = "cgroupfs"
+default_capabilities = [
+	"CHOWN", 
+	"DAC_OVERRIDE", 
+	"FSETID", 
+	"FOWNER", 
+	"NET_RAW", 
+	"SETGID", 
+	"SETUID", 
+	"SETPCAP", 
+	"NET_BIND_SERVICE", 
+	"SYS_CHROOT", 
+	"KILL", 
+]
+hooks_dir_path = "{{.RootABSPath}}/hooks.d"
+default_mounts = [
+]
+pids_limit = 1024
+log_size_max = -1
+read_only = false
+log_level = "info"
+uid_mappings = ""
+gid_mappings = ""
+
+[crio.image]
+default_transport = "docker://"
+pause_image = "k8s.gcr.io/pause:3.1"
+pause_command = "/pause"
+signature_policy = ""
+image_volumes = "mkdir"
+
+[crio.network]
+network_dir = "{{.RootABSPath}}/net.d"
+plugin_dir = "{{.RootABSPath}}/bin"
 `),
 		},
 		{

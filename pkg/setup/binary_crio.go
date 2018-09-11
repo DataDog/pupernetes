@@ -26,14 +26,45 @@ func (e *Environment) extractCrio() error {
 		_ = e.binaryCrio.removeArchive()
 		return err
 	}
-	// todo extract data.tar.xz and get `usr/bin/crio`
-	b, err = exec.Command("tar", "-C", e.binABSPath, "-xJf ", path.Join(e.binABSPath, "data.tar.xz")).CombinedOutput()
-	_, err = os.Stat(e.binaryCrio.binaryABSPath)
+	dataTarXZ := path.Join(e.binABSPath, "data.tar.xz")
+	_, err = os.Stat(dataTarXZ)
 	if err != nil {
-		glog.Errorf("Unexpected error: %v after untar %s", err, output)
+		glog.Errorf("Unexpected error: %v after ar x %s", err, output)
 		return err
 	}
-	glog.V(2).Infof("Successfully untar %s: %s", e.binaryCrio.archivePath, output)
+	glog.V(4).Infof("Successfully ar x %s to %s", e.binaryCrio.archivePath, dataTarXZ)
+
+	b, err = exec.Command("tar", "-C", e.binABSPath, "-xJvf", dataTarXZ,
+		"./usr/bin/crio",
+		"--strip-component", "3").CombinedOutput()
+	if err != nil {
+		glog.Errorf("Unexpected error: %v after untar %s", err, string(b))
+		return err
+	}
+
+	b, err = exec.Command("tar", "-C", e.binABSPath, "-xJvf", dataTarXZ,
+		"./usr/lib/crio/bin/conmon",
+		"./usr/lib/crio/bin/pause",
+		"--strip-component", "5").CombinedOutput()
+	if err != nil {
+		glog.Errorf("Unexpected error: %v after untar %s", err, string(b))
+		return err
+	}
+
+	b, err = exec.Command("tar", "-C", e.binABSPath, "-xJvf", dataTarXZ,
+		"./usr/lib/crio/bin/conmon",
+		"./usr/lib/crio/bin/pause",
+		"--strip-component", "5").CombinedOutput()
+	if err != nil {
+		glog.Errorf("Unexpected error: %v after untar %s", err, string(b))
+		return err
+	}
+	_, err = os.Stat(e.binaryCrio.binaryABSPath)
+	if err != nil {
+		glog.Errorf("Unexpected error: %v after untar", err)
+		return err
+	}
+	glog.V(2).Infof("Successfully extracted %s", e.binaryCrio.archivePath)
 	return err
 }
 
