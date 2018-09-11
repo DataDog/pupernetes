@@ -27,6 +27,9 @@ const (
 
 	defaultAPIAddress = "127.0.0.1:8989"
 
+	// DockerRuntime is a container runtime
+	DockerRuntime = "docker"
+
 	// CRIContainerd is a container runtime engine
 	CRIContainerd = "containerd"
 
@@ -46,7 +49,7 @@ func init() {
 	ViperConfig.SetDefault("crio-version", "1.11.2")
 	ViperConfig.SetDefault("runc-version", "1.0.0-rc5")
 
-	ViperConfig.SetDefault("container-runtime", "docker")
+	ViperConfig.SetDefault("container-runtime", DockerRuntime)
 
 	ViperConfig.SetDefault("download-timeout", time.Minute*30)
 
