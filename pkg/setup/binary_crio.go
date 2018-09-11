@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 
 	"github.com/golang/glog"
 
@@ -27,7 +28,7 @@ func (e *Environment) extractCrio() error {
 		return err
 	}
 	// todo extract data.tar.xz and get `usr/bin/crio`
-	b, err = exec.Command("tar", "-C", e.binABSPath, "-xJf", " data.tar.xz").CombinedOutput()
+	b, err = exec.Command("tar", "-C", e.binABSPath, "-xJf ", path.Join(e.binABSPath, "data.tar.xz")).CombinedOutput()
 	_, err = os.Stat(e.binaryCrio.binaryABSPath)
 	if err != nil {
 		glog.Errorf("Unexpected error: %v after untar %s", err, output)
