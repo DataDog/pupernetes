@@ -6,7 +6,6 @@
 package setup
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path"
@@ -56,8 +55,9 @@ func (e *Environment) setupBinaryCrio() error {
 	if err != nil {
 		return err
 	}
-	if !e.binaryCrio.isUpToDate() {
-		return fmt.Errorf("CRI-o %s is outdated", e.binaryEtcd.binaryABSPath)
-	}
+	// TODO
+	// if !e.binaryCrio.isUpToDate() {
+	// 	return fmt.Errorf("CRI-o %s is outdated", e.binaryEtcd.binaryABSPath)
+	// }
 	return nil
 }

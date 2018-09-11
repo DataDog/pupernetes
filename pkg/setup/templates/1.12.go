@@ -74,7 +74,7 @@ After=network.target
 [Service]
 KillMode=process
 Environment=PATH=/bin:/sbin:/usr/bin:/usr/sbin/:/usr/local/bin:/usr/local/sbin:{{.RootABSPath}}/bin
-ExecStart={{.RootABSPath}}/bin/crio
+ExecStart={{.RootABSPath}}/bin/usr/bin/crio --runtime {{.RootABSPath}}/bin/runc
 
 Restart=no
 `),
