@@ -77,7 +77,7 @@ KillMode=process
 Environment=PATH=/bin:/sbin:/usr/bin:/usr/sbin/:/usr/local/bin:/usr/local/sbin:{{.RootABSPath}}/bin
 ExecStartPre=/bin/mkdir -pv {{.RootABSPath}}/hooks.d
 ExecStart={{.RootABSPath}}/bin/crio \
-	--config {{.RootABSPath}}/manifest-config/cri-o.conf 
+	--config {{.RootABSPath}}/manifest-config/cri-o.conf
 
 Restart=no
 `),
@@ -116,17 +116,17 @@ seccomp_profile = "{{.RootABSPath}}/manifest-config/seccomp.json"
 apparmor_profile = "crio-default"
 cgroup_manager = "cgroupfs"
 default_capabilities = [
-	"CHOWN", 
-	"DAC_OVERRIDE", 
-	"FSETID", 
-	"FOWNER", 
-	"NET_RAW", 
-	"SETGID", 
-	"SETUID", 
-	"SETPCAP", 
-	"NET_BIND_SERVICE", 
-	"SYS_CHROOT", 
-	"KILL", 
+	"CHOWN",
+	"DAC_OVERRIDE",
+	"FSETID",
+	"FOWNER",
+	"NET_RAW",
+	"SETGID",
+	"SETUID",
+	"SETPCAP",
+	"NET_BIND_SERVICE",
+	"SYS_CHROOT",
+	"KILL",
 ]
 hooks_dir_path = "{{.RootABSPath}}/hooks.d"
 default_mounts = [
@@ -137,6 +137,7 @@ read_only = false
 log_level = "info"
 uid_mappings = ""
 gid_mappings = ""
+enable-metrics = true
 
 [crio.image]
 default_transport = "docker://"
@@ -144,6 +145,9 @@ pause_image = "k8s.gcr.io/pause:3.1"
 pause_command = "/pause"
 signature_policy = ""
 image_volumes = "mkdir"
+registries = [
+"docker.io",
+]
 
 [crio.network]
 network_dir = "{{.RootABSPath}}/net.d"
