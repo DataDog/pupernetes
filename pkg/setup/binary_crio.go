@@ -17,7 +17,9 @@ import (
 
 func (e *Environment) extractCrio() error {
 	glog.V(2).Infof("Extracting %s", e.binaryCrio.archivePath)
-	b, err := exec.Command("ar", "x", e.binaryCrio.archivePath).CombinedOutput()
+	cmd := exec.Command("ar", "x", e.binaryCrio.archivePath)
+	cmd.Dir = e.binABSPath
+	b, err := cmd.CombinedOutput()
 	output := string(b)
 	if err != nil {
 		glog.Errorf("Cannot extract %s, %s: %v", e.binaryCrio.archivePath, output, err)
