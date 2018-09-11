@@ -323,6 +323,11 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		ContainerRuntimeEndpoint = "/run/containerd/containerd.sock"
 		e.systemdUnitNames = append(e.systemdUnitNames, fmt.Sprintf("%s%s.service", e.systemdUnitPrefix, e.containerRuntimeInterface))
 	}
+	if e.containerRuntimeInterface == config.CRICrio {
+		containerRuntime = "remote"
+		ContainerRuntimeEndpoint = "/run/crio/crio.sock"
+		e.systemdUnitNames = append(e.systemdUnitNames, fmt.Sprintf("%s%s.service", e.systemdUnitPrefix, e.containerRuntimeInterface))
+	}
 	e.systemdUnitNames = append(e.systemdUnitNames, e.etcdUnitName, e.kubeAPIServerUnitName, e.kubeletUnitName)
 
 	cgroupDriver := "cgroupfs"
@@ -404,6 +409,7 @@ func (e *Environment) Setup() error {
 		e.setupBinaryCNI,
 		e.setupBinaryEtcd,
 		e.setupBinaryContainerd,
+		e.setupBinaryCrio,
 		e.setupBinaryRunc,
 		e.setupBinaryVault,
 		e.setupBinaryHyperkube,
