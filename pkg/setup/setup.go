@@ -22,8 +22,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"time"
-
 	"github.com/DataDog/pupernetes/pkg/config"
 	"github.com/DataDog/pupernetes/pkg/options"
 	"github.com/DataDog/pupernetes/pkg/setup/requirements"
