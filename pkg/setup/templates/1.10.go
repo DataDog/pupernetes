@@ -77,7 +77,8 @@ KillMode=process
 Environment=PATH=/bin:/sbin:/usr/bin:/usr/sbin/:/usr/local/bin:/usr/local/sbin:{{.RootABSPath}}/bin
 ExecStartPre=/bin/mkdir -pv {{.RootABSPath}}/hooks.d
 ExecStart={{.RootABSPath}}/bin/crio \
-	--config {{.RootABSPath}}/manifest-config/cri-o.conf
+  --config {{.RootABSPath}}/manifest-config/cri-o.conf \
+  --enable-metrics
 
 Restart=no
 `),
@@ -92,9 +93,6 @@ Restart=no
 			Destination: ManifestConfig,
 			Content: []byte(`
 [crio]
-enable_metrics = true
-metrics_port = 9090
-
 [crio.api]
 listen = "/var/run/crio/crio.sock"
 stream_address = ""
