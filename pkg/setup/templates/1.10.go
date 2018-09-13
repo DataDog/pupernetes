@@ -92,6 +92,9 @@ Restart=no
 			Destination: ManifestConfig,
 			Content: []byte(`
 [crio]
+enable_metrics = true
+metrics_port = 9090
+
 [crio.api]
 listen = "/var/run/crio/crio.sock"
 stream_address = ""
@@ -137,7 +140,6 @@ read_only = false
 log_level = "info"
 uid_mappings = ""
 gid_mappings = ""
-enable_metrics = true
 
 [crio.image]
 default_transport = "docker://"
@@ -147,6 +149,7 @@ signature_policy = ""
 image_volumes = "mkdir"
 registries = [
 "docker.io",
+"k8s.gcr.io",
 ]
 
 [crio.network]
