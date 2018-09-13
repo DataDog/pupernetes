@@ -137,7 +137,7 @@ read_only = false
 log_level = "info"
 uid_mappings = ""
 gid_mappings = ""
-enable-metrics = true
+enable_metrics = true
 
 [crio.image]
 default_transport = "docker://"
