@@ -122,7 +122,8 @@ type Environment struct {
 	isDockerBridge        bool
 
 	// Vault token
-	vaultRootToken string
+	vaultRootToken     string
+	vaultListenAddress string
 
 	kubectlLink string
 
@@ -191,6 +192,7 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		kubeletUnitName:           config.ViperConfig.GetString("systemd-unit-prefix") + "kubelet.service",
 		kubeAPIServerUnitName:     config.ViperConfig.GetString("systemd-unit-prefix") + "kube-apiserver.service",
 		containerRuntimeInterface: config.ViperConfig.GetString("container-runtime"),
+		vaultListenAddress:        config.ViperConfig.GetString("vault-listen-address"),
 	}
 	// Kubernetes
 	e.binaryHyperkube = &exeBinary{

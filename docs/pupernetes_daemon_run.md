@@ -72,6 +72,7 @@ pupernetes daemon run /opt/state/ --dns-check --dns-queries quay.io.,coredns.kub
       --pod-ip-range string                  pod common network interface CIDR (default "192.168.253.0/24")
       --skip-binaries-version                skip binaries version check, allows to use custom compiled binaries
       --systemd-unit-prefix string           prefix for systemd unit name (default "p8s-")
+      --vault-listen-address string          vault listen address during setup stage (default "127.0.0.1:8201")
       --vault-version string                 vault version (default "0.9.5")
   -v, --verbose int                          verbose level (default 2)
       --version                              display the version and exit 0

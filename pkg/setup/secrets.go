@@ -72,7 +72,7 @@ func waitForUnseal(vRaw *vault.Client) error {
 
 func (e *Environment) generateVaultPKI() error {
 	vaultCFG := vault.DefaultConfig()
-	vaultCFG.Address = "http://127.0.0.1:8200"
+	vaultCFG.Address = "http://" + e.vaultListenAddress
 	vRaw, err := vault.NewClient(vaultCFG)
 	if err != nil {
 		glog.Errorf("Cannot use vault client: %v", err)
@@ -231,7 +231,7 @@ func (e *Environment) generateVaultSecrets() error {
 		return nil
 	}
 	glog.V(4).Infof("Starting vault %s", e.binaryVault.binaryABSPath)
-	cmd := exec.Command(e.binaryVault.binaryABSPath, "server", "-dev", "-dev-root-token-id="+e.vaultRootToken)
+	cmd := exec.Command(e.binaryVault.binaryABSPath, "server", "-dev", "-dev-root-token-id="+e.vaultRootToken, "-dev-listen-address="+e.vaultListenAddress)
 	var std bytes.Buffer
 	cmd.Stderr = &std
 	cmd.Stdout = &std

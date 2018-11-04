@@ -306,6 +306,9 @@ func NewCommand() (*cobra.Command, *int) {
 	daemonCommand.PersistentFlags().String("download-timeout", config.ViperConfig.GetString("download-timeout"), "timeout for each downloaded archive")
 	config.ViperConfig.BindPFlag("download-timeout", daemonCommand.PersistentFlags().Lookup("download-timeout"))
 
+	daemonCommand.PersistentFlags().String("vault-listen-address", config.ViperConfig.GetString("vault-listen-address"), "vault listen address during setup stage")
+	config.ViperConfig.BindPFlag("vault-listen-address", daemonCommand.PersistentFlags().Lookup("vault-listen-address"))
+
 	daemonCommand.PersistentFlags().String("kubelet-root-dir", config.ViperConfig.GetString("kubelet-root-dir"), "directory path for managing kubelet files")
 	config.ViperConfig.BindPFlag("kubelet-root-dir", daemonCommand.PersistentFlags().Lookup("kubelet-root-dir"))
 
