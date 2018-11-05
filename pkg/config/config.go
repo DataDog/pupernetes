@@ -55,6 +55,7 @@ func init() {
 
 	ViperConfig.SetDefault("kubectl-link", "")
 	ViperConfig.SetDefault("vault-root-token", "")
+	ViperConfig.SetDefault("vault-listen-address", "127.0.0.1:8201")
 
 	ViperConfig.SetDefault("clean", "etcd,kubelet,logs,mounts,iptables")
 	ViperConfig.SetDefault("keep", "")
