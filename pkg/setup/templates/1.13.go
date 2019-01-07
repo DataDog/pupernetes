@@ -358,7 +358,6 @@ spec:
     - --concurrent-resource-quota-syncs=2
     - --concurrent-service-syncs=1
     - --concurrent-serviceaccount-token-syncs=2
-    - --horizontal-pod-autoscaler-use-rest-clients=true
     volumeMounts:
       - name: secrets
         mountPath: /etc/secrets
