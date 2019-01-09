@@ -383,19 +383,28 @@ spec:
 			Name:        "kube-scheduler.yaml",
 			Destination: ManifestAPI,
 			Content: []byte(`---
-apiVersion: extensions/v1beta1
-kind: DaemonSet
+apiVersion: v1
+kind: ServiceAccount
 metadata:
   name: kube-scheduler
   namespace: kube-system
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: kube-scheduler
+  name: kube-scheduler
+  namespace: kube-system
 spec:
-  template:
-    metadata:
-      labels:
-        app: kube-scheduler
-    spec:
-      hostNetwork: true
-      containers:
+  serviceAccountName: kube-scheduler
+  nodeName: "{{ .Hostname }}"
+  hostNetwork: true
+  volumes:
+  - name: secrets
+    hostPath:
+      path: "{{.RootABSPath}}/secrets"
+  containers:
       - name: kube-scheduler
         image: "{{ .HyperkubeImageURL }}"
         imagePullPolicy: IfNotPresent
