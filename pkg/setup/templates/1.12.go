@@ -388,7 +388,6 @@ kind: ServiceAccount
 metadata:
   name: kube-scheduler
   namespace: kube-system
-automountServiceAccountToken: true
 ---
 apiVersion: v1
 kind: Pod
@@ -399,7 +398,6 @@ metadata:
   namespace: kube-system
 spec:
   serviceAccountName: kube-scheduler
-  automountServiceAccountToken: false
   nodeName: "{{ .Hostname }}"
   hostNetwork: true
   volumes:
