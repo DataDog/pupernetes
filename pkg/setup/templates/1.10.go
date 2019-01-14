@@ -45,6 +45,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
 	--container-runtime={{.ContainerRuntime}} \
 	--runtime-request-timeout=15m \
 	--container-runtime-endpoint=unix://{{.ContainerRuntimeEndpoint}} \
+	--feature-gates=PodShareProcessNamespace=true \
 
 Restart=no
 `),
@@ -113,6 +114,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube apiserver \
 	--etcd-compaction-interval=0 \
 	--event-ttl=10m \
 	--admission-control-config-file={{.RootABSPath}}/manifest-config/admission.yaml \
+	--feature-gates=PodShareProcessNamespace=true \
 
 Restart=no
 `),
