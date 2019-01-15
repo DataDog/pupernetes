@@ -8,6 +8,30 @@
 - [v0.2.1](#v021)
 - [v0.2.0](#v020)
 
+## v0.9.0
+
+### Enhancement
+* node: support shared PID #128
+* add kubernetes 1.13 #126
+* setup: can choose the vault listen address #125
+* version: introduce the display of it #121
+* containerd: can choose the version over the command line #122
+* binaries: can skip the verification of the version #120
+* Support Fedora (systemd cgroupfs) #118
+* versions: upgrade hyperkube, etcd and containerd #116
+
+### Bugfixes
+* resolv: remove the extension .conf #117
+* containerd: kill move to process #115
+
+
+### Other
+* bump travis matrix #127
+* makefile: set the constrain to go 1.10+ #123
+* Update the license file #119
+* examples: upgrade to the latest pupernetes #114
+
+
 ## v0.8.0
 
 ### Enhancement
