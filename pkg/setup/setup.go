@@ -250,7 +250,7 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		depBinary: depBinary{
 			archivePath:     path.Join(e.binABSPath, fmt.Sprintf("crio-v%s.deb", config.ViperConfig.GetString("crio-version"))),
 			binaryABSPath:   path.Join(e.binABSPath, "crio"),
-			archiveURL:      fmt.Sprintf("https://launchpad.net/~projectatomic/+archive/ubuntu/ppa/+files/cri-o-1.11_%s-1~ubuntu16.04.2~ppa11_amd64.deb", config.ViperConfig.GetString("crio-version")),
+			archiveURL:      fmt.Sprintf("https://launchpad.net/~projectatomic/+archive/ubuntu/ppa/+files/cri-o-1.11-stable_%s-1~ubuntu18.04~ppa3_amd64.deb", config.ViperConfig.GetString("crio-version")),
 			version:         config.ViperConfig.GetString("crio-version"),
 			downloadTimeout: e.downloadTimeout,
 		},
