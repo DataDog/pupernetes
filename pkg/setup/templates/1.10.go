@@ -67,6 +67,54 @@ Restart=no
 `),
 		},
 		{
+			Name:        "nginx.service",
+			Destination: ManifestSystemdUnit,
+			Content: []byte(`[Unit]
+Description=nginx
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/docker run --rm -it --net=host \
+	-v {{.RootABSPath}}/manifest-config/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
+	-v {{.RootABSPath}}/secrets:/opt/secrets:ro \
+	nginx:latest
+
+Restart=no
+`),
+		},
+		{
+			Name:        "nginx.conf",
+			Destination: ManifestConfig,
+			Content: []byte(`
+server {
+    listen			443 ssl;
+    server_name		localhost;
+
+	ssl_certificate			/opt/secrets/kubernetes.certificate;
+	ssl_certificate_key		/opt/secrets/kubernetes.private_key;
+
+	underscores_in_headers on;
+	set $ssl_client_s_dn_c_compat '';
+
+	set_by_lua $ssl_client_s_dn_c_compat '
+		return string.match(require("openssl").x509.subject():oneline(),"/C=([^/]+)");
+	';
+		
+    location / {
+		proxy_pass						http://localhost:6443/;
+		proxy_redirect					off;
+	
+		proxy_set_header		X-Remote-User $ssl_client_s_dn_c_compat;
+	
+		proxy_ssl_verify				on;
+		proxy_ssl_certificate			/opt/secrets/kubernetes.certificate;
+		proxy_ssl_certificate_key		/opt/secrets/kubernetes.private_key;
+		proxy_ssl_trusted_certificate	/opt/secrets/kubernetes.issuing_ca;
+    }
+}
+`),
+		},
+		{
 			Name:        "kube-apiserver.service",
 			Destination: ManifestSystemdUnit,
 			Content: []byte(`[Unit]
@@ -75,6 +123,11 @@ After=network.target
 
 [Service]
 ExecStart={{.RootABSPath}}/bin/hyperkube apiserver \
+	--requestheader-username-headers=X-Remote-User \
+	--requestheader-group-headers=X-Remote-Group \
+	--requestheader-extra-headers-prefix=X-Remote-Extra- \
+	--requestheader-client-ca-file={{.RootABSPath}}/secrets/kubernetes.issuing_ca \
+	--requestheader-allowed-names="" \
 	--apiserver-count=1 \
 	--insecure-bind-address=127.0.0.1 \
 	--insecure-port=8080 \
