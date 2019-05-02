@@ -45,7 +45,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
 	--container-runtime={{.ContainerRuntime}} \
 	--runtime-request-timeout=15m \
 	--container-runtime-endpoint=unix://{{.ContainerRuntimeEndpoint}} \
-	--feature-gates=PodShareProcessNamespace=true \
+	--feature-gates=PodShareProcessNamespace=true
 
 Restart=no
 `),
@@ -114,7 +114,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube apiserver \
 	--etcd-compaction-interval=0 \
 	--event-ttl=10m \
 	--admission-control-config-file={{.RootABSPath}}/manifest-config/admission.yaml \
-	--feature-gates=PodShareProcessNamespace=true \
+	--feature-gates=PodShareProcessNamespace=true
 
 Restart=no
 `),
@@ -139,7 +139,7 @@ ExecStart={{.RootABSPath}}/bin/etcd \
 	--client-cert-auth=true \
 	--trusted-ca-file={{.RootABSPath}}/secrets/etcd.issuing_ca \
 	--listen-client-urls=http://127.0.0.1:2379,https://{{ .NodeIP }}:2379 \
-	--advertise-client-urls=http://127.0.0.1:2379,https://{{ .NodeIP }}:2379 \
+	--advertise-client-urls=http://127.0.0.1:2379,https://{{ .NodeIP }}:2379
 
 Restart=no
 `),
