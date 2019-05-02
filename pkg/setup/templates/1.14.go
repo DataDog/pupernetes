@@ -43,7 +43,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
 	--cni-bin-dir={{.RootABSPath}}/bin \
 	--container-runtime={{.ContainerRuntime}} \
 	--runtime-request-timeout=15m \
-	--container-runtime-endpoint=unix://{{.ContainerRuntimeEndpoint}} \
+	--container-runtime-endpoint=unix://{{.ContainerRuntimeEndpoint}}
 
 Restart=no
 `),
@@ -110,7 +110,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube apiserver \
 	--audit-policy-file={{.RootABSPath}}/manifest-config/audit.yaml \
 	--etcd-compaction-interval=0 \
 	--event-ttl=10m \
-	--admission-control-config-file={{.RootABSPath}}/manifest-config/admission.yaml \
+	--admission-control-config-file={{.RootABSPath}}/manifest-config/admission.yaml
 
 Restart=no
 `),
@@ -135,7 +135,7 @@ ExecStart={{.RootABSPath}}/bin/etcd \
 	--client-cert-auth=true \
 	--trusted-ca-file={{.RootABSPath}}/secrets/etcd.issuing_ca \
 	--listen-client-urls=http://127.0.0.1:2379,https://{{ .NodeIP }}:2379 \
-	--advertise-client-urls=http://127.0.0.1:2379,https://{{ .NodeIP }}:2379 \
+	--advertise-client-urls=http://127.0.0.1:2379,https://{{ .NodeIP }}:2379
 
 Restart=no
 `),

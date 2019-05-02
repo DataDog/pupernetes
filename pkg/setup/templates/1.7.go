@@ -42,7 +42,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
 	--application-metrics-count-limit=50 \
 	--network-plugin=cni \
 	--cni-conf-dir={{.RootABSPath}}/net.d \
-	--cni-bin-dir={{.RootABSPath}}/bin \
+	--cni-bin-dir={{.RootABSPath}}/bin
 
 Restart=no
 `),
@@ -81,7 +81,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube apiserver \
 	--watch-cache=false \
 	--watch-cache-sizes="" \
 	--deserialization-cache-size=0 \
-	--event-ttl=10m \
+	--event-ttl=10m
 
 Restart=no
 `),
@@ -106,7 +106,7 @@ ExecStart={{.RootABSPath}}/bin/etcd \
 	--client-cert-auth=true \
 	--trusted-ca-file={{.RootABSPath}}/secrets/etcd.issuing_ca \
 	--listen-client-urls=http://127.0.0.1:2379,https://{{ .NodeIP }}:2379 \
-	--advertise-client-urls=http://127.0.0.1:2379,https://{{ .NodeIP }}:2379 \
+	--advertise-client-urls=http://127.0.0.1:2379,https://{{ .NodeIP }}:2379
 
 Restart=no
 `),
