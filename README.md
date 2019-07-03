@@ -53,8 +53,6 @@ You can use pupernetes to validate a software dependency on Kubernetes itself or
 
 As pupernetes runs in [travis](./.travis.yml) and [circle-ci](./.circleci/config.yml), it becomes very easy to integrate this tool in any Kubernetes project.
 
-[![asciicast](https://asciinema.org/a/5fvTb9iEcvwO3EhqOSmDMIT9O.png)](https://asciinema.org/a/5fvTb9iEcvwO3EhqOSmDMIT9O)
-
 ![img](docs/pupernetes.jpg)
 
 ## Requirements
