@@ -35,7 +35,7 @@ pupernetes daemon clean /opt/state/ -c etcd,network,secrets
 
 ```
   -c, --clean string                         clean options before setup: binaries,etcd,iptables,kubectl,kubelet,logs,manifests,mounts,network,secrets,systemd,all,none (default "etcd,kubelet,logs,mounts,iptables")
-      --cni-version string                   container network interface (cni) version (default "0.7.0")
+      --cni-version string                   container network interface (cni) version (default "0.8.1")
       --container-runtime string             container runtime interface to use (experimental: "containerd") (default "docker")
       --containerd-version string            containerd version (default "1.1.3")
       --download-timeout string              timeout for each downloaded archive (default "30m0s")
