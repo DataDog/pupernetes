@@ -263,7 +263,7 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 	e.binaryCNI = &depBinary{
 		archivePath:     path.Join(e.binABSPath, fmt.Sprintf("cni-v%s.tar.gz", config.ViperConfig.GetString("cni-version"))),
 		binaryABSPath:   path.Join(e.binABSPath, "bridge"),
-		archiveURL:      fmt.Sprintf("https://github.com/containernetworking/plugins/releases/download/v%s/cni-plugins-amd64-v%s.tgz", config.ViperConfig.GetString("cni-version"), config.ViperConfig.GetString("cni-version")),
+		archiveURL:      fmt.Sprintf("https://github.com/containernetworking/plugins/releases/download/v%s/cni-plugins-linux-amd64-v%s.tgz", config.ViperConfig.GetString("cni-version"), config.ViperConfig.GetString("cni-version")),
 		version:         config.ViperConfig.GetString("cni-version"),
 		downloadTimeout: e.downloadTimeout,
 	}
