@@ -177,6 +177,7 @@ Gracefully stop it with:
 pupernetes can start a specific Kubernetes version with the flag `--hyperkube-version=1.9.3`.
 
 These are the current supported versions:
+- [x] 1.15
 - [x] 1.14
 - [x] 1.13
 - [x] 1.12
