@@ -91,7 +91,7 @@ storage:
     contents:
       inline: |
         #!/bin/bash -ex
-        curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.9.0/pupernetes -o /opt/bin/pupernetes
+        curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.10.0/pupernetes -o /opt/bin/pupernetes
         sha512sum -c /opt/bin/pupernetes.sha512sum
         chmod +x /opt/bin/pupernetes
 
@@ -100,4 +100,4 @@ storage:
     filesystem: root
     contents:
       inline: |
-        531f2acd1b176cbadab3fed7429e30f744316dc2971a71da9f4e0e2f162685eb49a37c112eeb8259468317e57f7ff1ea84a2354b44034686e9762f0ca0ebf97d /opt/bin/pupernetes
+        35353ea46464a9c77848fbc03745de8fc6bf90b7e0ecf8011f48973b6cba571e8d3964e995397d8a8ba368d0f127b82deaa2ff916ca7544fba1b44dc6ee94bf5 /opt/bin/pupernetes
