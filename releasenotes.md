@@ -1,3 +1,5 @@
+- [v0.10.0](#v0100)
+- [v0.9.0](#v090)
 - [v0.8.0](#v080)
 - [v0.7.0](#v070)
 - [v0.6.1](#v061)
@@ -7,6 +9,20 @@
 - [v0.3.0](#v030)
 - [v0.2.1](#v021)
 - [v0.2.0](#v020)
+
+
+## v0.10.0
+
+### Enhancement
+* kube-apiserver: remove deprecated admission control flag #135
+* setup: increase the verbosity of everything #133
+* Update CNI #132
+* Add Kubernetes 1.14 #130
+
+
+### Bugfixes
+* Fix systemd unit files #131
+
 
 ## v0.9.0
 
