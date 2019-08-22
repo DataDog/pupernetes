@@ -10,6 +10,7 @@ core,"github.com/coreos/go-systemd/unit",Apache-2.0
 core,"github.com/coreos/go-systemd/util",Apache-2.0
 core,"github.com/coreos/pkg/dlopen",Apache-2.0
 core,"github.com/cpuguy83/go-md2man/md2man",MIT
+core,"github.com/davecgh/go-spew/spew",ISC
 core,"github.com/docker/distribution/digest",Apache-2.0
 core,"github.com/docker/distribution/reference",Apache-2.0
 core,"github.com/docker/docker/api/types",Apache-2.0
@@ -71,6 +72,7 @@ core,"github.com/hashicorp/vault/helper/compressutil",MPL-2.0
 core,"github.com/hashicorp/vault/helper/jsonutil",MPL-2.0
 core,"github.com/hashicorp/vault/helper/parseutil",MPL-2.0
 core,"github.com/hashicorp/vault/helper/strutil",MPL-2.0
+core,"github.com/howeyc/gopass",ISC
 core,"github.com/imdario/mergo",NewBSD
 core,"github.com/inconshreveable/mousetrap",Apache-2.0
 core,"github.com/json-iterator/go",MIT
