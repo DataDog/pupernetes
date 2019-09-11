@@ -90,6 +90,7 @@ type Environment struct {
 	binaryVault      *exeBinary
 	binaryEtcd       *exeBinary
 	binaryContainerd *exeBinary
+	binaryCrio       *exeBinary
 	binaryRunc       *exeBinary
 
 	// dependencies
@@ -246,6 +247,18 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		commandVersion:    []string{"--version"},
 	}
 
+	// CRI-o
+	e.binaryCrio = &exeBinary{
+		depBinary: depBinary{
+			archivePath:     path.Join(e.binABSPath, fmt.Sprintf("crio-v%s.deb", config.ViperConfig.GetString("crio-version"))),
+			binaryABSPath:   path.Join(e.binABSPath, "crio"),
+			archiveURL:      fmt.Sprintf("https://launchpad.net/~projectatomic/+archive/ubuntu/ppa/+files/cri-o-1.11-stable_%s-1~ubuntu18.04~ppa3_amd64.deb", config.ViperConfig.GetString("crio-version")),
+			version:         config.ViperConfig.GetString("crio-version"),
+			downloadTimeout: e.downloadTimeout,
+		},
+		commandVersion: []string{"--version"},
+	}
+
 	// Runc
 	e.binaryRunc = &exeBinary{
 		depBinary: depBinary{
@@ -308,6 +321,11 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 	if e.containerRuntimeInterface == config.CRIContainerd {
 		containerRuntime = "remote"
 		ContainerRuntimeEndpoint = "/run/containerd/containerd.sock"
+		e.systemdUnitNames = append(e.systemdUnitNames, fmt.Sprintf("%s%s.service", e.systemdUnitPrefix, e.containerRuntimeInterface))
+	}
+	if e.containerRuntimeInterface == config.CRICrio {
+		containerRuntime = "remote"
+		ContainerRuntimeEndpoint = "/run/crio/crio.sock"
 		e.systemdUnitNames = append(e.systemdUnitNames, fmt.Sprintf("%s%s.service", e.systemdUnitPrefix, e.containerRuntimeInterface))
 	}
 	e.systemdUnitNames = append(e.systemdUnitNames, e.etcdUnitName, e.kubeAPIServerUnitName, e.kubeletUnitName)
@@ -391,6 +409,7 @@ func (e *Environment) Setup() error {
 		e.setupBinaryCNI,
 		e.setupBinaryEtcd,
 		e.setupBinaryContainerd,
+		e.setupBinaryCrio,
 		e.setupBinaryRunc,
 		e.setupBinaryVault,
 		e.setupBinaryHyperkube,

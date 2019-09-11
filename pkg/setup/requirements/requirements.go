@@ -61,6 +61,10 @@ func CheckRequirements() error {
 	if err != nil {
 		return err
 	}
+	err = checkCommand("ar", "--version")
+	if err != nil {
+		return err
+	}
 	err = checkCommand("unzip")
 	if err != nil {
 		return err

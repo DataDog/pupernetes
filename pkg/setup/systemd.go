@@ -198,7 +198,7 @@ func (e *Environment) createUnitFromTemplate(unitName string) error {
 	defer fd.Close()
 	unitOptions, err := unit2.Deserialize(fd)
 	if err != nil {
-		glog.Errorf("Unexpected error during parsing s: %v", manifestUnitName, err)
+		glog.Errorf("Unexpected error during parsing %s: %v", manifestUnitName, err)
 		return err
 	}
 	// TODO see how to insert e.systemdEnd2EndSection

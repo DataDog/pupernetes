@@ -39,7 +39,7 @@ func (e *Environment) extractRunc() error {
 }
 
 func (e *Environment) setupBinaryRunc() error {
-	if e.containerRuntimeInterface != config.CRIContainerd {
+	if e.containerRuntimeInterface == config.DockerRuntime {
 		glog.V(2).Infof("Skipping the download of runc: using %q", e.containerRuntimeInterface)
 		return nil
 	}
