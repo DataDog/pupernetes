@@ -1,16 +1,16 @@
 package templates
 
 var (
-	manifest1o15 = []Manifest{
+	manifest1o17 = []Manifest{
 		{
 			Name:        "kubelet.service",
 			Destination: ManifestSystemdUnit,
 			Content: []byte(`[Unit]
-Description=Hyperkube kubelet for pupernetes
+Description=Kubelet for pupernetes
 After=network.target
 
 [Service]
-ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
+ExecStart={{.RootABSPath}}/bin/kubelet \
   --v=4 \
   --hairpin-mode=none \
   --config={{.RootABSPath}}/manifest-config/kubelet-config.yaml \
@@ -67,11 +67,11 @@ Restart=no
 			Name:        "kube-apiserver.service",
 			Destination: ManifestSystemdUnit,
 			Content: []byte(`[Unit]
-Description=Hyperkube apiserver for pupernetes
+Description=Apiserver apiserver for pupernetes
 After=network.target
 
 [Service]
-ExecStart={{.RootABSPath}}/bin/hyperkube kube-apiserver \
+ExecStart={{.RootABSPath}}/bin/kube-apiserver \
 	--apiserver-count=1 \
 	--insecure-bind-address=127.0.0.1 \
 	--insecure-port=8080 \
@@ -123,7 +123,7 @@ After=network.target
 
 [Service]
 ExecStart={{.RootABSPath}}/bin/etcd \
-	--name=etcdv3.1.11 \
+	--name=etcdv3 \
 	--data-dir={{.RootABSPath}}/etcd-data \
 	--auto-compaction-retention=0 \
 	--quota-backend-bytes=0 \
@@ -270,7 +270,7 @@ users:
 			Name:        "audit.yaml",
 			Destination: ManifestConfig,
 			Content: []byte(`---
-apiVersion: audit.k8s.io/v1beta1
+apiVersion: audit.k8s.io/v1
 kind: Policy
 rules:
   - level: Request
@@ -282,7 +282,6 @@ rules:
     - group: ""
       resources:
         - events
-
   - level: Metadata
     omitStages:
       - RequestReceived
@@ -396,6 +395,19 @@ metadata:
   name: kube-scheduler
   namespace: kube-system
 ---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: system:kube-scheduler
+subjects:
+  - kind: ServiceAccount
+    name: kube-scheduler
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: system:kube-scheduler
+  apiGroup: rbac.authorization.k8s.io
+---
 apiVersion: v1
 kind: Pod
 metadata:
@@ -420,10 +432,6 @@ spec:
         - kube-scheduler
         - --master=http://127.0.0.1:8080
         - --leader-elect=true
-        - --leader-elect-lease-duration=150s
-        - --leader-elect-renew-deadline=100s
-        - --leader-elect-retry-period=20s
-        - --housekeeping-interval=15s
         livenessProbe:
           httpGet:
             path: /healthz
@@ -436,9 +444,9 @@ spec:
           initialDelaySeconds: 5
         resources:
           requests:
-            cpu: "50m"
-          limits:
             cpu: "100m"
+          limits:
+            cpu: "200m"
 `),
 		},
 		{
@@ -491,7 +499,7 @@ metadata:
   namespace: kube-system
 ---
 kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: system:kube-proxy
 subjects:
@@ -503,12 +511,15 @@ roleRef:
   name: system:node-proxier
   apiGroup: rbac.authorization.k8s.io
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: kube-proxy
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      app: kube-proxy
   template:
     metadata:
       labels:
@@ -576,7 +587,7 @@ metadata:
   name: coredns
   namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
@@ -594,7 +605,7 @@ rules:
   - list
   - watch
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   annotations:
@@ -626,11 +637,11 @@ data:
           pods insecure
         }
         prometheus :9153
-        proxy . /etc/resolv.conf 8.8.8.8 8.8.4.4
+        forward . /etc/resolv.conf 8.8.8.8 8.8.4.4
         cache 30
     }
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: coredns
@@ -658,7 +669,7 @@ spec:
           operator: "Exists"
       containers:
       - name: coredns
-        image: coredns/coredns:1.3.1
+        image: coredns/coredns:1.6.2
         imagePullPolicy: IfNotPresent
         args: [ "-conf", "/etc/coredns/Corefile" ]
         volumeMounts:

@@ -81,6 +81,7 @@ func (e *Environment) writeCNIConfig(c *cniConfig) error {
 type cniConfig struct {
 	Name             string `json:"name"`
 	Type             string `json:"type"`
+	CniVersion       string `json:"cniVersion"`
 	Bridge           string `json:"bridge"`
 	IsDefaultGateway bool   `json:"isDefaultGateway"`
 	ForceAddress     bool   `json:"forceAddress,omitempty"`
@@ -153,6 +154,7 @@ func (e *Environment) generateResolvConf() error {
 func (e *Environment) newCNIBridgeConfig(bridgeName string) *cniConfig {
 	return &cniConfig{
 		Name:             "p8s",
+		CniVersion:       "0.1.0",
 		Type:             "bridge",
 		Bridge:           bridgeName,
 		IsDefaultGateway: true,

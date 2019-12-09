@@ -32,6 +32,8 @@ var Manifests map[string][]Manifest
 func init() {
 	Manifests = make(map[string][]Manifest)
 
+	Manifests["1.17"] = manifest1o17
+	Manifests["1.16"] = manifest1o16
 	Manifests["1.15"] = manifest1o15
 	Manifests["1.14"] = manifest1o14
 	Manifests["1.13"] = manifest1o13

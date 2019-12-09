@@ -53,6 +53,8 @@ systemd:
       Restart=on-failure
       RestartSec=5
       Type=notify
+      TimeoutStartSec=600
+      TimeoutStopSec=120
 
       [Install]
       WantedBy=multi-user.target

@@ -35,7 +35,7 @@ func init() {
 	ViperConfig.SetDefault("version", false)
 
 	ViperConfig.SetDefault("skip-binaries-version", false)
-	ViperConfig.SetDefault("hyperkube-version", "1.10.7")
+	ViperConfig.SetDefault("hyperkube-version", "1.16.3")
 	ViperConfig.SetDefault("vault-version", "0.9.5")
 	ViperConfig.SetDefault("etcd-version", "3.1.19")
 	ViperConfig.SetDefault("cni-version", "0.8.1")

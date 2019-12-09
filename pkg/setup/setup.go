@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/Masterminds/semver"
 	"github.com/coreos/go-systemd/dbus"
 	"github.com/coreos/go-systemd/unit"
 	"github.com/docker/docker/client"
@@ -100,6 +101,7 @@ type Environment struct {
 
 	// Kubernetes Major.Minor
 	templateVersion string
+	kubeVersion     *semver.Version
 
 	systemdEnd2EndSection []*unit.UnitOption
 
@@ -161,6 +163,12 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		return nil, err
 	}
 
+	parsedKubeVersion, err := semver.NewVersion(config.ViperConfig.GetString("hyperkube-version"))
+	if err != nil {
+		glog.Errorf("Unable to parse hyperkube version: %v", err)
+		return nil, err
+	}
+
 	e := &Environment{
 		rootABSPath: rootABSPath,
 		binABSPath:  path.Join(rootABSPath, defaultBinaryDirName),
@@ -175,7 +183,8 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		networkConfigABSPath:     path.Join(rootABSPath, defaultNetworkDirName),
 		networkStateABSPath:      path.Join(rootABSPath, "networks"),
 		logsABSPath:              path.Join(rootABSPath, defaultLogsDirName),
-		templateVersion:          getMajorMinorVersion(config.ViperConfig.GetString("hyperkube-version")),
+		kubeVersion:              parsedKubeVersion,
+		templateVersion:          fmt.Sprintf("%d.%d", parsedKubeVersion.Major(), parsedKubeVersion.Minor()),
 
 		kubeConfigUserPath:     config.ViperConfig.GetString("kubeconfig-path"),
 		kubeConfigAuthPath:     path.Join(rootABSPath, defaultTemplates.ManifestConfig, "kubeconfig-auth.yaml"),
