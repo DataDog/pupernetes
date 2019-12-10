@@ -28,7 +28,7 @@ func (e *Environment) extractHyperkube() error {
 
 	// After 1.17 hyperkube binary has been removed from Kubernetes
 	// It's replaced by a shell script forwarding calls to each binary
-	hyperkubeMissingCheck, err := semver.NewConstraint(">=1.17.0-rc")
+	hyperkubeMissingCheck, err := semver.NewConstraint(">=1.17.0")
 	if err != nil {
 		return err
 	}

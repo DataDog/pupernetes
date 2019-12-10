@@ -27,22 +27,29 @@ type Manifest struct {
 // Manifests is the map catalog where all Kubernetes major.minor are stored
 var Manifests map[string][]Manifest
 
+// KubeTaggedVersions is a mapping between string tags and real kube versions to ease usage
+var KubeTaggedVersions map[string]string
+
 // TODO add a layer for flavor like, http, https
-
 func init() {
-	Manifests = make(map[string][]Manifest)
+	Manifests = map[string][]Manifest{
+		"1.17": manifest1o17,
+		"1.16": manifest1o16,
+		"1.15": manifest1o15,
+		"1.14": manifest1o14,
+		"1.13": manifest1o13,
+		"1.12": manifest1o12,
+		"1.11": manifest1o11,
+		"1.10": manifest1o10,
+		"1.9":  manifest1o9,
+		"1.8":  manifest1o8,
+		"1.7":  manifest1o7,
+		"1.6":  manifest1o6,
+		"1.5":  manifest1o5,
+	}
 
-	Manifests["1.17"] = manifest1o17
-	Manifests["1.16"] = manifest1o16
-	Manifests["1.15"] = manifest1o15
-	Manifests["1.14"] = manifest1o14
-	Manifests["1.13"] = manifest1o13
-	Manifests["1.12"] = manifest1o12
-	Manifests["1.11"] = manifest1o11
-	Manifests["1.10"] = manifest1o10
-	Manifests["1.9"] = manifest1o9
-	Manifests["1.8"] = manifest1o8
-	Manifests["1.7"] = manifest1o7
-	Manifests["1.6"] = manifest1o6
-	Manifests["1.5"] = manifest1o5
+	KubeTaggedVersions = map[string]string{
+		"latest": "1.16.3",
+		"next":   "1.17.0",
+	}
 }
