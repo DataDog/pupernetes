@@ -15,7 +15,7 @@ import (
 
 func (e *Environment) extractEtcd() error {
 	glog.V(2).Infof("Extracting %s", e.binaryEtcd.archivePath)
-	b, err := exec.Command("tar", "-C", e.binABSPath, "-xzvf", e.binaryEtcd.archivePath, "--strip-components=1",
+	b, err := exec.Command("tar", "-C", e.binABSPath, "-xzvf", e.binaryEtcd.archivePath, "--strip-components=1", "--warning=no-unknown-keyword",
 		fmt.Sprintf("etcd-v%s-linux-amd64/etcd", e.binaryEtcd.version)).CombinedOutput()
 	output := string(b)
 	if err != nil {

@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/Masterminds/semver"
 	"github.com/coreos/go-systemd/dbus"
 	"github.com/coreos/go-systemd/unit"
 	"github.com/docker/docker/client"
@@ -100,6 +101,7 @@ type Environment struct {
 
 	// Kubernetes Major.Minor
 	templateVersion string
+	kubeVersion     *semver.Version
 
 	systemdEnd2EndSection []*unit.UnitOption
 
@@ -161,6 +163,17 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		return nil, err
 	}
 
+	kubeVersion, found := defaultTemplates.KubeTaggedVersions[config.ViperConfig.GetString("hyperkube-version")]
+	if !found {
+		kubeVersion = config.ViperConfig.GetString("hyperkube-version")
+	}
+
+	parsedKubeVersion, err := semver.NewVersion(kubeVersion)
+	if err != nil {
+		glog.Errorf("Unable to parse hyperkube version: %v", err)
+		return nil, err
+	}
+
 	e := &Environment{
 		rootABSPath: rootABSPath,
 		binABSPath:  path.Join(rootABSPath, defaultBinaryDirName),
@@ -175,7 +188,8 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 		networkConfigABSPath:     path.Join(rootABSPath, defaultNetworkDirName),
 		networkStateABSPath:      path.Join(rootABSPath, "networks"),
 		logsABSPath:              path.Join(rootABSPath, defaultLogsDirName),
-		templateVersion:          getMajorMinorVersion(config.ViperConfig.GetString("hyperkube-version")),
+		kubeVersion:              parsedKubeVersion,
+		templateVersion:          fmt.Sprintf("%d.%d", parsedKubeVersion.Major(), parsedKubeVersion.Minor()),
 
 		kubeConfigUserPath:     config.ViperConfig.GetString("kubeconfig-path"),
 		kubeConfigAuthPath:     path.Join(rootABSPath, defaultTemplates.ManifestConfig, "kubeconfig-auth.yaml"),
@@ -197,10 +211,10 @@ func NewConfigSetup(givenRootPath string) (*Environment, error) {
 	// Kubernetes
 	e.binaryHyperkube = &exeBinary{
 		depBinary: depBinary{
-			archivePath:     path.Join(e.binABSPath, fmt.Sprintf("hyperkube-v%s.tar.gz", config.ViperConfig.GetString("hyperkube-version"))),
+			archivePath:     path.Join(e.binABSPath, fmt.Sprintf("hyperkube-v%s.tar.gz", kubeVersion)),
 			binaryABSPath:   path.Join(e.binABSPath, "hyperkube"),
-			archiveURL:      fmt.Sprintf("https://dl.k8s.io/v%s/kubernetes-server-linux-amd64.tar.gz", config.ViperConfig.GetString("hyperkube-version")),
-			version:         config.ViperConfig.GetString("hyperkube-version"),
+			archiveURL:      fmt.Sprintf("https://dl.k8s.io/v%s/kubernetes-server-linux-amd64.tar.gz", kubeVersion),
+			version:         kubeVersion,
 			downloadTimeout: e.downloadTimeout,
 		},
 		skipVersionVerify: config.ViperConfig.GetBool("skip-binaries-version"),

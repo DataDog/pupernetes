@@ -142,6 +142,16 @@ func RunSystemdJob(givenRootPath string) error {
 			Name:    "Restart",
 			Value:   "no",
 		},
+		{
+			Section: "Service",
+			Name:    "TimeoutStartSec",
+			Value:   "600",
+		},
+		{
+			Section: "Service",
+			Name:    "TimeoutStopSec",
+			Value:   "120",
+		},
 	}
 
 	// Write the unit on disk

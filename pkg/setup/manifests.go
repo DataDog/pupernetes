@@ -22,7 +22,7 @@ func createManifest(filePath string, content []byte) error {
 	glog.V(4).Infof("Creating default template in %s", filePath)
 	err := ioutil.WriteFile(filePath, content, 0444)
 	if err != nil {
-		glog.Errorf("Cannot create manifest file: %s")
+		glog.Errorf("Cannot create manifest file: %s", filePath)
 		return err
 	}
 	return nil

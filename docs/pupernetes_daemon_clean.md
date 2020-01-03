@@ -40,7 +40,7 @@ pupernetes daemon clean /opt/state/ -c etcd,network,secrets
       --containerd-version string            containerd version (default "1.1.3")
       --download-timeout string              timeout for each downloaded archive (default "30m0s")
       --etcd-version string                  etcd version (default "3.1.19")
-      --hyperkube-version string             hyperkube version (default "1.10.7")
+      --hyperkube-version string             hyperkube version (default "1.16.3")
   -k, --keep string                          clean everything but the given options before setup: binaries,etcd,iptables,kubectl,kubelet,logs,manifests,mounts,network,secrets,systemd,all,none, this flag overrides any clean options
       --kubeconfig-path string               path to the kubeconfig file
       --kubectl-link string                  path to create a kubectl link

@@ -93,7 +93,7 @@ func (e *Environment) Clean() error {
 	}
 	if e.cleanOptions.Iptables && err == nil {
 		// this command can fail, it's a non issue
-		b, err := exec.Command(e.GetHyperkubePath(), "proxy", "--cleanup").CombinedOutput()
+		b, err := exec.Command(e.GetHyperkubePath(), "kube-proxy", "--cleanup").CombinedOutput()
 		glog.V(5).Infof("Iptables clean: %s, %v", string(b), err)
 	}
 

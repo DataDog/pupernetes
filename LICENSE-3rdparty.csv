@@ -1,5 +1,6 @@
 Component,Origin,License
 core,"github.com/frapposelli/wwhrd",MIT
+core,"github.com/Masterminds/semver",MIT
 core,"github.com/Microsoft/go-winio",MIT
 core,"github.com/beorn7/perks/quantile",MIT
 core,"github.com/cloudfoundry/gosigar",Apache-2.0

@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+
+	"github.com/DataDog/pupernetes/pkg/setup/templates"
 )
 
 // ViperConfig is a global variable for the viper configuration
@@ -35,7 +37,7 @@ func init() {
 	ViperConfig.SetDefault("version", false)
 
 	ViperConfig.SetDefault("skip-binaries-version", false)
-	ViperConfig.SetDefault("hyperkube-version", "1.10.7")
+	ViperConfig.SetDefault("hyperkube-version", templates.KubeTaggedVersions["latest"])
 	ViperConfig.SetDefault("vault-version", "0.9.5")
 	ViperConfig.SetDefault("etcd-version", "3.1.19")
 	ViperConfig.SetDefault("cni-version", "0.8.1")
