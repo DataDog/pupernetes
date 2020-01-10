@@ -28,13 +28,13 @@ docs:
 	$(CC) run ./scripts/update/docs.go
 
 license:
+	./scripts/install-wwhrd.sh
 	./scripts/update/license.sh
 
 goget:
 	@which ineffassign || go get github.com/gordonklaus/ineffassign
 	@which golint || go get golang.org/x/lint/golint
 	@which misspell || go get github.com/client9/misspell/cmd/misspell
-	@which wwhrd || go get github.com/frapposelli/wwhrd
 
 # Private targets
 PKG=.cmd .pkg .docs

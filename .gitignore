@@ -2,4 +2,4 @@
 /sandbox
 /pupernetes.sha512sum
 /environments/container-linux/ignition.json
-
+bin/
