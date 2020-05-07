@@ -44,7 +44,7 @@ pupernetes daemon run /opt/state/ --dns-check --dns-queries quay.io.,coredns.kub
 ```
       --bind-address string       bind address for pupernetes API ip:port (default "127.0.0.1:8989")
       --dns-check                 needed dns queries to notify readiness
-      --dns-queries stringSlice   dns queries for readiness, coma-separated values (default [coredns.kube-system.svc.cluster.local.])
+      --dns-queries strings       dns queries for readiness, coma-separated values (default [coredns.kube-system.svc.cluster.local.])
   -d, --drain string              drain options after run: iptables,kubeletgc,pods,all,none (default "all")
       --gc duration               grace period for the kubelet GC trigger when draining run, no-op if not draining (default 1m0s)
   -h, --help                      help for run

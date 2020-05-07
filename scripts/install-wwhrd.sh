@@ -12,7 +12,7 @@ cleanup() {
 }
 trap "cleanup" EXIT SIGINT
 
-VERSION=0.2.4
+VERSION=0.3.0
 TARBALL="wwhrd_${VERSION}_$(uname)_amd64.tar.gz"
 
 cd $WORK_DIR
