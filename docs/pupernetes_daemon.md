@@ -14,7 +14,7 @@ Use this command to clean setup and run a Kubernetes local environment
       --container-runtime string             container runtime interface to use (experimental: "containerd") (default "docker")
       --containerd-version string            containerd version (default "1.1.3")
       --download-timeout string              timeout for each downloaded archive (default "30m0s")
-      --etcd-version string                  etcd version (default "3.1.19")
+      --etcd-version string                  etcd version (default "3.4.7")
   -h, --help                                 help for daemon
       --hyperkube-version string             hyperkube version (default "1.16.3")
   -k, --keep string                          clean everything but the given options before setup: binaries,etcd,iptables,kubectl,kubelet,logs,manifests,mounts,network,secrets,systemd,all,none, this flag overrides any clean options

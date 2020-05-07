@@ -33,6 +33,7 @@ var KubeTaggedVersions map[string]string
 // TODO add a layer for flavor like, http, https
 func init() {
 	Manifests = map[string][]Manifest{
+		"1.18": manifest1o18,
 		"1.17": manifest1o17,
 		"1.16": manifest1o16,
 		"1.15": manifest1o15,

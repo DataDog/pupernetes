@@ -40,7 +40,7 @@ func notifySystemd() error {
 		return nil
 	}
 	if !sent {
-		glog.Warning("Forgot to set Type=notify in systemd service file ? PPID is %d", os.Getppid())
+		glog.Warningf("Forgot to set Type=notify in systemd service file ? PPID is %d", os.Getppid())
 		return nil
 	}
 	glog.V(2).Infof("Systemd notify sent")
