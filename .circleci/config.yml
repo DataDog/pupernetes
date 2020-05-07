@@ -3,7 +3,7 @@ version: 2
 templates:
   docker_job_template: &docker_job_template
     docker:
-      - image: golang:1.10
+      - image: golang:1.13
     working_directory: /go/src/github.com/DataDog/pupernetes
 
   machine_job_template: &machine_job_template

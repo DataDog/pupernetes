@@ -131,7 +131,6 @@ ExecStart={{.RootABSPath}}/bin/etcd \
 	--auto-compaction-retention=0 \
 	--quota-backend-bytes=0 \
 	--metrics=basic \
-	--ca-file={{.RootABSPath}}/secrets/etcd.issuing_ca \
 	--cert-file={{.RootABSPath}}/secrets/etcd.certificate \
 	--key-file={{.RootABSPath}}/secrets/etcd.private_key \
 	--client-cert-auth=true \

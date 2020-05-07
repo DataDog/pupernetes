@@ -1,20 +1,19 @@
 package templates
 
 var (
-	manifest1o11 = []Manifest{
+	manifest1o18 = []Manifest{
 		{
 			Name:        "kubelet.service",
 			Destination: ManifestSystemdUnit,
 			Content: []byte(`[Unit]
-Description=Hyperkube kubelet for pupernetes
+Description=Kubelet for pupernetes
 After=network.target
 
 [Service]
-ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
-	--v=4 \
-	--allow-privileged \
-	--fail-swap-on=false \
-	--hairpin-mode=none \
+ExecStart={{.RootABSPath}}/bin/kubelet \
+  --v=4 \
+  --hairpin-mode=none \
+  --config={{.RootABSPath}}/manifest-config/kubelet-config.yaml \
 	--pod-manifest-path={{.RootABSPath}}/manifest-static-pod \
 	--hostname-override={{ .Hostname }} \
 	--root-dir=/var/lib/p8s-kubelet \
@@ -32,7 +31,6 @@ ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
 	--authentication-token-webhook \
 	--authentication-token-webhook-cache-ttl=5s \
 	--authorization-mode=Webhook  \
-	--cadvisor-port=0 \
 	--cgroups-per-qos=true \
 	--cgroup-driver={{ .CgroupDriver }} \
 	--max-pods=60 \
@@ -44,8 +42,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube kubelet \
 	--cni-bin-dir={{.RootABSPath}}/bin \
 	--container-runtime={{.ContainerRuntime}} \
 	--runtime-request-timeout=15m \
-	--container-runtime-endpoint=unix://{{.ContainerRuntimeEndpoint}} \
-	--feature-gates=PodShareProcessNamespace=true
+	--container-runtime-endpoint=unix://{{.ContainerRuntimeEndpoint}}
 
 Restart=no
 `),
@@ -70,17 +67,17 @@ Restart=no
 			Name:        "kube-apiserver.service",
 			Destination: ManifestSystemdUnit,
 			Content: []byte(`[Unit]
-Description=Hyperkube apiserver for pupernetes
+Description=Apiserver apiserver for pupernetes
 After=network.target
 
 [Service]
-ExecStart={{.RootABSPath}}/bin/hyperkube apiserver \
+ExecStart={{.RootABSPath}}/bin/kube-apiserver \
 	--apiserver-count=1 \
 	--insecure-bind-address=127.0.0.1 \
 	--insecure-port=8080 \
 	--allow-privileged=true \
 	--service-cluster-ip-range={{ .ServiceClusterIPRange }} \
-	--enable-admission-plugins=PodPreset,NodeRestriction,EventRateLimit,PodTolerationRestriction \
+	--admission-control=NamespaceLifecycle,PodPreset,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota,EventRateLimit \
 	--kubelet-preferred-address-types=InternalIP,LegacyHostIP,ExternalDNS,InternalDNS,Hostname \
 	--authorization-mode=RBAC \
 	--etcd-servers=http://127.0.0.1:2379 \
@@ -112,8 +109,7 @@ ExecStart={{.RootABSPath}}/bin/hyperkube apiserver \
 	--audit-policy-file={{.RootABSPath}}/manifest-config/audit.yaml \
 	--etcd-compaction-interval=0 \
 	--event-ttl=10m \
-	--admission-control-config-file={{.RootABSPath}}/manifest-config/admission.yaml \
-	--feature-gates=PodShareProcessNamespace=true
+	--admission-control-config-file={{.RootABSPath}}/manifest-config/admission.yaml
 
 Restart=no
 `),
@@ -127,7 +123,7 @@ After=network.target
 
 [Service]
 ExecStart={{.RootABSPath}}/bin/etcd \
-	--name=etcdv3.1.11 \
+	--name=etcdv3 \
 	--data-dir={{.RootABSPath}}/etcd-data \
 	--auto-compaction-retention=0 \
 	--quota-backend-bytes=0 \
@@ -164,6 +160,15 @@ users:
     username: p8s
     client-certificate: "{{.RootABSPath}}/secrets/kubernetes.certificate"
     client-key: "{{.RootABSPath}}/secrets/kubernetes.private_key"
+`),
+		},
+		{
+			Name:        "kubelet-config.yaml",
+			Destination: ManifestConfig,
+			Content: []byte(`---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+failSwapOn: false
 `),
 		},
 		{
@@ -264,10 +269,21 @@ users:
 			Name:        "audit.yaml",
 			Destination: ManifestConfig,
 			Content: []byte(`---
-apiVersion: audit.k8s.io/v1beta1
+apiVersion: audit.k8s.io/v1
 kind: Policy
 rules:
-  - level: RequestResponse
+  - level: Request
+    verbs:
+      - create
+    omitStages:
+      - RequestReceived
+    resources:
+    - group: ""
+      resources:
+        - events
+  - level: Metadata
+    omitStages:
+      - RequestReceived
 `),
 		},
 		{
@@ -330,7 +346,7 @@ spec:
     imagePullPolicy: IfNotPresent
     command:
     - /hyperkube
-    - controller-manager
+    - kube-controller-manager
     - --master=http://127.0.0.1:8080
     - --leader-elect=true
     - --leader-elect-lease-duration=150s
@@ -348,7 +364,6 @@ spec:
     - --concurrent-resource-quota-syncs=2
     - --concurrent-service-syncs=1
     - --concurrent-serviceaccount-token-syncs=2
-    - --horizontal-pod-autoscaler-use-rest-clients=true
     volumeMounts:
       - name: secrets
         mountPath: /etc/secrets
@@ -373,31 +388,49 @@ spec:
 			Name:        "kube-scheduler.yaml",
 			Destination: ManifestAPI,
 			Content: []byte(`---
-apiVersion: extensions/v1beta1
-kind: DaemonSet
+apiVersion: v1
+kind: ServiceAccount
 metadata:
   name: kube-scheduler
   namespace: kube-system
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: system:kube-scheduler
+subjects:
+  - kind: ServiceAccount
+    name: kube-scheduler
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: system:kube-scheduler
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: kube-scheduler
+  name: kube-scheduler
+  namespace: kube-system
 spec:
-  template:
-    metadata:
-      labels:
-        app: kube-scheduler
-    spec:
-      hostNetwork: true
-      containers:
+  serviceAccountName: kube-scheduler
+  nodeName: "{{ .Hostname }}"
+  hostNetwork: true
+  volumes:
+  - name: secrets
+    hostPath:
+      path: "{{.RootABSPath}}/secrets"
+  containers:
       - name: kube-scheduler
         image: "{{ .HyperkubeImageURL }}"
         imagePullPolicy: IfNotPresent
         command:
         - /hyperkube
-        - scheduler
+        - kube-scheduler
         - --master=http://127.0.0.1:8080
         - --leader-elect=true
-        - --leader-elect-lease-duration=150s
-        - --leader-elect-renew-deadline=100s
-        - --leader-elect-retry-period=20s
-        - --housekeeping-interval=15s
         livenessProbe:
           httpGet:
             path: /healthz
@@ -410,9 +443,9 @@ spec:
           initialDelaySeconds: 5
         resources:
           requests:
-            cpu: "50m"
-          limits:
             cpu: "100m"
+          limits:
+            cpu: "200m"
 `),
 		},
 		{
@@ -465,7 +498,7 @@ metadata:
   namespace: kube-system
 ---
 kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: system:kube-proxy
 subjects:
@@ -477,12 +510,15 @@ roleRef:
   name: system:node-proxier
   apiGroup: rbac.authorization.k8s.io
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: kube-proxy
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      app: kube-proxy
   template:
     metadata:
       labels:
@@ -496,7 +532,7 @@ spec:
         imagePullPolicy: IfNotPresent
         command:
         - /hyperkube
-        - proxy
+        - kube-proxy
         - --config=/var/lib/kubernetes/config.yaml
         securityContext:
           privileged: true
@@ -550,7 +586,7 @@ metadata:
   name: coredns
   namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
@@ -568,7 +604,7 @@ rules:
   - list
   - watch
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   annotations:
@@ -600,11 +636,11 @@ data:
           pods insecure
         }
         prometheus :9153
-        proxy . /etc/resolv.conf 8.8.8.8 8.8.4.4
+        forward . /etc/resolv.conf 8.8.8.8 8.8.4.4
         cache 30
     }
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: coredns
@@ -632,7 +668,7 @@ spec:
           operator: "Exists"
       containers:
       - name: coredns
-        image: coredns/coredns:1.1.1
+        image: coredns/coredns:1.6.2
         imagePullPolicy: IfNotPresent
         args: [ "-conf", "/etc/coredns/Corefile" ]
         volumeMounts:
