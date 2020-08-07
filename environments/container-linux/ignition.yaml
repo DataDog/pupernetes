@@ -30,6 +30,8 @@ systemd:
     contents: |
       [Unit]
       Description=Setup pupernetes
+      Wants=network-online.target
+      After=network-online.target
 
       [Service]
       Type=oneshot
@@ -93,7 +95,7 @@ storage:
     contents:
       inline: |
         #!/bin/bash -ex
-        curl -Lf https://github.com/DataDog/pupernetes/releases/download/v0.11.0/pupernetes -o /opt/bin/pupernetes
+        curl -Lf --retry 7 --retry-connrefused https://github.com/DataDog/pupernetes/releases/download/v0.11.0/pupernetes -o /opt/bin/pupernetes
         sha512sum -c /opt/bin/pupernetes.sha512sum
         chmod +x /opt/bin/pupernetes
 
