@@ -1,3 +1,4 @@
+- [v0.12.0](#v0120)
 - [v0.11.0](#v0110)
 - [v0.10.0](#v0100)
 - [v0.9.0](#v090)
@@ -10,6 +11,15 @@
 - [v0.3.0](#v030)
 - [v0.2.1](#v021)
 - [v0.2.0](#v020)
+
+## v0.12.0
+
+### Enhancement
+* Add Kubernetes 1.18 #139
+
+### Bugfixes
+* Fix a race condition when downloading pupernetes #142
+
 
 ## v0.11.0
 

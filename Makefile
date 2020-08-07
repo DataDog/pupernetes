@@ -5,7 +5,7 @@ CGO_ENABLED?=0
 
 
 # Used to populate variables in version package.
-VERSION=$(shell git describe --match 'v[0-9]*' --dirty='+dirty' --always)
+VERSION=$(shell git describe --tags --match 'v[0-9]*' --dirty='+dirty' --always)
 REVISION=$(shell git rev-parse HEAD)$(shell if ! git diff --no-ext-diff --quiet --exit-code; then echo +dirty; fi)
 PROJECT=github.com/DataDog/pupernetes
 VERSION_FLAGS=-ldflags '-s -w -X $(PROJECT)/version.Version=$(VERSION) -X $(PROJECT)/version.Revision=$(REVISION) -X $(PROJECT)/version.Package=$(PROJECT)'
@@ -64,7 +64,7 @@ sha512sum: pupernetes
 	$@ ./$^ > $^.$@
 
 pupernetes-docker:
-	docker run --rm --net=host -v $(PWD):/go/src/github.com/DataDog/pupernetes -w /go/src/github.com/DataDog/pupernetes golang:1.10 make
+	docker run --rm --net=host -v $(PWD):/go/src/github.com/DataDog/pupernetes -w /go/src/github.com/DataDog/pupernetes golang:1.13 make
 
 ci-validation:
 	./.ci/pupernetes-validation.sh

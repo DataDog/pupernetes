@@ -95,7 +95,7 @@ storage:
     contents:
       inline: |
         #!/bin/bash -ex
-        curl -Lf --retry 7 --retry-connrefused https://github.com/DataDog/pupernetes/releases/download/v0.11.0/pupernetes -o /opt/bin/pupernetes
+        curl -Lf --retry 7 --retry-connrefused https://github.com/DataDog/pupernetes/releases/download/v0.12.0/pupernetes -o /opt/bin/pupernetes
         sha512sum -c /opt/bin/pupernetes.sha512sum
         chmod +x /opt/bin/pupernetes
 
@@ -104,4 +104,4 @@ storage:
     filesystem: root
     contents:
       inline: |
-        fcbf42316b9fbfbf6966b2f010f1bbc5006f7c882fc856d36b5e9f67a323d6b02361a45b88a4b4f7c64ac733078d9fd7d0cf72ef1229697f191b740c9fc95e61 /opt/bin/pupernetes
+        c0cd502d7dc8112e4c17e267068a12f150d334e1eca7e831130e462f5a431d044b10019af8533b756ee6d10a3fd4e9c72a62cee6d6a0045caa57807d06ede817 /opt/bin/pupernetes
