@@ -64,7 +64,7 @@ sha512sum: pupernetes
 	$@ ./$^ > $^.$@
 
 pupernetes-docker:
-	docker run --rm --net=host -v $(PWD):/go/src/github.com/DataDog/pupernetes -w /go/src/github.com/DataDog/pupernetes golang:1.10 make
+	docker run --rm --net=host -v $(PWD):/go/src/github.com/DataDog/pupernetes -w /go/src/github.com/DataDog/pupernetes golang:1.13 make
 
 ci-validation:
 	./.ci/pupernetes-validation.sh

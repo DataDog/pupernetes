@@ -35,12 +35,12 @@ git checkout -b v0.3.0
 ```
 
 Compile statically the binary and generate the sha512sum.
-> note: you need go 1.10
+> note: you need go 1.13
 ```bash
 CGO_ENABLED=0 make sha512sum
 
 # or using docker
-docker run --rm -v "$GOPATH":/go -w /go/src/github.com/DataDog/pupernetes golang:1.10 make re sha512sum
+docker run --rm -v "$GOPATH":/go -w /go/src/github.com/DataDog/pupernetes golang:1.13 make re sha512sum
 
 # equivalent to
 make pupernetes-docker
@@ -54,14 +54,14 @@ echo $?
 1
 
 # or using docker
-docker run --rm -v "$GOPATH":/go -w /go/src/github.com/DataDog/pupernetes golang:1.10 sh -c 'ldd pupernetes ; echo $?'
+docker run --rm -v "$GOPATH":/go -w /go/src/github.com/DataDog/pupernetes golang:1.13 sh -c 'ldd pupernetes ; echo $?'
 	not a dynamic executable
 1
 ```
 
 Check the sha512sum:
 ```bash
-sha512sum -c pupernetes.sha512sum 
+sha512sum -c pupernetes.sha512sum
 ./pupernetes: OK
 ```
 
@@ -100,7 +100,7 @@ cp -v pupernetes.sha512sum pr-pupernetes.sha512sum
 make clean
 CGO_ENABLED=0 make sha512sum
 diff pupernetes.sha512sum pr-pupernetes.sha512sum
-sha512sum -c pupernetes.sha512sum 
+sha512sum -c pupernetes.sha512sum
 ./pupernetes: OK
 ```
 
