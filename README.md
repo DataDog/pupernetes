@@ -59,6 +59,8 @@ As pupernetes runs in [travis](./.travis.yml) and [circle-ci](./.circleci/config
 
 ### Runtime
 
+A Linux system is required.
+
 #### Executables
 
 * `tar`
